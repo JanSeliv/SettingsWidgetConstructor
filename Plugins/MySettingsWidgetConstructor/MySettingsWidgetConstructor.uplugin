@@ -35,6 +35,10 @@
     {
       "Name": "GameplayTagsEditor",
       "Enabled": true
+    },
+    {
+      "Name": "FunctionPicker",
+      "Enabled": true
     }
   ]
 }

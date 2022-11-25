@@ -18,5 +18,5 @@ void FMySettingsWidgetConstructorModule::ShutdownModule()
 }
 
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(FMySettingsWidgetConstructorModule, MySettingsWidgetConstructor)
