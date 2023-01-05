@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "FunctionPicker.generated.h"
+#include "SWCFunctionPicker.generated.h"
 
 /**
   * Allows designer to choose the function in the list.
@@ -24,18 +24,18 @@
   * FFunctionPicker SetMembers = FFunctionPicker::Empty;
   */
 USTRUCT(BlueprintType)
-struct FUNCTIONPICKER_API FFunctionPicker
+struct FSWCFunctionPicker
 {
 	GENERATED_BODY()
 
-	/** Empty settings function. */
-	static const FFunctionPicker Empty;
+	/** Empty function data. */
+	static const FSWCFunctionPicker Empty;
 
 	/** Default constructor. */
-	FFunctionPicker() = default;
+	FSWCFunctionPicker() = default;
 
 	/** Custom constructor to set all members values. */
-	FFunctionPicker(UClass* InFunctionClass, FName InFunctionName);
+	FSWCFunctionPicker(UClass* InFunctionClass, FName InFunctionName);
 
 	/** The class where function can be found. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Class"))
@@ -53,11 +53,11 @@ struct FUNCTIONPICKER_API FFunctionPicker
 
 	/** Compares for equality.
 	  * @param Other The other object being compared. */
-	bool operator==(const FFunctionPicker& Other) const;
+	bool operator==(const FSWCFunctionPicker& Other) const;
 
 	/** Creates a hash value.
 	  * @param Other the other object to create a hash value for. */
-	friend FUNCTIONPICKER_API uint32 GetTypeHash(const FFunctionPicker& Other);
+	friend uint32 GetTypeHash(const FSWCFunctionPicker& Other);
 
 protected:
 	/** Contains cached function ptr for performance reasons. */

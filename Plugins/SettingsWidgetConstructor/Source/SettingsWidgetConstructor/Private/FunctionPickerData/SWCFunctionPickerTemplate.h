@@ -4,7 +4,7 @@
 
 #include "UObject/Object.h"
 //---
-#include "FunctionPickerTemplate.generated.h"
+#include "SWCFunctionPickerTemplate.generated.h"
 
 /**
   * Delegates wrapper that are used as templates for FFunctionPicker properties.
@@ -13,7 +13,7 @@
   * DECLARE_DYNAMIC_DELEGATE can't be declared under USTRUCT
   */
 UCLASS(Abstract, Const, Transient)
-class FUNCTIONPICKER_API UFunctionPickerTemplate : public UObject
+class USWCFunctionPickerTemplate : public UObject
 {
 	GENERATED_BODY()
 
