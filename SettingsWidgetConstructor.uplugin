@@ -29,15 +29,7 @@
   ],
   "Plugins": [
     {
-      "Name": "MyEditorUtils",
-      "Enabled": true
-    },
-    {
       "Name": "GameplayTagsEditor",
-      "Enabled": true
-    },
-    {
-      "Name": "FunctionPicker",
       "Enabled": true
     }
   ]
