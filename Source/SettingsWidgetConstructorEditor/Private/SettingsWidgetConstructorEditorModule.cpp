@@ -8,6 +8,7 @@
 #include "SettingTagCustomization.h"
 #include "FunctionPickerType/FunctionPickerCustomization.h"
 //---
+#include "KismetCompiler.h"
 #include "Modules/ModuleManager.h"
 
 #define LOCTEXT_NAMESPACE "FSettingsWidgetConstructorEditorModule"
@@ -17,6 +18,8 @@ void FSettingsWidgetConstructorEditorModule::StartupModule()
 {
 	RegisterPropertyCustomizations();
 	RegisterSettingAssets();
+
+	FKismetCompilerContext::RegisterCompilerForBP(USWCMyUserWidgetBlueprint::StaticClass(), &UWidgetBlueprint::GetCompilerForWidgetBP);
 }
 
 // Called before the module is unloaded, right before the module object is destroyed
