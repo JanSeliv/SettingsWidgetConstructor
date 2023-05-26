@@ -24,7 +24,7 @@
   * FFunctionPicker SetMembers = FFunctionPicker::Empty;
   */
 USTRUCT(BlueprintType)
-struct FSWCFunctionPicker
+struct SETTINGSWIDGETCONSTRUCTOR_API FSWCFunctionPicker
 {
 	GENERATED_BODY()
 

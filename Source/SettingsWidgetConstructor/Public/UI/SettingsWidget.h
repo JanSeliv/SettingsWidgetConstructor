@@ -12,7 +12,7 @@
  * The UI widget of settings.
  * It generates and manages settings specified in rows of the Settings Data Table.
  */
-UCLASS()
+UCLASS(Abstract, Blueprintable, BlueprintType)
 class SETTINGSWIDGETCONSTRUCTOR_API USettingsWidget : public UUserWidget
 {
 	GENERATED_BODY()

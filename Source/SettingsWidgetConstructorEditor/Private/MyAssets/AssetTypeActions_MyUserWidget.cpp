@@ -35,8 +35,6 @@ UObject* USWCMyUserWidgetFactory::FactoryCreateNew(UClass* Class, UObject* InPar
 	// Make sure we are trying to factory a blueprint, then create and init one
 	check(Class->IsChildOf(USWCMyUserWidgetBlueprint::StaticClass()));
 
-	FString ParentPath = InParent->GetPathName();
-
 	const TSubclassOf<UUserWidget> ParentClass = GetWidgetClass();
 	if (ParentClass == nullptr || !FKismetEditorUtilities::CanCreateBlueprintOfClass(ParentClass))
 	{

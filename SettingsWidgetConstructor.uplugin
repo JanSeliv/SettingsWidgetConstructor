@@ -6,7 +6,7 @@
   "Description": "Plugin allows automatically generate settings on the UI from data table",
   "Category": "UI",
   "CreatedBy": "Yevhenii Selivanov",
-  "CreatedByURL": "https://github.com/JanSeliv/Bomber",
+  "CreatedByURL": "https://github.com/JanSeliv/SettingsWidgetConstructor",
   "DocsURL": "",
   "MarketplaceURL": "",
   "SupportURL": "mailto:janseliw@gmail.com",
@@ -29,15 +29,7 @@
   ],
   "Plugins": [
     {
-      "Name": "MyEditorUtils",
-      "Enabled": true
-    },
-    {
       "Name": "GameplayTagsEditor",
-      "Enabled": true
-    },
-    {
-      "Name": "FunctionPicker",
       "Enabled": true
     }
   ]

@@ -11,7 +11,7 @@
 // Called on every change in this this row
 void FSWCMyTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName)
 {
-	if (!GEditor && !GEditor->IsPlaySessionInProgress()) // Is Editor not PIE world
+	if (!GEditor || !GEditor->IsPlaySessionInProgress()) // Is Editor not PIE world
 	{
 		return;
 	}
