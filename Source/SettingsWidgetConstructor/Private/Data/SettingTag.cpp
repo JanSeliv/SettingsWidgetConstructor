@@ -3,6 +3,8 @@
 #include "Data/SettingTag.h"
 //---
 #include "GameplayTags/Classes/GameplayTagsManager.h"
+//---
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SettingTag)
 
 // Setting gag that contains nothing by default
 const FSettingTag FSettingTag::EmptySettingTag = EmptyTag;

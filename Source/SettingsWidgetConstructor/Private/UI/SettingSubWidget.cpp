@@ -2,8 +2,8 @@
 
 #include "UI/SettingSubWidget.h"
 //---
-#include "UI/SettingsWidget.h"
 #include "MyUtilsLibraries/SWCWidgetUtilsLibrary.h"
+#include "UI/SettingsWidget.h"
 //---
 #include "Components/Button.h"
 #include "Components/CheckBox.h"
@@ -16,6 +16,8 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Widgets/Input/SSlider.h"
+//---
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SettingSubWidget)
 
 // Set the new setting tag for this widget
 void USettingSubWidget::SetSettingPrimaryRow(const FSettingsPrimary& InSettingPrimaryRow)

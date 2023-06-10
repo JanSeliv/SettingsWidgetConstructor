@@ -4,6 +4,8 @@
 //---
 #include "MyUtilsLibraries/SWCWidgetUtilsLibrary.h"
 #include "UI/SettingsWidget.h"
+//---
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsCheatExtension)
 
 // Default constructor
 USettingsCheatExtension::USettingsCheatExtension()

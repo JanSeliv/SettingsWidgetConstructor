@@ -2,11 +2,13 @@
 
 #include "AssetTypeActions_SettingsDataTable.h"
 //---
-#include "Data/SettingsDataTable.h"
 #include "SettingsWidgetConstructorEditorModule.h"
+#include "Data/SettingsDataTable.h"
 //---
 #include "EditorFramework/AssetImportData.h"
 #include "Interfaces/IPluginManager.h"
+//---
+#include UE_INLINE_GENERATED_CPP_BY_NAME(AssetTypeActions_SettingsDataTable)
 
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 

@@ -5,6 +5,8 @@
 #if WITH_EDITOR
 #include "DataTableEditorUtils.h" // FDataTableEditorUtils::RenameRow
 #endif
+//---
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsDataTable)
 
 // Default constructor to set members as FSettingsRow
 USettingsDataTable::USettingsDataTable()
