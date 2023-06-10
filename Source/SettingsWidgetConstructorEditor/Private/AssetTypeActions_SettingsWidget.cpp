@@ -4,6 +4,8 @@
 //---
 #include "SettingsWidgetConstructorEditorModule.h"
 #include "UI/SettingsWidget.h"
+//---
+#include UE_INLINE_GENERATED_CPP_BY_NAME(AssetTypeActions_SettingsWidget)
 
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 

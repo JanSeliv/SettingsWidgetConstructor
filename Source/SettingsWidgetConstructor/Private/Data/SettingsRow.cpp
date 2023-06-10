@@ -1,6 +1,8 @@
 // Copyright (c) Yevhenii Selivanov.
 
 #include "Data/SettingsRow.h"
+//---
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsRow)
 
 // Empty settings primary row
 const FSettingsPrimary FSettingsPrimary::EmptyPrimary = FSettingsPrimary();
