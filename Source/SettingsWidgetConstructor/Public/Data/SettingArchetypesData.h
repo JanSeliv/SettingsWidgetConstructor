@@ -5,6 +5,7 @@
 #include "Data/SettingTypes.h"
 //---
 #include "Data/SettingFunction.h"
+#include "Framework/Text/TextLayout.h"
 //---
 #include "SettingArchetypesData.generated.h"
 
