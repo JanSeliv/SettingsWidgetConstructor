@@ -2,13 +2,15 @@
 
 #include "UI/SettingsWidget.h"
 //---
-#include "GameFramework/GameUserSettings.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/SizeBox.h"
+#include "GameFramework/GameUserSettings.h"
 //---
 #include "Data/SettingsDataAsset.h"
 #include "Data/SettingsDataTable.h"
 #include "UI/SettingSubWidget.h"
+//---
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsWidget)
 
 // Try to find the setting row
 const FSettingsPicker& USettingsWidget::FindSettingRow(FName PotentialTagName) const
