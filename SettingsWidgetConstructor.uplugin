@@ -10,7 +10,7 @@
   "DocsURL": "",
   "MarketplaceURL": "",
   "SupportURL": "mailto:janseliw@gmail.com",
-  "EngineVersion": "5.1",
+  "EngineVersion": "5.2.0",
   "EnabledByDefault": true,
   "CanContainContent": true,
   "IsBetaVersion": false,
@@ -23,7 +23,7 @@
     },
     {
       "Name": "SettingsWidgetConstructorEditor",
-      "Type": "Editor",
+      "Type": "UncookedOnly",
       "LoadingPhase": "Default"
     }
   ],

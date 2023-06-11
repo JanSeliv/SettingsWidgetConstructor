@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Yevhenii Selivanov
 
 #include "Data/SettingsThemeData.h"
+//---
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsThemeData)
 
 // Default constructor to set default values
 FButtonThemeData::FButtonThemeData()

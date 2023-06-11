@@ -12,13 +12,13 @@ Detailed documentation about the Settings Widget Constructor can be found [here]
 
 ## 🎓 Sample Projects
 
-Check out our [Release](https://github.com/JanSeliv/SettingsWidgetConstructor/releases) page a sample project showcasing the Settings Widget Constructor.
+Check out our [Release](https://github.com/JanSeliv/SettingsWidgetConstructor/releases) page for a sample project showcasing the Settings Widget Constructor.
 
 Also, explore this [game project repository](https://github.com/JanSeliv/Bomber) to view the Settings Widget Constructor in action.
 
 ## 📅 Changelog
 #### 2023-05-26
-- 🎉 Initial public release.
+- 🎉 Initial public release on Unreal Engine 5.2
 
 ## 📫 Feedback & Contribution
 
