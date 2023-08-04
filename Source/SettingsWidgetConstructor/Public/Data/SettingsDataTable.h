@@ -4,8 +4,6 @@
 
 #include "SettingsWidgetConstructor/Private/MyDataTable/SWCMyDataTable.h"
 //---
-#include "Data/SettingsRow.h"
-//---
 #include "SettingsDataTable.generated.h"
 
 /**
@@ -24,7 +22,7 @@ public:
 	/** Returns the table rows.
 	 * @see USettingsDataAsset::SettingsDataTableInternal */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
-	void GetSettingRows(TMap<FName, FSettingsRow>& OutRows) const { GetRows(OutRows); }
+	void GetSettingRows(TMap<FName, struct FSettingsRow>& OutRows) const { GetRows(OutRows); }
 
 protected:
 #if WITH_EDITOR
