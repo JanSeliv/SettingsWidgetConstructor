@@ -456,47 +456,45 @@ void USettingsWidget::SetSettingCustomWidget(const FSettingTag& CustomWidgetTag,
 	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
 }
 
+/* ---------------------------------------------------
+ *		Getters by setting types
+ * --------------------------------------------------- */
+
+/** Executes the common pattern of getting a value from a data structure.
+	* @param Tag The tag used to find the setting row
+	* @param DataMember The member that holds the desired value
+	* @param ValueType The type of value to retrieve
+	* @param GetterType The type of getter delegate
+	* @param ValueExpression The expression to retrieve the value
+	* @param GetterExpression The expression to retrieve the getter delegate
+	* @param DefaultValue The default value to return if no value is found */
+#define GET_SETTING_VALUE(Tag, DataMember, ValueType, GetterType, ValueExpression, GetterExpression, DefaultValue) \
+	{ \
+		const FSettingsPicker& FoundRow = GetSettingRow(Tag); \
+		ValueType Value = DefaultValue; \
+		if (FoundRow.IsValid()) \
+		{ \
+			const auto& Data = FoundRow.DataMember; \
+			Value = ValueExpression; \
+			const GetterType& Getter = GetterExpression; \
+			if (Getter.IsBound()) \
+			{ \
+				Value = Getter.Execute(); \
+			} \
+		} \
+		return Value; \
+	}
+
 // Returns is a checkbox toggled
 bool USettingsWidget::GetCheckboxValue(const FSettingTag& CheckboxTag) const
 {
-	if (!CheckboxTag.IsValid())
-	{
-		return false;
-	}
-
-	const FSettingsPicker& FoundRow = GetSettingRow(CheckboxTag);
-	bool Value = false;
-	if (FoundRow.IsValid())
-	{
-		const FSettingsCheckbox& Data = FoundRow.Checkbox;
-		Value = Data.bIsSet;
-
-		const USettingFunctionTemplate::FOnGetterBool& Getter = Data.OnGetterBool;
-		if (Getter.IsBound())
-		{
-			Value = Getter.Execute();
-		}
-	}
-	return Value;
+	GET_SETTING_VALUE(CheckboxTag, Checkbox, bool, USettingFunctionTemplate::FOnGetterBool, Data.bIsSet, Data.OnGetterBool, false)
 }
 
 // Returns chosen member index of a combobox
 int32 USettingsWidget::GetComboboxIndex(const FSettingTag& ComboboxTag) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(ComboboxTag);
-	int32 Value = false;
-	if (FoundRow.IsValid())
-	{
-		const FSettingsCombobox& Data = FoundRow.Combobox;
-		Value = Data.ChosenMemberIndex;
-
-		const USettingFunctionTemplate::FOnGetterInt& Getter = Data.OnGetterInt;
-		if (Getter.IsBound())
-		{
-			Value = Getter.Execute();
-		}
-	}
-	return Value;
+	GET_SETTING_VALUE(ComboboxTag, Combobox, int32, USettingFunctionTemplate::FOnGetterInt, Data.ChosenMemberIndex, Data.OnGetterInt, 0)
 }
 
 // Get all members of a combobox
@@ -519,20 +517,7 @@ void USettingsWidget::GetComboboxMembers(const FSettingTag& ComboboxTag, TArray<
 // Get current value of a slider [0...1]
 double USettingsWidget::GetSliderValue(const FSettingTag& SliderTag) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(SliderTag);
-	double Value = 0.0;
-	if (FoundRow.IsValid())
-	{
-		const FSettingsSlider& Data = FoundRow.Slider;
-		Value = Data.ChosenValue;
-
-		const USettingFunctionTemplate::FOnGetterFloat& Getter = Data.OnGetterFloat;
-		if (Getter.IsBound())
-		{
-			Value = Getter.Execute();
-		}
-	}
-	return Value;
+	GET_SETTING_VALUE(SliderTag, Slider, double, USettingFunctionTemplate::FOnGetterFloat, Data.ChosenValue, Data.OnGetterFloat, 0.0)
 }
 
 // Get current text of a simple text widget
@@ -554,20 +539,7 @@ void USettingsWidget::GetTextLineValue(const FSettingTag& TextLineTag, FText& Ou
 // Get current input name of the text input
 FName USettingsWidget::GetUserInputValue(const FSettingTag& UserInputTag) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(UserInputTag);
-	FName Value = NAME_None;
-	if (FoundRow.IsValid())
-	{
-		const FSettingsUserInput& Data = FoundRow.UserInput;
-		Value = Data.UserInput;
-
-		const USettingFunctionTemplate::FOnGetterName& Getter = Data.OnGetterName;
-		if (Getter.IsBound())
-		{
-			Value = Getter.Execute();
-		}
-	}
-	return Value;
+	GET_SETTING_VALUE(UserInputTag, UserInput, FName, USettingFunctionTemplate::FOnGetterName, Data.UserInput, Data.OnGetterName, NAME_None)
 }
 
 // Get custom widget of the setting by specified tag
@@ -1057,20 +1029,20 @@ void USettingsWidget::AddSettingCombobox(FSettingsPrimary& Primary, FSettingsCom
 {
 	const TSubclassOf<USettingCombobox> ComboboxClass = USettingsDataAsset::Get().GetComboboxClass();
 	CREATE_AND_BIND_WIDGET(Primary, ComboboxClass, Data, OnGetterInt, OnSetterInt,
-	{
-		const FName GetMembersFunctionName = Data.GetMembers.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetMembersFunctionName))
-		{
-			Data.OnGetMembers.BindUFunction(StaticContextObject, GetMembersFunctionName);
-			Data.OnGetMembers.ExecuteIfBound(Data.Members);
-		}
-		const FName SetMembersFunctionName = Data.SetMembers.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetMembersFunctionName))
-		{
-			Data.OnSetMembers.BindUFunction(StaticContextObject, SetMembersFunctionName);
-			Data.OnSetMembers.ExecuteIfBound(Data.Members);
-		}
-	});
+	                       {
+	                       const FName GetMembersFunctionName = Data.GetMembers.FunctionName;
+	                       if (Primary.StaticContextFunctionList.Contains(GetMembersFunctionName))
+	                       {
+	                       Data.OnGetMembers.BindUFunction(StaticContextObject, GetMembersFunctionName);
+	                       Data.OnGetMembers.ExecuteIfBound(Data.Members);
+	                       }
+	                       const FName SetMembersFunctionName = Data.SetMembers.FunctionName;
+	                       if (Primary.StaticContextFunctionList.Contains(SetMembersFunctionName))
+	                       {
+	                       Data.OnSetMembers.BindUFunction(StaticContextObject, SetMembersFunctionName);
+	                       Data.OnSetMembers.ExecuteIfBound(Data.Members);
+	                       }
+	                       });
 	AddCombobox(Primary, Data);
 }
 
