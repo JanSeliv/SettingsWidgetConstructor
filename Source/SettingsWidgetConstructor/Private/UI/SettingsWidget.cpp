@@ -757,14 +757,8 @@ void USettingsWidget::ConstructSettings()
 
 void USettingsWidget::UpdateSettingsTableRows()
 {
-	const USettingsDataTable* SettingsDataTable = USettingsDataAsset::Get().GetSettingsDataTable();
-	if (!ensureMsgf(SettingsDataTable, TEXT("ASSERT: 'SettingsDataTable' is not valid")))
-	{
-		return;
-	}
-
 	TMap<FName, FSettingsRow> SettingRows;
-	SettingsDataTable->GetSettingRows(/*Out*/SettingRows);
+	USettingsDataAsset::Get().GetAllSettingRows(/*Out*/SettingRows);
 	if (!ensureMsgf(!SettingRows.IsEmpty(), TEXT("ASSERT: 'SettingRows' are empty")))
 	{
 		return;

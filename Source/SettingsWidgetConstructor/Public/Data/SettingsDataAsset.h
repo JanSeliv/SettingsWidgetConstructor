@@ -4,10 +4,12 @@
 
 #include "Engine/DeveloperSettings.h"
 //---
-#include "Data/SettingsDataTable.h"
 #include "Data/SettingsThemeData.h"
 //---
 #include "SettingsDataAsset.generated.h"
+
+class USettingsDataTable;
+class UDataRegistry;
 
 /**
  * Contains common settings data of the Constructor Widget plugin.
@@ -18,6 +20,9 @@ class SETTINGSWIDGETCONSTRUCTOR_API USettingsDataAsset : public UDeveloperSettin
 {
 	GENERATED_BODY()
 
+	/*********************************************************************************************
+	 * Getters
+	 ********************************************************************************************* */
 public:
 	/** Returns Project Settings Data of the Settings Widget Constructor plugin. */
 	static const FORCEINLINE USettingsDataAsset& Get() { return *GetDefault<ThisClass>(); }
@@ -32,9 +37,14 @@ public:
 	/** Gets the category for the settings, some high level grouping like, Editor, Engine, Game...etc. */
 	virtual FName GetCategoryName() const override { return TEXT("Plugins"); }
 
-	/** Returns the data table. */
+	/** Returns the project's main Settings Data Table, it has to be set manually. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
-	FORCEINLINE USettingsDataTable* GetSettingsDataTable() const { return SettingsDataTableInternal.LoadSynchronous(); }
+	const USettingsDataTable* GetSettingsDataTable() const;
+
+	/** Returns all Settings Rows from project's Settings Data Table and all other additional Data Tables from 'SettingsDataTable' Data Registry.
+	 * Prefer to cache the result of this function, since it is expensive to call it every time. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
+	void GetAllSettingRows(TMap<FName, struct FSettingsRow>& OutSettingRows) const;
 
 	/** Returns the sub-widget of Button settings. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
@@ -108,10 +118,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	const FORCEINLINE FMiscThemeData& GetMiscThemeData() const { return MiscThemeDataInternal; }
 
+	/*********************************************************************************************
+	 * Protected properties
+	 ********************************************************************************************* */
 protected:
-	/** The data table with all settings, is config property. */
+	/** The project's main Settings Data Table, is config property and has to be set manually. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Settings Data Table", ShowOnlyInnerProperties))
-	TSoftObjectPtr<class USettingsDataTable> SettingsDataTableInternal;
+	TSoftObjectPtr<const USettingsDataTable> SettingsDataTableInternal;
 
 	/** The sub-widget class of Button settings, is config property. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Button Class", ShowOnlyInnerProperties))
@@ -184,4 +197,43 @@ protected:
 	/** The misc theme data, is config property. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Misc Theme Data"))
 	FMiscThemeData MiscThemeDataInternal;
+
+	/*********************************************************************************************
+	 * Data Registry support
+	 * 
+	 * Allows to register additional Settings Data Tables if needed, to do it:
+	 * 1. Enable 'Initialize All Loaded Registries' in Project Settings.
+	 * 2. Create additional Settings Data Table.
+	 * 3. Call USettingsDataAsset::Get().RegisterDataTable(AdditionalSettingsDataTable) in BeginPlay
+	 * or use 'Add Data Registry Source' inside GameFeatureDataAsset, where 'Registry to Add To' is 'SettingsDataTable'.
+	 ********************************************************************************************* */
+public:
+	/** Registers given Settings Data Table to the Settings Data Registry. Alternatively Game Feature Action can be used to register it.
+	 * It's automatically called on startup for the 'Settings Data Table' set in the Project Settings.
+	 * Can be called manually to register additional Settings Data Tables. */
+	UFUNCTION(BlueprintCallable, Category = "C++")
+	void RegisterDataTable(const TSoftObjectPtr<const USettingsDataTable> SettingsDataTable);
+
+	/** Returns the Settings Data Registry asset, is automatically set by default to which 'Settings Data Table' is added by itself. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
+	const UDataRegistry* GetSettingsDataRegistry() const;
+
+	/** Returns all Settings Data Tables added to 'SettingsDataTable' Data Registry including Project's one. */
+	void GetAllSettingDataTables(TSet<const USettingsDataTable*>& OutDataTables) const;
+
+protected:
+	/** The Settings Data Registry asset, is automatically set by default to which 'Settings Data Table' is added by itself. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Settings Data Registry", ShowOnlyInnerProperties))
+	TSoftObjectPtr<const UDataRegistry> SettingsDataRegistryInternal;
+
+	/** Overrides post init to register Settings Data Table by default on startup. */
+	virtual void PostInitProperties() override;
+
+	/** Is called once Engine is initialized, so we can register Settings Data Table by default on startup. */
+	void OnPostEngineInit();
+
+#if WITH_EDITOR
+	/** Overrides property change events to handle picking Settings Data Table. */
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 };
