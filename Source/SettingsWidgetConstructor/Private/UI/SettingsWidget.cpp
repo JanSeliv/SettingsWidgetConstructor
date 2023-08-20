@@ -1029,20 +1029,20 @@ void USettingsWidget::AddSettingCombobox(FSettingsPrimary& Primary, FSettingsCom
 {
 	const TSubclassOf<USettingCombobox> ComboboxClass = USettingsDataAsset::Get().GetComboboxClass();
 	CREATE_AND_BIND_WIDGET(Primary, ComboboxClass, Data, OnGetterInt, OnSetterInt,
-	                       {
-	                       const FName GetMembersFunctionName = Data.GetMembers.FunctionName;
-	                       if (Primary.StaticContextFunctionList.Contains(GetMembersFunctionName))
-	                       {
-	                       Data.OnGetMembers.BindUFunction(StaticContextObject, GetMembersFunctionName);
-	                       Data.OnGetMembers.ExecuteIfBound(Data.Members);
-	                       }
-	                       const FName SetMembersFunctionName = Data.SetMembers.FunctionName;
-	                       if (Primary.StaticContextFunctionList.Contains(SetMembersFunctionName))
-	                       {
-	                       Data.OnSetMembers.BindUFunction(StaticContextObject, SetMembersFunctionName);
-	                       Data.OnSetMembers.ExecuteIfBound(Data.Members);
-	                       }
-	                       });
+	{
+		const FName GetMembersFunctionName = Data.GetMembers.FunctionName;
+		if (Primary.StaticContextFunctionList.Contains(GetMembersFunctionName))
+		{
+			Data.OnGetMembers.BindUFunction(StaticContextObject, GetMembersFunctionName);
+			Data.OnGetMembers.ExecuteIfBound(Data.Members);
+		}
+		const FName SetMembersFunctionName = Data.SetMembers.FunctionName;
+		if (Primary.StaticContextFunctionList.Contains(SetMembersFunctionName))
+		{
+			Data.OnSetMembers.BindUFunction(StaticContextObject, SetMembersFunctionName);
+			Data.OnSetMembers.ExecuteIfBound(Data.Members);
+		}
+	});
 	AddCombobox(Primary, Data);
 }
 
