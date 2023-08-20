@@ -21,6 +21,7 @@ public class SettingsWidgetConstructor : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new[]
 			{
 				"CoreUObject", "Engine", "Slate", "SlateCore" // Core
+				, "DataRegistry" // Multiple Data Tables support
 			}
 		);
 

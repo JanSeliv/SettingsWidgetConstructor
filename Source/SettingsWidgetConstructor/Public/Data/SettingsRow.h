@@ -54,11 +54,11 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsPrimary
 	FSettingFunctionPicker Getter = FSettingFunctionPicker::EmptySettingFunction;
 
 	/** The setting name. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MultiLine = "true"))
 	FText Caption = TEXT_NONE;
 
 	/** The description to be shown as tooltip. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MultiLine = "true"))
 	FText Tooltip = TEXT_NONE;
 
 	/** The padding of this setting. */
@@ -77,6 +77,13 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsPrimary
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Categories = "Settings"))
 	FGameplayTagContainer SettingsToUpdate = FGameplayTagContainer::EmptyContainer;
 
+	/** If set, it will override own position to be shown after specified setting.
+	 * Is useful when should be shown after setting that is created in another Settings Data Table.
+	 * All the next settings after ShowNextToSettingOverride in the same table will be also shown next to it.
+	 * @see 'Data Registr'y category of 'Settings Data Asset'. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FSettingTag ShowNextToSettingOverride = FSettingTag::EmptySettingTag;
+	
 	/** Created widget of the chosen setting (button, checkbox, combobox, slider, text line, user input). */
 	TWeakObjectPtr<class USettingSubWidget> SettingSubWidget = nullptr;
 
