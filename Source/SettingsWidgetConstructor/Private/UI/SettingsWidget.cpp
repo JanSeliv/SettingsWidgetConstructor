@@ -954,6 +954,10 @@ void USettingsWidget::ToggleSettings()
 	}
 }
 
+/* ---------------------------------------------------
+ *		Add by setting types
+ * --------------------------------------------------- */
+
 // Add setting on UI.
 void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 {
@@ -1003,21 +1007,40 @@ void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 	UpdateSettings(FGameplayTagContainer(PrimaryData.Tag));
 }
 
+/**
+ * Macro to create and bind a UI widget.
+ * @param Primary				Primary settings for the widget
+ * @param WidgetClass			The class of the widget to create
+ * @param Data					Data structure containing widget properties
+ * @param GetterFunction		The getter function to bind
+ * @param SetterFunction		The setter function to bind
+ * @param AdditionalFunctionCalls Any additional function calls needed for specific widgets
+ */
+#define CREATE_AND_BIND_WIDGET(Primary, WidgetClass, Data, GetterFunction, SetterFunction, AdditionalFunctionCalls) \
+	do																												\
+	{																												\
+		CreateSettingSubWidget(Primary, WidgetClass);																\
+		if (UObject* StaticContextObject = Primary.StaticContextObject.Get())										\
+		{																											\
+			const FName GetterFunctionName = Primary.Getter.FunctionName;											\
+			if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))										\
+			{																										\
+				Data.GetterFunction.BindUFunction(StaticContextObject, GetterFunctionName);							\
+			}																										\
+			const FName SetterFunctionName = Primary.Setter.FunctionName;											\
+			if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))										\
+			{																										\
+				Data.SetterFunction.BindUFunction(StaticContextObject, SetterFunctionName);							\
+			}																										\
+			AdditionalFunctionCalls																					\
+		}																											\
+	} while (0)
+
 // Add button on UI
 void USettingsWidget::AddSettingButton(FSettingsPrimary& Primary, FSettingsButton& Data)
 {
 	const TSubclassOf<USettingButton> ButtonClass = USettingsDataAsset::Get().GetButtonClass();
-	CreateSettingSubWidget(Primary, ButtonClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnButtonPressed.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
+	CREATE_AND_BIND_WIDGET(Primary, ButtonClass, Data, OnButtonPressed, OnButtonPressed, {});
 	AddButton(Primary, Data);
 }
 
@@ -1025,23 +1048,7 @@ void USettingsWidget::AddSettingButton(FSettingsPrimary& Primary, FSettingsButto
 void USettingsWidget::AddSettingCheckbox(FSettingsPrimary& Primary, FSettingsCheckbox& Data)
 {
 	const TSubclassOf<USettingCheckbox> CheckboxClass = USettingsDataAsset::Get().GetCheckboxClass();
-	CreateSettingSubWidget(Primary, CheckboxClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterBool.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterBool.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
+	CREATE_AND_BIND_WIDGET(Primary, CheckboxClass, Data, OnGetterBool, OnSetterBool, {});
 	AddCheckbox(Primary, Data);
 }
 
@@ -1049,9 +1056,7 @@ void USettingsWidget::AddSettingCheckbox(FSettingsPrimary& Primary, FSettingsChe
 void USettingsWidget::AddSettingCombobox(FSettingsPrimary& Primary, FSettingsCombobox& Data)
 {
 	const TSubclassOf<USettingCombobox> ComboboxClass = USettingsDataAsset::Get().GetComboboxClass();
-	CreateSettingSubWidget(Primary, ComboboxClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
+	CREATE_AND_BIND_WIDGET(Primary, ComboboxClass, Data, OnGetterInt, OnSetterInt,
 	{
 		const FName GetMembersFunctionName = Data.GetMembers.FunctionName;
 		if (Primary.StaticContextFunctionList.Contains(GetMembersFunctionName))
@@ -1059,27 +1064,13 @@ void USettingsWidget::AddSettingCombobox(FSettingsPrimary& Primary, FSettingsCom
 			Data.OnGetMembers.BindUFunction(StaticContextObject, GetMembersFunctionName);
 			Data.OnGetMembers.ExecuteIfBound(Data.Members);
 		}
-
 		const FName SetMembersFunctionName = Data.SetMembers.FunctionName;
 		if (Primary.StaticContextFunctionList.Contains(SetMembersFunctionName))
 		{
 			Data.OnSetMembers.BindUFunction(StaticContextObject, SetMembersFunctionName);
 			Data.OnSetMembers.ExecuteIfBound(Data.Members);
 		}
-
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterInt.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterInt.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
+	});
 	AddCombobox(Primary, Data);
 }
 
@@ -1087,23 +1078,7 @@ void USettingsWidget::AddSettingCombobox(FSettingsPrimary& Primary, FSettingsCom
 void USettingsWidget::AddSettingSlider(FSettingsPrimary& Primary, FSettingsSlider& Data)
 {
 	const TSubclassOf<USettingSlider>& SliderClass = USettingsDataAsset::Get().GetSliderClass();
-	CreateSettingSubWidget(Primary, SliderClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterFloat.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterFloat.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
+	CREATE_AND_BIND_WIDGET(Primary, SliderClass, Data, OnGetterFloat, OnSetterFloat, {});
 	AddSlider(Primary, Data);
 }
 
@@ -1111,23 +1086,7 @@ void USettingsWidget::AddSettingSlider(FSettingsPrimary& Primary, FSettingsSlide
 void USettingsWidget::AddSettingTextLine(FSettingsPrimary& Primary, FSettingsTextLine& Data)
 {
 	const TSubclassOf<USettingTextLine>& TextLineClass = USettingsDataAsset::Get().GetTextLineClass();
-	CreateSettingSubWidget(Primary, TextLineClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterText.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterText.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
+	CREATE_AND_BIND_WIDGET(Primary, TextLineClass, Data, OnGetterText, OnSetterText, {});
 	AddTextLine(Primary, Data);
 }
 
@@ -1135,23 +1094,7 @@ void USettingsWidget::AddSettingTextLine(FSettingsPrimary& Primary, FSettingsTex
 void USettingsWidget::AddSettingUserInput(FSettingsPrimary& Primary, FSettingsUserInput& Data)
 {
 	const TSubclassOf<USettingUserInput>& UserInputClass = USettingsDataAsset::Get().GetUserInputClass();
-	CreateSettingSubWidget(Primary, UserInputClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterName.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterName.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
+	CREATE_AND_BIND_WIDGET(Primary, UserInputClass, Data, OnGetterName, OnSetterName, {});
 	AddUserInput(Primary, Data);
 }
 
@@ -1159,21 +1102,6 @@ void USettingsWidget::AddSettingUserInput(FSettingsPrimary& Primary, FSettingsUs
 void USettingsWidget::AddSettingCustomWidget(FSettingsPrimary& Primary, FSettingsCustomWidget& Data)
 {
 	CreateSettingSubWidget(Primary, Data.CustomWidgetClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterWidget.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterWidget.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
+	CREATE_AND_BIND_WIDGET(Primary, Data.CustomWidgetClass, Data, OnGetterWidget, OnSetterWidget, {});
 	AddCustomWidget(Primary, Data);
 }
