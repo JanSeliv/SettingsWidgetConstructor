@@ -2,15 +2,18 @@
 
 #include "UI/SettingsWidget.h"
 //---
+#include "Data/SettingsDataAsset.h"
+#include "UI/SettingSubWidget.h"
+//---
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/SizeBox.h"
 #include "GameFramework/GameUserSettings.h"
 //---
-#include "Data/SettingsDataAsset.h"
-#include "Data/SettingsDataTable.h"
-#include "UI/SettingSubWidget.h"
-//---
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsWidget)
+
+/* ---------------------------------------------------
+ *		Public functions
+ * --------------------------------------------------- */
 
 // Try to find the setting row
 const FSettingsPicker& USettingsWidget::FindSettingRow(FName PotentialTagName) const
@@ -150,6 +153,10 @@ const FSettingTag& USettingsWidget::GetTagByFunction(const FSettingFunctionPicke
 
 	return FSettingTag::EmptySettingTag;
 }
+
+/* ---------------------------------------------------
+ *		Setters by setting types
+ * --------------------------------------------------- */
 
 // Set value to the option by tag
 void USettingsWidget::SetSettingValue(FName TagName, const FString& Value)
@@ -460,104 +467,82 @@ void USettingsWidget::SetSettingCustomWidget(const FSettingTag& CustomWidgetTag,
  *		Getters by setting types
  * --------------------------------------------------- */
 
+/** Retrieve a specific setting row using a given tag.
+ * @param Tag The tag used to find the setting row.
+ * @param DataMember The member that holds the desired value. */
+#define GET_SETTING_ROW(Tag, DataMember)					\
+	const FSettingsPicker& FoundRow = GetSettingRow(Tag);	\
+	if (!FoundRow.IsValid()) { return; }					\
+	const auto& Data = FoundRow.DataMember;					\
+
 /** Executes the common pattern of getting a value from a data structure.
-	* @param Tag The tag used to find the setting row
-	* @param DataMember The member that holds the desired value
-	* @param ValueType The type of value to retrieve
-	* @param GetterType The type of getter delegate
-	* @param ValueExpression The expression to retrieve the value
-	* @param GetterExpression The expression to retrieve the getter delegate
-	* @param DefaultValue The default value to return if no value is found */
-#define GET_SETTING_VALUE(Tag, DataMember, ValueType, GetterType, ValueExpression, GetterExpression, DefaultValue) \
-	{ \
-		const FSettingsPicker& FoundRow = GetSettingRow(Tag); \
-		ValueType Value = DefaultValue; \
-		if (FoundRow.IsValid()) \
-		{ \
-			const auto& Data = FoundRow.DataMember; \
-			Value = ValueExpression; \
-			const GetterType& Getter = GetterExpression; \
-			if (Getter.IsBound()) \
-			{ \
-				Value = Getter.Execute(); \
-			} \
-		} \
+ * @param Tag The tag used to find the setting row.
+ * @param DataMember The member that holds the desired value.
+ * @param ValueType The type of value to retrieve.
+ * @param ValueExpression The expression to retrieve the value.
+ * @param GetterExpression The expression to retrieve the getter delegate.
+ * @param DefaultValue The default value to return if no value is found. */
+#define GET_SETTING_VALUE(Tag, DataMember, ValueType, ValueExpression, GetterExpression, DefaultValue) \
+	{															\
+		const FSettingsPicker& FoundRow = GetSettingRow(Tag);	\
+		ValueType Value = DefaultValue;							\
+		if (FoundRow.IsValid())									\
+		{														\
+			const auto& Data = FoundRow.DataMember;				\
+			Value = ValueExpression;							\
+			const auto& Getter = GetterExpression;				\
+			if (Getter.IsBound())								\
+			{													\
+				Value = Getter.Execute();						\
+			}													\
+		}														\
 		return Value; \
 	}
 
 // Returns is a checkbox toggled
 bool USettingsWidget::GetCheckboxValue(const FSettingTag& CheckboxTag) const
 {
-	GET_SETTING_VALUE(CheckboxTag, Checkbox, bool, USettingFunctionTemplate::FOnGetterBool, Data.bIsSet, Data.OnGetterBool, false)
+	GET_SETTING_VALUE(CheckboxTag, Checkbox, bool, Data.bIsSet, Data.OnGetterBool, false);
 }
 
 // Returns chosen member index of a combobox
 int32 USettingsWidget::GetComboboxIndex(const FSettingTag& ComboboxTag) const
 {
-	GET_SETTING_VALUE(ComboboxTag, Combobox, int32, USettingFunctionTemplate::FOnGetterInt, Data.ChosenMemberIndex, Data.OnGetterInt, 0)
+	GET_SETTING_VALUE(ComboboxTag, Combobox, int32, Data.ChosenMemberIndex, Data.OnGetterInt, 0);
 }
 
 // Get all members of a combobox
 void USettingsWidget::GetComboboxMembers(const FSettingTag& ComboboxTag, TArray<FText>& OutMembers) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(ComboboxTag);
-	if (FoundRow.IsValid())
-	{
-		const FSettingsCombobox& Data = FoundRow.Combobox;
-		OutMembers = Data.Members;
-
-		const USettingFunctionTemplate::FOnGetMembers& Getter = Data.OnGetMembers;
-		if (Getter.IsBound())
-		{
-			Getter.Execute(OutMembers);
-		}
-	}
+	GET_SETTING_ROW(ComboboxTag, Combobox)
+	OutMembers = Data.Members;
+	Data.OnGetMembers.ExecuteIfBound(OutMembers);
 }
 
 // Get current value of a slider [0...1]
 double USettingsWidget::GetSliderValue(const FSettingTag& SliderTag) const
 {
-	GET_SETTING_VALUE(SliderTag, Slider, double, USettingFunctionTemplate::FOnGetterFloat, Data.ChosenValue, Data.OnGetterFloat, 0.0)
+	GET_SETTING_VALUE(SliderTag, Slider, double, Data.ChosenValue, Data.OnGetterFloat, 0.f);
 }
 
 // Get current text of a simple text widget
 void USettingsWidget::GetTextLineValue(const FSettingTag& TextLineTag, FText& OutText) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(TextLineTag);
-	if (FoundRow.IsValid())
-	{
-		OutText = FoundRow.PrimaryData.Caption;
-
-		const USettingFunctionTemplate::FOnGetterText& Getter = FoundRow.TextLine.OnGetterText;
-		if (Getter.IsBound())
-		{
-			Getter.Execute(OutText);
-		}
-	}
+	GET_SETTING_ROW(TextLineTag, PrimaryData)
+	OutText = Data.Caption;
+	FoundRow.TextLine.OnGetterText.ExecuteIfBound(OutText);
 }
 
 // Get current input name of the text input
 FName USettingsWidget::GetUserInputValue(const FSettingTag& UserInputTag) const
 {
-	GET_SETTING_VALUE(UserInputTag, UserInput, FName, USettingFunctionTemplate::FOnGetterName, Data.UserInput, Data.OnGetterName, NAME_None)
+	GET_SETTING_VALUE(UserInputTag, UserInput, FName, Data.UserInput, Data.OnGetterName, NAME_None);
 }
 
 // Get custom widget of the setting by specified tag
 USettingCustomWidget* USettingsWidget::GetCustomWidget(const FSettingTag& CustomWidgetTag) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(CustomWidgetTag);
-	USettingCustomWidget* CustomWidget = nullptr;
-	if (FoundRow.IsValid())
-	{
-		CustomWidget = Cast<USettingCustomWidget>(FoundRow.PrimaryData.SettingSubWidget.Get());
-
-		const USettingFunctionTemplate::FOnGetterWidget& Getter = FoundRow.CustomWidget.OnGetterWidget;
-		if (Getter.IsBound())
-		{
-			CustomWidget = Getter.Execute();
-		}
-	}
-	return CustomWidget;
+	GET_SETTING_VALUE(CustomWidgetTag, CustomWidget, USettingCustomWidget*, Cast<USettingCustomWidget>(FoundRow.PrimaryData.SettingSubWidget.Get()), Data.OnGetterWidget, nullptr);
 }
 
 // Get setting widget object by specified tag
@@ -566,6 +551,10 @@ USettingSubWidget* USettingsWidget::GetSettingSubWidget(const FSettingTag& Setti
 	const FSettingsPrimary& PrimaryData = GetSettingRow(SettingTag).PrimaryData;
 	return PrimaryData.IsValid() ? PrimaryData.SettingSubWidget.Get() : nullptr;
 }
+
+/* ---------------------------------------------------
+ *		Style
+ * --------------------------------------------------- */
 
 // Returns the size of the Settings widget on the screen
 FVector2D USettingsWidget::GetSettingsSize() const
@@ -621,7 +610,6 @@ FVector2D USettingsWidget::GetSubWidgetsSize(int32 SectionsBitmask) const
 	return SubWidgetsHeight;
 }
 
-
 // Returns the height of a setting scrollbox on the screen
 float USettingsWidget::GetScrollBoxHeight() const
 {
@@ -651,7 +639,7 @@ float USettingsWidget::GetScrollBoxHeight() const
 }
 
 // Is blueprint-event called that returns the style brush by specified button state
-FSlateBrush USettingsWidget::GetButtonBrush(ESettingsButtonState State) const
+FSlateBrush USettingsWidget::GetButtonBrush(ESettingsButtonState State)
 {
 	const USettingsDataAsset& SettingsDataAsset = USettingsDataAsset::Get();
 	const FMiscThemeData& MiscThemeData = SettingsDataAsset.GetMiscThemeData();
@@ -682,6 +670,10 @@ FSlateBrush USettingsWidget::GetButtonBrush(ESettingsButtonState State) const
 
 	return SlateBrush;
 }
+
+/* ---------------------------------------------------
+ *		Protected functions
+ * --------------------------------------------------- */
 
 // Called after the underlying slate widget is constructed
 void USettingsWidget::NativeConstruct()
