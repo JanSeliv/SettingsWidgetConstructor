@@ -116,7 +116,7 @@ public:
 
 	/** Is blueprint-event called that returns the style brush by specified button state. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Style")
-	FSlateBrush GetButtonBrush(ESettingsButtonState State) const;
+	static FSlateBrush GetButtonBrush(ESettingsButtonState State);
 
 	/* ---------------------------------------------------
 	 *		Setters by setting types
