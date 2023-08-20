@@ -227,6 +227,33 @@ void USettingsWidget::SetSettingValue(FName TagName, const FString& Value)
 	}
 }
 
+/** Executes the common pattern of setting a value, executing if bound, and updating the settings.
+ * @param Tag The tag used to find the setting row.
+ * @param DataMember The member that holds the desired value.
+ * @param MemberValue The specific member to set the value to.
+ * @param Value The new value to set.
+ * @param SetterExpression The expression to update the setter delegate. */
+#define SET_SETTING_VALUE(Tag, DataMember, MemberValue, Value, SetterExpression)	\
+	do {																			\
+		if (!Tag.IsValid())															\
+		{																			\
+			return;																	\
+		}																			\
+		FSettingsPicker* FoundRowPtr = SettingsTableRowsInternal.Find(Tag.GetTagName());\
+		if (!FoundRowPtr)															\
+		{																			\
+			return;																	\
+		}																			\
+		auto& Data = FoundRowPtr->DataMember;										\
+		if (Data.MemberValue == Value)												\
+		{																			\
+			return;																	\
+		}																			\
+		Data.MemberValue = Value;													\
+		Data.SetterExpression.ExecuteIfBound(Value);								\
+		UpdateSettings(FoundRowPtr->PrimaryData.SettingsToUpdate);					\
+	} while (0)
+
 // Press button
 void USettingsWidget::SetSettingButtonPressed(const FSettingTag& ButtonTag)
 {
@@ -251,26 +278,7 @@ void USettingsWidget::SetSettingButtonPressed(const FSettingTag& ButtonTag)
 // Toggle checkbox
 void USettingsWidget::SetSettingCheckbox(const FSettingTag& CheckboxTag, bool InValue)
 {
-	if (!CheckboxTag.IsValid())
-	{
-		return;
-	}
-
-	FSettingsPicker* SettingsRowPtr = SettingsTableRowsInternal.Find(CheckboxTag.GetTagName());
-	if (!SettingsRowPtr)
-	{
-		return;
-	}
-
-	bool& bIsSetRef = SettingsRowPtr->Checkbox.bIsSet;
-	if (bIsSetRef == InValue)
-	{
-		return;
-	}
-
-	bIsSetRef = InValue;
-	SettingsRowPtr->Checkbox.OnSetterBool.ExecuteIfBound(InValue);
-	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+	SET_SETTING_VALUE(CheckboxTag, Checkbox, bIsSet, InValue, OnSetterBool);
 
 	// BP implementation
 	SetCheckbox(CheckboxTag, InValue);
@@ -280,32 +288,12 @@ void USettingsWidget::SetSettingCheckbox(const FSettingTag& CheckboxTag, bool In
 // Set chosen member index for a combobox
 void USettingsWidget::SetSettingComboboxIndex(const FSettingTag& ComboboxTag, int32 InValue)
 {
-	if (!ComboboxTag.IsValid())
-	{
-		return;
-	}
-
 	if (InValue == INDEX_NONE)
 	{
 		return;
 	}
 
-	FSettingsPicker* SettingsRowPtr = SettingsTableRowsInternal.Find(ComboboxTag.GetTagName());
-	if (!SettingsRowPtr)
-	{
-		return;
-	}
-
-	FSettingsPicker& SettingsRowRef = *SettingsRowPtr;
-	int32& ChosenMemberIndexRef = SettingsRowRef.Combobox.ChosenMemberIndex;
-	if (ChosenMemberIndexRef == InValue)
-	{
-		return;
-	}
-
-	ChosenMemberIndexRef = InValue;
-	SettingsRowRef.Combobox.OnSetterInt.ExecuteIfBound(InValue);
-	UpdateSettings(SettingsRowRef.PrimaryData.SettingsToUpdate);
+	SET_SETTING_VALUE(ComboboxTag, Combobox, ChosenMemberIndex, InValue, OnSetterInt);
 
 	// BP implementation
 	SetComboboxIndex(ComboboxTag, InValue);
@@ -335,29 +323,10 @@ void USettingsWidget::SetSettingComboboxMembers(const FSettingTag& ComboboxTag, 
 // Set current value for a slider
 void USettingsWidget::SetSettingSlider(const FSettingTag& SliderTag, double InValue)
 {
-	if (!SliderTag.IsValid())
-	{
-		return;
-	}
-
-	FSettingsPicker* SettingsRowPtr = SettingsTableRowsInternal.Find(SliderTag.GetTagName());
-	if (!SettingsRowPtr)
-	{
-		return;
-	}
-
 	static constexpr double MinValue = 0.0;
 	static constexpr float MaxValue = 1.0;
 	const double NewValue = FMath::Clamp(InValue, MinValue, MaxValue);
-	double& ChosenValueRef = SettingsRowPtr->Slider.ChosenValue;
-	if (ChosenValueRef == NewValue)
-	{
-		return;
-	}
-
-	ChosenValueRef = NewValue;
-	SettingsRowPtr->Slider.OnSetterFloat.ExecuteIfBound(InValue);
-	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+	SET_SETTING_VALUE(SliderTag, Slider, ChosenValue, NewValue, OnSetterFloat);
 
 	// BP implementation
 	SetSlider(SliderTag, InValue);
@@ -473,7 +442,7 @@ void USettingsWidget::SetSettingCustomWidget(const FSettingTag& CustomWidgetTag,
 #define GET_SETTING_ROW(Tag, DataMember)					\
 	const FSettingsPicker& FoundRow = GetSettingRow(Tag);	\
 	if (!FoundRow.IsValid()) { return; }					\
-	const auto& Data = FoundRow.DataMember;					\
+	const auto& Data = FoundRow.DataMember;
 
 /** Executes the common pattern of getting a value from a data structure.
  * @param Tag The tag used to find the setting row.
