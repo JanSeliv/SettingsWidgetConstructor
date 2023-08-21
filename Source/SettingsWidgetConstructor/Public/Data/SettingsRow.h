@@ -159,7 +159,7 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsPicker
 	/** Returns the pointer to one of the chosen in-game type.
 	  * It searches the member property of this struct by a value of SettingsType.
 	  * @see FSettingsPicker::SettingsType */
-	const FSettingsDataBase* GetChosenSettingsData() const;
+	FSettingsDataBase* GetChosenSettingsData() const;
 
 	/** Returns true if row is valid. */
 	FORCEINLINE bool IsValid() const { return !(*this == Empty); }

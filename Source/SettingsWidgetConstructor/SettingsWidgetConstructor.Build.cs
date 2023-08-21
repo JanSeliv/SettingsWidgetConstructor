@@ -8,7 +8,8 @@ public class SettingsWidgetConstructor : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		CppStandard = CppStandardVersion.Latest;
-
+		bEnableNonInlinedGenCppWarnings = true;
+        
 		PublicDependencyModuleNames.AddRange(new[]
 			{
 				"Core"

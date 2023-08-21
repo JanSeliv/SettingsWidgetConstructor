@@ -9,6 +9,11 @@
 //---
 #include "SettingArchetypesData.generated.h"
 
+struct FSettingTag;
+struct FSettingsPrimary;
+
+class USettingsWidget;
+
 /**
   * The base archetype of any setting.
   * Properties of child archetypes are used by Settings Picker select a setting.
@@ -22,6 +27,26 @@ USTRUCT(BlueprintType, meta = (
 struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsDataBase
 {
 	GENERATED_BODY()
+
+	virtual ~FSettingsDataBase() = default;
+
+	/*********************************************************************************************
+	 * Base methods to override
+	 *
+	 * Since FSettingsPicker contains many types of settings, base methods are used to call them indirectly: 
+	 * FSettingsPicker& Setting == ... ;
+	 * FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
+	 * ChosenData-> ... ; // call any of the following methods
+	 ********************************************************************************************* */
+
+	/** Base method to get the setting value, where appropriate Getter of Settings Widget will be called. */
+	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const PURE_VIRTUAL(FSettingsDataBase::GetSettingValue,);
+
+	/** Base method to set the setting value, where string value will be converted to the setting type and appropriate Setter of Settings Widget will be called. */
+	virtual void SetSettingValue(USettingsWidget& SettingsWidget, const FSettingTag& Tag, const FString& Value) PURE_VIRTUAL(FSettingsDataBase::SetSettingValue,);
+
+	/** Base method to add the setting to the Settings Widget, where appropriate Add method of Settings Widget will be called. */
+	virtual void AddSetting(USettingsWidget& SettingsWidget, FSettingsPrimary& InOutPrimaryData) PURE_VIRTUAL(FSettingsDataBase::AddSetting,);
 };
 
 /**
@@ -33,6 +58,10 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsButton : public FSettingsDataBase
 {
 	GENERATED_BODY()
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
+
 	/** Either Header, Content, or Footer. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	EMyVerticalAlignment VerticalAlignment = EMyVerticalAlignment::Content;
@@ -41,8 +70,25 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsButton : public FSettingsDataBase
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TEnumAsByte<EHorizontalAlignment> HorizontalAlignment = HAlign_Fill;
 
+	/*********************************************************************************************
+	 * Bindings
+	 ********************************************************************************************* */
+
 	/** Cached bound delegate, is executed on pressing this button. */
 	USettingFunctionTemplate::FOnButtonPressed OnButtonPressed;
+
+	/*********************************************************************************************
+	 * Overrides
+	 ********************************************************************************************* */
+
+	/** Calls the Get function of the Settings Widget of this setting type. */
+	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override { OutResult = FString(TEXT("")); }
+
+	/** Calls the Set function of the Settings Widget of this setting type. */
+	virtual void SetSettingValue(USettingsWidget& SettingsWidget, const FSettingTag& Tag, const FString& Value) override;
+
+	/** Calls the Add function of the Settings Widget of this setting type. */
+	virtual void AddSetting(USettingsWidget& SettingsWidget, FSettingsPrimary& InOutPrimaryData) override;
 };
 
 /**
@@ -55,14 +101,35 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsCheckbox : public FSettingsDataBas
 {
 	GENERATED_BODY()
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
+
 	/** The cached current checkbox state. */
 	bool bIsSet = false;
+
+	/*********************************************************************************************
+	 * Bindings
+	 ********************************************************************************************* */
 
 	/** The cached bound delegate, is executed to get the current checkbox state. */
 	USettingFunctionTemplate::FOnGetterBool OnGetterBool;
 
 	/** The cached bound delegate, is executed to set the current checkbox state. */
 	USettingFunctionTemplate::FOnSetterBool OnSetterBool;
+
+	/*********************************************************************************************
+	 * Overrides
+	 ********************************************************************************************* */
+
+	/** Calls the Get function of the Settings Widget of this setting type. */
+	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;
+
+	/** Calls the Set function of the Settings Widget of this setting type. */
+	virtual void SetSettingValue(USettingsWidget& SettingsWidget, const FSettingTag& Tag, const FString& Value) override;
+
+	/** Calls the Add function of the Settings Widget of this setting type. */
+	virtual void AddSetting(USettingsWidget& SettingsWidget, FSettingsPrimary& InOutPrimaryData) override;
 };
 
 /**
@@ -74,6 +141,10 @@ USTRUCT(BlueprintType, meta = (
 struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsCombobox : public FSettingsDataBase
 {
 	GENERATED_BODY()
+
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
 
 	/** The Setter function to be called to set all combobox members. */
 	UPROPERTY(EditDefaultsOnly, meta = (FunctionSetterTemplate = "/Script/SettingsWidgetConstructor.SettingFunctionTemplate::OnSetMembers__DelegateSignature"))
@@ -94,6 +165,10 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsCombobox : public FSettingsDataBas
 	/** The cached chosen member index. */
 	int32 ChosenMemberIndex = INDEX_NONE;
 
+	/*********************************************************************************************
+	 * Bindings
+	 ********************************************************************************************* */
+
 	/** The cached bound delegate, is executed to get the chosen member index. */
 	USettingFunctionTemplate::FOnGetterInt OnGetterInt;
 
@@ -105,6 +180,19 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsCombobox : public FSettingsDataBas
 
 	/** The cached bound delegate, is executed to set all combobox members. */
 	USettingFunctionTemplate::FOnSetMembers OnSetMembers;
+
+	/*********************************************************************************************
+	 * Overrides
+	 ********************************************************************************************* */
+
+	/** Calls the Get function of the Settings Widget of this setting type. */
+	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;
+
+	/** Calls the Set function of the Settings Widget of this setting type. */
+	virtual void SetSettingValue(USettingsWidget& SettingsWidget, const FSettingTag& Tag, const FString& Value) override;
+
+	/** Calls the Add function of the Settings Widget of this setting type. */
+	virtual void AddSetting(USettingsWidget& SettingsWidget, FSettingsPrimary& InOutPrimaryData) override;
 };
 
 /**
@@ -117,14 +205,35 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsSlider : public FSettingsDataBase
 {
 	GENERATED_BODY()
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
+
 	/** Cached slider value (0..1). */
 	double ChosenValue = INDEX_NONE;
+
+	/*********************************************************************************************
+	 * Bindings
+	 ********************************************************************************************* */
 
 	/** The cached bound delegate, is executed to get the current slider value. */
 	USettingFunctionTemplate::FOnGetterFloat OnGetterFloat;
 
 	/** The cached bound delegate, is executed to set the current slider value. */
 	USettingFunctionTemplate::FOnSetterFloat OnSetterFloat;
+
+	/*********************************************************************************************
+	 * Overrides
+	 ********************************************************************************************* */
+
+	/** Calls the Get function of the Settings Widget of this setting type. */
+	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;
+
+	/** Calls the Set function of the Settings Widget of this setting type. */
+	virtual void SetSettingValue(USettingsWidget& SettingsWidget, const FSettingTag& Tag, const FString& Value) override;
+
+	/** Calls the Add function of the Settings Widget of this setting type. */
+	virtual void AddSetting(USettingsWidget& SettingsWidget, FSettingsPrimary& InOutPrimaryData) override;
 };
 
 /**
@@ -137,6 +246,10 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsTextLine : public FSettingsDataBas
 {
 	GENERATED_BODY()
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
+
 	/** Either Header, Content, or Footer. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	EMyVerticalAlignment VerticalAlignment = EMyVerticalAlignment::Content;
@@ -145,11 +258,28 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsTextLine : public FSettingsDataBas
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TEnumAsByte<EHorizontalAlignment> HorizontalAlignment = HAlign_Fill;
 
+	/*********************************************************************************************
+	 * Bindings
+	 ********************************************************************************************* */
+
 	/** The cached bound delegate, is executed to set the text caption. */
 	USettingFunctionTemplate::FOnGetterText OnGetterText;
 
 	/** The cached bound delegate, is executed to get the text caption. */
 	USettingFunctionTemplate::FOnSetterText OnSetterText;
+
+	/*********************************************************************************************
+	 * Overrides
+	 ********************************************************************************************* */
+
+	/** Calls the Get function of the Settings Widget of this setting type. */
+	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;
+
+	/** Calls the Set function of the Settings Widget of this setting type. */
+	virtual void SetSettingValue(USettingsWidget& SettingsWidget, const FSettingTag& Tag, const FString& Value) override;
+
+	/** Calls the Add function of the Settings Widget of this setting type. */
+	virtual void AddSetting(USettingsWidget& SettingsWidget, FSettingsPrimary& InOutPrimaryData) override;
 };
 
 /**
@@ -162,6 +292,10 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsUserInput : public FSettingsDataBa
 {
 	GENERATED_BODY()
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
+
 	/** The maximal length of the player input that is allowed to type.
 	 * Set 0 to do not limit number of characters. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -170,11 +304,28 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsUserInput : public FSettingsDataBa
 	/** The cached text shown left of the input box. */
 	FName UserInput = NAME_None;
 
+	/*********************************************************************************************
+	 * Bindings
+	 ********************************************************************************************* */
+
 	/** The cached bound delegate, is executed to set the input text. */
 	USettingFunctionTemplate::FOnGetterName OnGetterName;
 
 	/** The cached bound delegate, is executed to get the input text. */
 	USettingFunctionTemplate::FOnSetterName OnSetterName;
+
+	/*********************************************************************************************
+	 * Overrides
+	 ********************************************************************************************* */
+
+	/** Calls the Get function of the Settings Widget of this setting type. */
+	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;
+
+	/** Calls the Set function of the Settings Widget of this setting type. */
+	virtual void SetSettingValue(USettingsWidget& SettingsWidget, const FSettingTag& Tag, const FString& Value) override;
+
+	/** Calls the Add function of the Settings Widget of this setting type. */
+	virtual void AddSetting(USettingsWidget& SettingsWidget, FSettingsPrimary& InOutPrimaryData) override;
 };
 
 /**
@@ -187,13 +338,34 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsCustomWidget : public FSettingsDat
 {
 	GENERATED_BODY()
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
+
 	/** Contains created custom widget of the setting. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ShowOnlyInnerProperties))
 	TSubclassOf<class USettingCustomWidget> CustomWidgetClass = nullptr;
+
+	/*********************************************************************************************
+	 * Bindings
+	 ********************************************************************************************* */
 
 	/** The cached bound delegate, is executed to set the custom widget. */
 	USettingFunctionTemplate::FOnGetterWidget OnGetterWidget;
 
 	/** The cached bound delegate, is executed to get the custom widget. */
 	USettingFunctionTemplate::FOnSetterWidget OnSetterWidget;
+
+	/*********************************************************************************************
+	 * Overrides
+	 ********************************************************************************************* */
+
+	/** Calls the Get function of the Settings Widget of this setting type. */
+	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;
+
+	/** Calls the Set function of the Settings Widget of this setting type. */
+	virtual void SetSettingValue(USettingsWidget& SettingsWidget, const FSettingTag& Tag, const FString& Value) override {}
+
+	/** Calls the Add function of the Settings Widget of this setting type. */
+	virtual void AddSetting(USettingsWidget& SettingsWidget, FSettingsPrimary& InOutPrimaryData) override;
 };

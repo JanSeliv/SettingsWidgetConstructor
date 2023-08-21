@@ -103,37 +103,12 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 			continue;
 		}
 
-		const FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
-		if (!ChosenData)
+		if (FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData())
 		{
-			continue;
-		}
-
-		if (ChosenData == &Setting.Checkbox)
-		{
-			const bool NewValue = GetCheckboxValue(SettingTag);
-			SetSettingCheckbox(SettingTag, NewValue);
-		}
-		else if (ChosenData == &Setting.Combobox)
-		{
-			const int32 NewValue = GetComboboxIndex(SettingTag);
-			SetSettingComboboxIndex(SettingTag, NewValue);
-		}
-		else if (ChosenData == &Setting.Slider)
-		{
-			const double NewValue = GetSliderValue(SettingTag);
-			SetSettingSlider(SettingTag, NewValue);
-		}
-		else if (ChosenData == &Setting.TextLine)
-		{
-			FText NewValue = TEXT_NONE;
-			GetTextLineValue(SettingTag, /*Out*/NewValue);
-			SetSettingTextLine(SettingTag, NewValue);
-		}
-		else if (ChosenData == &Setting.UserInput)
-		{
-			const FName NewValue = GetUserInputValue(SettingTag);
-			SetSettingUserInput(SettingTag, NewValue);
+			// Obtain the latest value from configs and set it
+			FString Result;
+			ChosenData->GetSettingValue(*this, SettingTag, /*Out*/Result);
+			ChosenData->SetSettingValue(*this, SettingTag, Result);
 		}
 	}
 }
@@ -167,63 +142,16 @@ void USettingsWidget::SetSettingValue(FName TagName, const FString& Value)
 		return;
 	}
 
-	const FSettingsDataBase* ChosenData = FoundRow.GetChosenSettingsData();
+	FSettingsDataBase* ChosenData = FoundRow.GetChosenSettingsData();
 	if (!ChosenData)
 	{
 		return;
 	}
 
 	const FSettingTag& Tag = FoundRow.PrimaryData.Tag;
-	if (!Tag.IsValid())
+	if (Tag.IsValid())
 	{
-		return;
-	}
-
-	if (ChosenData == &FoundRow.Button)
-	{
-		SetSettingButtonPressed(Tag);
-	}
-	else if (ChosenData == &FoundRow.Checkbox)
-	{
-		const bool NewValue = Value.ToBool();
-		SetSettingCheckbox(Tag, NewValue);
-	}
-	else if (ChosenData == &FoundRow.Combobox)
-	{
-		if (Value.IsNumeric())
-		{
-			const int32 NewValue = FCString::Atoi(*Value);
-			SetSettingComboboxIndex(Tag, NewValue);
-		}
-		else
-		{
-			static const FString Delimiter = TEXT(",");
-			TArray<FString> SeparatedStrings;
-			Value.ParseIntoArray(SeparatedStrings, *Delimiter);
-
-			TArray<FText> NewMembers;
-			NewMembers.Reserve(SeparatedStrings.Num());
-			for (FString& StringIt : SeparatedStrings)
-			{
-				NewMembers.Emplace(FText::FromString(MoveTemp(StringIt)));
-			}
-			SetSettingComboboxMembers(Tag, NewMembers);
-		}
-	}
-	else if (ChosenData == &FoundRow.Slider)
-	{
-		const double NewValue = FCString::Atod(*Value);
-		SetSettingSlider(Tag, NewValue);
-	}
-	else if (ChosenData == &FoundRow.TextLine)
-	{
-		const FText NewValue = FText::FromString(Value);
-		SetSettingTextLine(Tag, NewValue);
-	}
-	else if (ChosenData == &FoundRow.UserInput)
-	{
-		const FName NewValue = *Value;
-		SetSettingUserInput(Tag, NewValue);
+		ChosenData->SetSettingValue(*this, Tag, Value);
 	}
 }
 
@@ -894,7 +822,7 @@ void USettingsWidget::ToggleSettings()
 // Add setting on UI.
 void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 {
-	const FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
+	FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
 	if (!ChosenData)
 	{
 		return;
@@ -908,34 +836,7 @@ void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 		StartNextColumn();
 	}
 
-	if (ChosenData == &Setting.Button)
-	{
-		AddSettingButton(PrimaryData, Setting.Button);
-	}
-	else if (ChosenData == &Setting.Checkbox)
-	{
-		AddSettingCheckbox(PrimaryData, Setting.Checkbox);
-	}
-	else if (ChosenData == &Setting.Combobox)
-	{
-		AddSettingCombobox(PrimaryData, Setting.Combobox);
-	}
-	else if (ChosenData == &Setting.Slider)
-	{
-		AddSettingSlider(PrimaryData, Setting.Slider);
-	}
-	else if (ChosenData == &Setting.TextLine)
-	{
-		AddSettingTextLine(PrimaryData, Setting.TextLine);
-	}
-	else if (ChosenData == &Setting.UserInput)
-	{
-		AddSettingUserInput(PrimaryData, Setting.UserInput);
-	}
-	else if (ChosenData == &Setting.CustomWidget)
-	{
-		AddSettingCustomWidget(PrimaryData, Setting.CustomWidget);
-	}
+	ChosenData->AddSetting(*this, PrimaryData);
 
 	UpdateSettings(FGameplayTagContainer(PrimaryData.Tag));
 }
