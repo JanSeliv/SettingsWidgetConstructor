@@ -13,6 +13,7 @@ struct FSettingTag;
 struct FSettingsPrimary;
 
 class USettingsWidget;
+class USettingSubWidget;
 
 /**
   * The base archetype of any setting.
@@ -38,6 +39,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsDataBase
 	 * FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
 	 * ChosenData-> ... ; // call any of the following methods
 	 ********************************************************************************************* */
+
+	/** Base method to get the sub-widget class of this setting type. */
+	virtual TSubclassOf<USettingSubWidget> GetSubWidgetClass() const PURE_VIRTUAL(FSettingsDataBase::GetSubWidgetClass, return nullptr;);
 
 	/** Base method to get the setting value, where appropriate Getter of Settings Widget will be called. */
 	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const PURE_VIRTUAL(FSettingsDataBase::GetSettingValue,);
@@ -81,6 +85,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsButton : public FSettingsDataBase
 	 * Overrides
 	 ********************************************************************************************* */
 
+	/** Returns the sub-widget class of this setting type. */
+	virtual TSubclassOf<USettingSubWidget> GetSubWidgetClass() const;
+
 	/** Calls the Get function of the Settings Widget of this setting type. */
 	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override { OutResult = FString(TEXT("")); }
 
@@ -121,6 +128,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsCheckbox : public FSettingsDataBas
 	/*********************************************************************************************
 	 * Overrides
 	 ********************************************************************************************* */
+
+	/** Returns the sub-widget class of this setting type. */
+	virtual TSubclassOf<USettingSubWidget> GetSubWidgetClass() const;
 
 	/** Calls the Get function of the Settings Widget of this setting type. */
 	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;
@@ -185,6 +195,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsCombobox : public FSettingsDataBas
 	 * Overrides
 	 ********************************************************************************************* */
 
+	/** Returns the sub-widget class of this setting type. */
+	virtual TSubclassOf<USettingSubWidget> GetSubWidgetClass() const;
+
 	/** Calls the Get function of the Settings Widget of this setting type. */
 	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;
 
@@ -225,6 +238,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsSlider : public FSettingsDataBase
 	/*********************************************************************************************
 	 * Overrides
 	 ********************************************************************************************* */
+
+	/** Returns the sub-widget class of this setting type. */
+	virtual TSubclassOf<USettingSubWidget> GetSubWidgetClass() const;
 
 	/** Calls the Get function of the Settings Widget of this setting type. */
 	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;
@@ -272,6 +288,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsTextLine : public FSettingsDataBas
 	 * Overrides
 	 ********************************************************************************************* */
 
+	/** Returns the sub-widget class of this setting type. */
+	virtual TSubclassOf<USettingSubWidget> GetSubWidgetClass() const;
+
 	/** Calls the Get function of the Settings Widget of this setting type. */
 	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;
 
@@ -318,6 +337,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsUserInput : public FSettingsDataBa
 	 * Overrides
 	 ********************************************************************************************* */
 
+	/** Returns the sub-widget class of this setting type. */
+	virtual TSubclassOf<USettingSubWidget> GetSubWidgetClass() const;
+
 	/** Calls the Get function of the Settings Widget of this setting type. */
 	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;
 
@@ -359,6 +381,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsCustomWidget : public FSettingsDat
 	/*********************************************************************************************
 	 * Overrides
 	 ********************************************************************************************* */
+
+	/** Returns the sub-widget class of this setting type. */
+	virtual TSubclassOf<USettingSubWidget> GetSubWidgetClass() const;
 
 	/** Calls the Get function of the Settings Widget of this setting type. */
 	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const override;

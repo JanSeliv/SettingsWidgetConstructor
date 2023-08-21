@@ -295,37 +295,37 @@ public:
 	/** Add button on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddButton(const FSettingsPrimary& Primary, const FSettingsButton& Data);
-	void AddSettingButton(FSettingsPrimary& Primary, FSettingsButton& Data);
+	void AddSettingButton(const FSettingsPrimary& Primary, FSettingsButton& Data);
 
 	/** Add checkbox on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddCheckbox(const FSettingsPrimary& Primary, const FSettingsCheckbox& Data);
-	void AddSettingCheckbox(FSettingsPrimary& Primary, FSettingsCheckbox& Data);
+	void AddSettingCheckbox(const FSettingsPrimary& Primary, FSettingsCheckbox& Data);
 
 	/** Add combobox on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddCombobox(const FSettingsPrimary& Primary, const FSettingsCombobox& Data);
-	void AddSettingCombobox(FSettingsPrimary& Primary, FSettingsCombobox& Data);
+	void AddSettingCombobox(const FSettingsPrimary& Primary, FSettingsCombobox& Data);
 
 	/** Add slider on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddSlider(const FSettingsPrimary& Primary, const FSettingsSlider& Data);
-	void AddSettingSlider(FSettingsPrimary& Primary, FSettingsSlider& Data);
+	void AddSettingSlider(const FSettingsPrimary& Primary, FSettingsSlider& Data);
 
 	/** Add simple text on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddTextLine(const FSettingsPrimary& Primary, const FSettingsTextLine& Data);
-	void AddSettingTextLine(FSettingsPrimary& Primary, FSettingsTextLine& Data);
+	void AddSettingTextLine(const FSettingsPrimary& Primary, FSettingsTextLine& Data);
 
 	/** Add text input on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddUserInput(const FSettingsPrimary& Primary, const FSettingsUserInput& Data);
-	void AddSettingUserInput(FSettingsPrimary& Primary, FSettingsUserInput& Data);
+	void AddSettingUserInput(const FSettingsPrimary& Primary, FSettingsUserInput& Data);
 
 	/** Add custom widget on UI.  */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddCustomWidget(const FSettingsPrimary& Primary, const FSettingsCustomWidget& Data);
-	void AddSettingCustomWidget(FSettingsPrimary& Primary, FSettingsCustomWidget& Data);
+	void AddSettingCustomWidget(const FSettingsPrimary& Primary, FSettingsCustomWidget& Data);
 
 	/* ---------------------------------------------------
 	 *		Blueprint implementable setters

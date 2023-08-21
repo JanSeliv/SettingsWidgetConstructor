@@ -608,10 +608,15 @@ void USettingsWidget::ConstructSettings()
 	// BP implementation to cache some data before creating subwidgets
 	OnConstructSettings();
 
+	FGameplayTagContainer AddedSettings;
 	for (TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
 	{
-		AddSetting(RowIt.Value);
+		FSettingsPicker& SettingRef = RowIt.Value;
+		AddSetting(SettingRef);
+		AddedSettings.AddTag(SettingRef.PrimaryData.Tag);
 	}
+
+	UpdateSettings(AddedSettings);
 
 	UpdateScrollBoxesHeight();
 }
@@ -836,24 +841,21 @@ void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 		StartNextColumn();
 	}
 
+	CreateSettingSubWidget(PrimaryData, ChosenData->GetSubWidgetClass());
 	ChosenData->AddSetting(*this, PrimaryData);
-
-	UpdateSettings(FGameplayTagContainer(PrimaryData.Tag));
 }
 
 /**
  * Macro to create and bind a UI widget.
  * @param Primary				Primary settings for the widget
- * @param WidgetClass			The class of the widget to create
  * @param Data					Data structure containing widget properties
  * @param GetterFunction		The getter function to bind
  * @param SetterFunction		The setter function to bind
  * @param AdditionalFunctionCalls Any additional function calls needed for specific widgets
  */
-#define CREATE_AND_BIND_WIDGET(Primary, WidgetClass, Data, GetterFunction, SetterFunction, AdditionalFunctionCalls) \
+#define BIND_WIDGET(Primary, Data, GetterFunction, SetterFunction, AdditionalFunctionCalls)							\
 	do																												\
 	{																												\
-		CreateSettingSubWidget(Primary, WidgetClass);																\
 		if (UObject* StaticContextObject = Primary.StaticContextObject.Get())										\
 		{																											\
 			const FName GetterFunctionName = Primary.Getter.FunctionName;											\
@@ -871,26 +873,23 @@ void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 	} while (0)
 
 // Add button on UI
-void USettingsWidget::AddSettingButton(FSettingsPrimary& Primary, FSettingsButton& Data)
+void USettingsWidget::AddSettingButton(const FSettingsPrimary& Primary, FSettingsButton& Data)
 {
-	const TSubclassOf<USettingButton> ButtonClass = USettingsDataAsset::Get().GetButtonClass();
-	CREATE_AND_BIND_WIDGET(Primary, ButtonClass, Data, OnButtonPressed, OnButtonPressed, {});
+	BIND_WIDGET(Primary, Data, OnButtonPressed, OnButtonPressed, {});
 	AddButton(Primary, Data);
 }
 
 // Add checkbox on UI
-void USettingsWidget::AddSettingCheckbox(FSettingsPrimary& Primary, FSettingsCheckbox& Data)
+void USettingsWidget::AddSettingCheckbox(const FSettingsPrimary& Primary, FSettingsCheckbox& Data)
 {
-	const TSubclassOf<USettingCheckbox> CheckboxClass = USettingsDataAsset::Get().GetCheckboxClass();
-	CREATE_AND_BIND_WIDGET(Primary, CheckboxClass, Data, OnGetterBool, OnSetterBool, {});
+	BIND_WIDGET(Primary, Data, OnGetterBool, OnSetterBool, {});
 	AddCheckbox(Primary, Data);
 }
 
 // Add combobox on UI
-void USettingsWidget::AddSettingCombobox(FSettingsPrimary& Primary, FSettingsCombobox& Data)
+void USettingsWidget::AddSettingCombobox(const FSettingsPrimary& Primary, FSettingsCombobox& Data)
 {
-	const TSubclassOf<USettingCombobox> ComboboxClass = USettingsDataAsset::Get().GetComboboxClass();
-	CREATE_AND_BIND_WIDGET(Primary, ComboboxClass, Data, OnGetterInt, OnSetterInt,
+	BIND_WIDGET(Primary, Data, OnGetterInt, OnSetterInt,
 	{
 		const FName GetMembersFunctionName = Data.GetMembers.FunctionName;
 		if (Primary.StaticContextFunctionList.Contains(GetMembersFunctionName))
@@ -909,33 +908,29 @@ void USettingsWidget::AddSettingCombobox(FSettingsPrimary& Primary, FSettingsCom
 }
 
 // Add slider on UI
-void USettingsWidget::AddSettingSlider(FSettingsPrimary& Primary, FSettingsSlider& Data)
+void USettingsWidget::AddSettingSlider(const FSettingsPrimary& Primary, FSettingsSlider& Data)
 {
-	const TSubclassOf<USettingSlider>& SliderClass = USettingsDataAsset::Get().GetSliderClass();
-	CREATE_AND_BIND_WIDGET(Primary, SliderClass, Data, OnGetterFloat, OnSetterFloat, {});
+	BIND_WIDGET(Primary, Data, OnGetterFloat, OnSetterFloat, {});
 	AddSlider(Primary, Data);
 }
 
 // Add simple text on UI
-void USettingsWidget::AddSettingTextLine(FSettingsPrimary& Primary, FSettingsTextLine& Data)
+void USettingsWidget::AddSettingTextLine(const FSettingsPrimary& Primary, FSettingsTextLine& Data)
 {
-	const TSubclassOf<USettingTextLine>& TextLineClass = USettingsDataAsset::Get().GetTextLineClass();
-	CREATE_AND_BIND_WIDGET(Primary, TextLineClass, Data, OnGetterText, OnSetterText, {});
+	BIND_WIDGET(Primary, Data, OnGetterText, OnSetterText, {});
 	AddTextLine(Primary, Data);
 }
 
 // Add text input on UI
-void USettingsWidget::AddSettingUserInput(FSettingsPrimary& Primary, FSettingsUserInput& Data)
+void USettingsWidget::AddSettingUserInput(const FSettingsPrimary& Primary, FSettingsUserInput& Data)
 {
-	const TSubclassOf<USettingUserInput>& UserInputClass = USettingsDataAsset::Get().GetUserInputClass();
-	CREATE_AND_BIND_WIDGET(Primary, UserInputClass, Data, OnGetterName, OnSetterName, {});
+	BIND_WIDGET(Primary, Data, OnGetterName, OnSetterName, {});
 	AddUserInput(Primary, Data);
 }
 
 // Add custom widget on UI
-void USettingsWidget::AddSettingCustomWidget(FSettingsPrimary& Primary, FSettingsCustomWidget& Data)
+void USettingsWidget::AddSettingCustomWidget(const FSettingsPrimary& Primary, FSettingsCustomWidget& Data)
 {
-	CreateSettingSubWidget(Primary, Data.CustomWidgetClass);
-	CREATE_AND_BIND_WIDGET(Primary, Data.CustomWidgetClass, Data, OnGetterWidget, OnSetterWidget, {});
+	BIND_WIDGET(Primary, Data, OnGetterWidget, OnSetterWidget, {});
 	AddCustomWidget(Primary, Data);
 }
