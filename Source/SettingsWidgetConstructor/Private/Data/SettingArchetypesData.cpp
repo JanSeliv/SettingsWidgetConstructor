@@ -2,7 +2,9 @@
 
 #include "Data/SettingArchetypesData.h"
 //---
+#include "Data/SettingsDataAsset.h"
 #include "Data/SettingTag.h"
+#include "UI/SettingSubWidget.h"
 #include "UI/SettingsWidget.h"
 //---
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SettingArchetypesData)
@@ -10,6 +12,12 @@
 /*********************************************************************************************
  * FSettingsButton
  ********************************************************************************************* */
+
+// Returns the sub-widget class of this setting type
+TSubclassOf<USettingSubWidget> FSettingsButton::GetSubWidgetClass() const
+{
+	return USettingsDataAsset::Get().GetButtonClass();
+}
 
 // Calls the Set function of the Settings Widget of this setting type
 void FSettingsButton::SetSettingValue(USettingsWidget& SettingsWidget, const FSettingTag& Tag, const FString& Value)
@@ -27,6 +35,13 @@ void FSettingsButton::AddSetting(USettingsWidget& SettingsWidget, FSettingsPrima
  * FSettingsCheckbox
  ********************************************************************************************* */
 
+// Returns the sub-widget class of this setting type
+TSubclassOf<USettingSubWidget> FSettingsCheckbox::GetSubWidgetClass() const
+{
+	return USettingsDataAsset::Get().GetCheckboxClass();
+}
+
+// Calls the Get function of the Settings Widget of this setting type
 void FSettingsCheckbox::GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const
 {
 	const bool Value = SettingsWidget.GetCheckboxValue(Tag);
@@ -49,6 +64,12 @@ void FSettingsCheckbox::AddSetting(USettingsWidget& SettingsWidget, FSettingsPri
 /*********************************************************************************************
  * FSettingsCombobox
  ********************************************************************************************* */
+
+// Returns the sub-widget class of this setting type
+TSubclassOf<USettingSubWidget> FSettingsCombobox::GetSubWidgetClass() const
+{
+	return USettingsDataAsset::Get().GetComboboxClass();
+}
 
 // Calls the Get function of the Settings Widget of this setting type
 void FSettingsCombobox::GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const
@@ -91,6 +112,12 @@ void FSettingsCombobox::AddSetting(USettingsWidget& SettingsWidget, FSettingsPri
  * FSettingsSlider
  ********************************************************************************************* */
 
+// Returns the sub-widget class of this setting type
+TSubclassOf<USettingSubWidget> FSettingsSlider::GetSubWidgetClass() const
+{
+	return USettingsDataAsset::Get().GetSliderClass();
+}
+
 // Calls the Get function of the Settings Widget of this setting type
 void FSettingsSlider::GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const
 {
@@ -114,6 +141,12 @@ void FSettingsSlider::AddSetting(USettingsWidget& SettingsWidget, FSettingsPrima
 /*********************************************************************************************
  * FSettingsTextLine
  ********************************************************************************************* */
+
+// Returns the sub-widget class of this setting type
+TSubclassOf<USettingSubWidget> FSettingsTextLine::GetSubWidgetClass() const
+{
+	return USettingsDataAsset::Get().GetTextLineClass();
+}
 
 // Calls the Get function of the Settings Widget of this setting type
 void FSettingsTextLine::GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const
@@ -140,6 +173,12 @@ void FSettingsTextLine::AddSetting(USettingsWidget& SettingsWidget, FSettingsPri
  * FSettingsUserInput
  ********************************************************************************************* */
 
+// Returns the sub-widget class of this setting type
+TSubclassOf<USettingSubWidget> FSettingsUserInput::GetSubWidgetClass() const
+{
+	return USettingsDataAsset::Get().GetUserInputClass();
+}
+
 // Calls the Get function of the Settings Widget of this setting type
 void FSettingsUserInput::GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const
 {
@@ -163,6 +202,12 @@ void FSettingsUserInput::AddSetting(USettingsWidget& SettingsWidget, FSettingsPr
 /*********************************************************************************************
  * FSettingsCustomWidget
  ********************************************************************************************* */
+
+// Returns the sub-widget class of this setting type
+TSubclassOf<USettingSubWidget> FSettingsCustomWidget::GetSubWidgetClass() const
+{
+	return CustomWidgetClass;
+}
 
 // Calls the Get function of the Settings Widget of this setting type
 void FSettingsCustomWidget::GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const
