@@ -21,7 +21,7 @@ public:
 	/* ---------------------------------------------------
 	 *		Public properties
 	 * --------------------------------------------------- */
-
+public:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToggledSettings, bool, bIsVisible);
 
 	/** Is called to notify listeners the Settings widget is opened or closed. */
@@ -31,7 +31,7 @@ public:
 	/* ---------------------------------------------------
 	 *		Public functions
 	 * --------------------------------------------------- */
-
+public:
 	/** Constructs settings if viewport is ready otherwise wait until viewport become initialized. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
 	void TryConstructSettings();
@@ -100,7 +100,7 @@ public:
 	/* ---------------------------------------------------
 	 *		Style
 	 * --------------------------------------------------- */
-
+public:
 	/** Returns the size of the Settings widget on the screen. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	FVector2D GetSettingsSize() const;
@@ -121,7 +121,7 @@ public:
 	/* ---------------------------------------------------
 	 *		Setters by setting types
 	 * --------------------------------------------------- */
-
+public:
 	/**
    	  * Set value to the option by tag.
    	  * Common function to set setting of an any type by the string.
@@ -177,7 +177,7 @@ public:
 	/* ---------------------------------------------------
 	 *		Getters by setting types
 	 * --------------------------------------------------- */
-
+public:
 	/** Returns is a checkbox toggled. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Getters", meta = (AutoCreateRefTerm = "CheckboxTag"))
 	bool GetCheckboxValue(const FSettingTag& CheckboxTag) const;
@@ -214,7 +214,7 @@ protected:
 	/* ---------------------------------------------------
 	 *		Protected properties
 	 * --------------------------------------------------- */
-
+protected:
 	/** Contains all settings. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Settings Table Rows"))
 	TMap<FName/*Tag*/, FSettingsPicker/*Row*/> SettingsTableRowsInternal;
@@ -234,7 +234,7 @@ protected:
 	/* ---------------------------------------------------
 	 *		Bound widget properties
 	 * --------------------------------------------------- */
-
+protected:
 	/** The section in the top margin of Settings, usually contains a title. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UVerticalBox> HeaderVerticalBox = nullptr;
@@ -250,7 +250,7 @@ protected:
 	/* ---------------------------------------------------
 	*		Protected functions
 	* --------------------------------------------------- */
-
+protected:
 	/** Called after the underlying slate widget is constructed.
 	* May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
@@ -287,7 +287,7 @@ protected:
 	/* ---------------------------------------------------
 	 *		Add by setting types
 	 * --------------------------------------------------- */
-
+public:
 	/** Add setting on UI. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected))
 	void AddSetting(UPARAM(ref)FSettingsPicker& Setting);
@@ -330,7 +330,7 @@ protected:
 	/* ---------------------------------------------------
 	 *		Blueprint implementable setters
 	 * --------------------------------------------------- */
-
+protected:
 	/** Internal blueprint function to toggle checkbox. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "CheckboxTag"))
 	void SetCheckbox(const FSettingTag& CheckboxTag, bool InValue);

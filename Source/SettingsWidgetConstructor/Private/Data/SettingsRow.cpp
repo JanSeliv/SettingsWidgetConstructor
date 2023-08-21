@@ -32,22 +32,21 @@ uint32 GetTypeHash(const FSettingsPrimary& Other)
 	const uint32 LineHeightHash = GetTypeHash(Other.LineHeight);
 	const uint32 StartOnNextColumnHash = GetTypeHash(Other.bStartOnNextColumn);
 	const uint32 SettingsToUpdateHash = GetTypeHash(Other.SettingsToUpdate.ToStringSimple());
-	return HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(
-		TagHash, ObjectContextHash), SetterHash), GetterHash), CaptionHash), TooltipHash), PaddingLeftHash), PaddingTopHash), PaddingRightHash), PaddingBottomHash), LineHeightHash), StartOnNextColumnHash), SettingsToUpdateHash);
+	return HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(HashCombine(TagHash, ObjectContextHash), SetterHash), GetterHash), CaptionHash), TooltipHash), PaddingLeftHash), PaddingTopHash), PaddingRightHash), PaddingBottomHash), LineHeightHash), StartOnNextColumnHash), SettingsToUpdateHash);
 }
 
 // Returns the pointer to one of the chosen in-game type
-const FSettingsDataBase* FSettingsPicker::GetChosenSettingsData() const
+FSettingsDataBase* FSettingsPicker::GetChosenSettingsData() const
 {
-	const FSettingsDataBase* FoundSetting = nullptr;
 	if (!SettingsType.IsNone())
 	{
 		static const UScriptStruct* const& SettingsPickerStruct = StaticStruct();
 		const FProperty* FoundProperty = SettingsPickerStruct ? SettingsPickerStruct->FindPropertyByName(SettingsType) : nullptr;
 		const FStructProperty* FoundStructProperty = CastField<FStructProperty>(FoundProperty);
-		FoundSetting = FoundStructProperty ? FoundStructProperty->ContainerPtrToValuePtr<FSettingsDataBase>(this, 0) : nullptr;
+		const FSettingsDataBase* FoundSetting = FoundStructProperty ? FoundStructProperty->ContainerPtrToValuePtr<FSettingsDataBase>(this, 0) : nullptr;
+		return const_cast<FSettingsDataBase*>(FoundSetting);
 	}
-	return FoundSetting;
+	return nullptr;
 }
 
 // Compares for equality
