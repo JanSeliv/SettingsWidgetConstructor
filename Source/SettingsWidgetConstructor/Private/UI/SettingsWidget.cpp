@@ -661,13 +661,22 @@ void USettingsWidget::OnToggleSettings(bool bIsVisible)
 bool USettingsWidget::TryBindStaticContext(FSettingsPrimary& Primary)
 {
 	UObject* FoundContextObj = nullptr;
-	if (UFunction* FunctionPtr = Primary.StaticContext.GetFunction())
+	UFunction* FunctionPtr = Primary.StaticContext.GetFunction();
+	if (FunctionPtr)
 	{
 		FunctionPtr->ProcessEvent(FunctionPtr, /*Out*/&FoundContextObj);
 	}
 
 	if (!FoundContextObj)
 	{
+		if (FunctionPtr)
+		{
+			// Static context function is set, but returning object is null,
+			// most likely such object is not initialized yet,
+			// defer binding to try to rebind it later
+			DeferredBindingsInternal.AddTag(Primary.Tag);
+		}
+
 		return false;
 	}
 
@@ -781,6 +790,8 @@ void USettingsWidget::OpenSettings()
 
 	TryConstructSettings();
 
+	TryRebindDeferredContexts();
+
 	SetVisibility(ESlateVisibility::Visible);
 
 	OnToggleSettings(true);
@@ -825,18 +836,21 @@ void USettingsWidget::ToggleSettings()
  * --------------------------------------------------- */
 
 // Bind setting to specified Get/Set delegates, so both methods will be called
-void USettingsWidget::BindSetting(FSettingsPicker& Setting)
+bool USettingsWidget::BindSetting(FSettingsPicker& Setting)
 {
 	FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
 	if (!ChosenData)
 	{
-		return;
+		return false;
 	}
 
 	if (TryBindStaticContext(Setting.PrimaryData))
 	{
 		ChosenData->BindSetting(*this, Setting.PrimaryData);
+		return true;
 	}
+
+	return false;
 }
 
 /**
@@ -922,6 +936,34 @@ void USettingsWidget::BindUserInput(const FSettingsPrimary& Primary, FSettingsUs
 void USettingsWidget::BindCustomWidget(const FSettingsPrimary& Primary, FSettingsCustomWidget& Data)
 {
 	BIND_SETTING(Primary, Data, OnGetterWidget, OnSetterWidget);
+}
+
+// Attempts to rebind those Settings that failed to bind their Getter/Setter functions on initial construct
+void USettingsWidget::TryRebindDeferredContexts()
+{
+	if (DeferredBindingsInternal.IsEmpty())
+	{
+		// Nothing to rebind, we are done
+		return;
+	}
+
+	FGameplayTagContainer ReboundSettings;
+	for (const FGameplayTag& TagIt : DeferredBindingsInternal)
+	{
+		FSettingsPicker* FoundRowPtr = TagIt.IsValid() ? SettingsTableRowsInternal.Find(TagIt.GetTagName()) : nullptr;
+		if (FoundRowPtr
+			&& BindSetting(*FoundRowPtr))
+		{
+			ReboundSettings.AddTagFast(TagIt);
+		}
+	}
+
+	if (!ReboundSettings.IsEmpty())
+	{
+		// Some settings were successfully rebound, remove them from the deferred list and update them
+		DeferredBindingsInternal.RemoveTags(ReboundSettings);
+		UpdateSettings(ReboundSettings);
+	}
 }
 
 // Add setting on UI.
