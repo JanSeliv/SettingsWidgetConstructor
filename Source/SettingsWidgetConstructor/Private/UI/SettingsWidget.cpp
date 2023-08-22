@@ -612,6 +612,7 @@ void USettingsWidget::ConstructSettings()
 	for (TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
 	{
 		FSettingsPicker& SettingRef = RowIt.Value;
+		BindSetting(SettingRef);
 		AddSetting(SettingRef);
 		AddedSettings.AddTag(SettingRef.PrimaryData.Tag);
 	}
@@ -657,7 +658,7 @@ void USettingsWidget::OnToggleSettings(bool bIsVisible)
 }
 
 // Bind and set static object delegate
-void USettingsWidget::TryBindStaticContext(FSettingsPrimary& Primary)
+bool USettingsWidget::TryBindStaticContext(FSettingsPrimary& Primary)
 {
 	UObject* FoundContextObj = nullptr;
 	if (UFunction* FunctionPtr = Primary.StaticContext.GetFunction())
@@ -667,16 +668,13 @@ void USettingsWidget::TryBindStaticContext(FSettingsPrimary& Primary)
 
 	if (!FoundContextObj)
 	{
-		return;
+		return false;
 	}
 
 	Primary.StaticContextObject = FoundContextObj;
 
 	const UClass* ContextClass = FoundContextObj->GetClass();
-	if (!ensureMsgf(ContextClass, TEXT("ASSERT: 'ContextClass' is not valid")))
-	{
-		return;
-	}
+	checkf(ContextClass, TEXT("ERROR: [%i] %s:\n'ContextClass' is null!"), __LINE__, *FString(__FUNCTION__));
 
 	// Cache all functions that are contained in returned object
 	for (TFieldIterator<UFunction> It(ContextClass, EFieldIteratorFlags::IncludeSuper); It; ++It)
@@ -693,6 +691,8 @@ void USettingsWidget::TryBindStaticContext(FSettingsPrimary& Primary)
 			Primary.StaticContextFunctionList.Emplace(FunctionNameIt);
 		}
 	}
+
+	return true;
 }
 
 // Creates new widget based on specified setting class and sets it to specified primary data
@@ -821,11 +821,11 @@ void USettingsWidget::ToggleSettings()
 }
 
 /* ---------------------------------------------------
- *		Add by setting types
+ *		Bind by setting types
  * --------------------------------------------------- */
 
-// Add setting on UI.
-void USettingsWidget::AddSetting(FSettingsPicker& Setting)
+// Bind setting to specified Get/Set delegates, so both methods will be called
+void USettingsWidget::BindSetting(FSettingsPicker& Setting)
 {
 	FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
 	if (!ChosenData)
@@ -833,16 +833,10 @@ void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 		return;
 	}
 
-	FSettingsPrimary& PrimaryData = Setting.PrimaryData;
-	TryBindStaticContext(PrimaryData);
-
-	if (Setting.PrimaryData.bStartOnNextColumn)
+	if (TryBindStaticContext(Setting.PrimaryData))
 	{
-		StartNextColumn();
+		ChosenData->BindSetting(*this, Setting.PrimaryData);
 	}
-
-	CreateSettingSubWidget(PrimaryData, ChosenData->GetSubWidgetClass());
-	ChosenData->AddSetting(*this, PrimaryData);
 }
 
 /**
@@ -853,7 +847,7 @@ void USettingsWidget::AddSetting(FSettingsPicker& Setting)
  * @param SetterFunction		The setter function to bind
  * @param AdditionalFunctionCalls Any additional function calls needed for specific widgets
  */
-#define BIND_WIDGET(Primary, Data, GetterFunction, SetterFunction, AdditionalFunctionCalls)							\
+#define BIND_SETTING(Primary, Data, GetterFunction, SetterFunction)							\
 	do																												\
 	{																												\
 		if (UObject* StaticContextObject = Primary.StaticContextObject.Get())										\
@@ -868,28 +862,27 @@ void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 			{																										\
 				Data.SetterFunction.BindUFunction(StaticContextObject, SetterFunctionName);							\
 			}																										\
-			AdditionalFunctionCalls																					\
 		}																											\
 	} while (0)
 
-// Add button on UI
-void USettingsWidget::AddSettingButton(const FSettingsPrimary& Primary, FSettingsButton& Data)
+// Bind button to own Get/Set delegates
+void USettingsWidget::BindButton(const FSettingsPrimary& Primary, FSettingsButton& Data)
 {
-	BIND_WIDGET(Primary, Data, OnButtonPressed, OnButtonPressed, {});
-	AddButton(Primary, Data);
+	BIND_SETTING(Primary, Data, OnButtonPressed, OnButtonPressed);
 }
 
-// Add checkbox on UI
-void USettingsWidget::AddSettingCheckbox(const FSettingsPrimary& Primary, FSettingsCheckbox& Data)
+// Bind checkbox to own Get/Set delegates
+void USettingsWidget::BindCheckbox(const FSettingsPrimary& Primary, FSettingsCheckbox& Data)
 {
-	BIND_WIDGET(Primary, Data, OnGetterBool, OnSetterBool, {});
-	AddCheckbox(Primary, Data);
+	BIND_SETTING(Primary, Data, OnGetterBool, OnSetterBool);
 }
 
-// Add combobox on UI
-void USettingsWidget::AddSettingCombobox(const FSettingsPrimary& Primary, FSettingsCombobox& Data)
+// Bind combobox to own Get/Set delegates
+void USettingsWidget::BindCombobox(const FSettingsPrimary& Primary, FSettingsCombobox& Data)
 {
-	BIND_WIDGET(Primary, Data, OnGetterInt, OnSetterInt,
+	BIND_SETTING(Primary, Data, OnGetterInt, OnSetterInt);
+
+	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
 	{
 		const FName GetMembersFunctionName = Data.GetMembers.FunctionName;
 		if (Primary.StaticContextFunctionList.Contains(GetMembersFunctionName))
@@ -897,40 +890,56 @@ void USettingsWidget::AddSettingCombobox(const FSettingsPrimary& Primary, FSetti
 			Data.OnGetMembers.BindUFunction(StaticContextObject, GetMembersFunctionName);
 			Data.OnGetMembers.ExecuteIfBound(Data.Members);
 		}
+
 		const FName SetMembersFunctionName = Data.SetMembers.FunctionName;
 		if (Primary.StaticContextFunctionList.Contains(SetMembersFunctionName))
 		{
 			Data.OnSetMembers.BindUFunction(StaticContextObject, SetMembersFunctionName);
 			Data.OnSetMembers.ExecuteIfBound(Data.Members);
 		}
-	});
-	AddCombobox(Primary, Data);
+	}
 }
 
-// Add slider on UI
-void USettingsWidget::AddSettingSlider(const FSettingsPrimary& Primary, FSettingsSlider& Data)
+// Bind slider to own Get/Set delegates
+void USettingsWidget::BindSlider(const FSettingsPrimary& Primary, FSettingsSlider& Data)
 {
-	BIND_WIDGET(Primary, Data, OnGetterFloat, OnSetterFloat, {});
-	AddSlider(Primary, Data);
+	BIND_SETTING(Primary, Data, OnGetterFloat, OnSetterFloat);
 }
 
-// Add simple text on UI
-void USettingsWidget::AddSettingTextLine(const FSettingsPrimary& Primary, FSettingsTextLine& Data)
+// Bind simple text to own Get/Set delegates
+void USettingsWidget::BindTextLine(const FSettingsPrimary& Primary, FSettingsTextLine& Data)
 {
-	BIND_WIDGET(Primary, Data, OnGetterText, OnSetterText, {});
-	AddTextLine(Primary, Data);
+	BIND_SETTING(Primary, Data, OnGetterText, OnSetterText);
 }
 
-// Add text input on UI
-void USettingsWidget::AddSettingUserInput(const FSettingsPrimary& Primary, FSettingsUserInput& Data)
+// Bind text input to own Get/Set delegates
+void USettingsWidget::BindUserInput(const FSettingsPrimary& Primary, FSettingsUserInput& Data)
 {
-	BIND_WIDGET(Primary, Data, OnGetterName, OnSetterName, {});
-	AddUserInput(Primary, Data);
+	BIND_SETTING(Primary, Data, OnGetterName, OnSetterName);
 }
 
-// Add custom widget on UI
-void USettingsWidget::AddSettingCustomWidget(const FSettingsPrimary& Primary, FSettingsCustomWidget& Data)
+// Bind custom widget to own Get/Set delegates
+void USettingsWidget::BindCustomWidget(const FSettingsPrimary& Primary, FSettingsCustomWidget& Data)
 {
-	BIND_WIDGET(Primary, Data, OnGetterWidget, OnSetterWidget, {});
-	AddCustomWidget(Primary, Data);
+	BIND_SETTING(Primary, Data, OnGetterWidget, OnSetterWidget);
+}
+
+// Add setting on UI.
+void USettingsWidget::AddSetting(FSettingsPicker& Setting)
+{
+	FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
+	if (!ChosenData)
+	{
+		return;
+	}
+
+	FSettingsPrimary& PrimaryData = Setting.PrimaryData;
+
+	if (Setting.PrimaryData.bStartOnNextColumn)
+	{
+		StartNextColumn();
+	}
+
+	CreateSettingSubWidget(PrimaryData, ChosenData->GetSubWidgetClass());
+	ChosenData->AddSetting(*this, PrimaryData);
 }
