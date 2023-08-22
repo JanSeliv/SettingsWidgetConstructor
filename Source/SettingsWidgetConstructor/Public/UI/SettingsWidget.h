@@ -231,6 +231,11 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Setting ScrollBoxes"))
 	TArray<TObjectPtr<class USettingScrollBox>> SettingScrollBoxesInternal;
 
+	/** Contains all Setting tags that failed to bind their Getter/Setter functions on initial construct, so it's stored to be rebound later.
+	 * @see USettingsWidget::TryRebindDeferredContexts */
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "DeferredBindings"))
+	FGameplayTagContainer DeferredBindingsInternal;
+
 	/* ---------------------------------------------------
 	 *		Bound widget properties
 	 * --------------------------------------------------- */
@@ -271,11 +276,6 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
 	void OnToggleSettings(bool bIsVisible);
 
-	/** Bind and set static object delegate.
-	* @see FSettingsPrimary::OnStaticContext */
-	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
-	bool TryBindStaticContext(UPARAM(ref)FSettingsPrimary& Primary);
-
 	/** Starts adding settings on the next column. */
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
 	void StartNextColumn();
@@ -290,7 +290,7 @@ protected:
 public:
 	/** Bind setting to specified in table Get/Set delegates, so both methods will be called. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
-	void BindSetting(UPARAM(ref)FSettingsPicker& Setting);
+	bool BindSetting(UPARAM(ref)FSettingsPicker& Setting);
 
 	/** Bind button to own Get/Set delegates. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Binders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
@@ -319,6 +319,17 @@ public:
 	/** Bind custom widget to own Get/Set delegates.  */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Binders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void BindCustomWidget(const FSettingsPrimary& Primary, FSettingsCustomWidget& Data);
+
+protected:
+	/** Bind and set static object delegate.
+	* @see FSettingsPrimary::OnStaticContext */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
+	bool TryBindStaticContext(UPARAM(ref)FSettingsPrimary& Primary);
+
+	/** Attempts to rebind those Settings that failed to bind their Getter/Setter functions on initial construct.
+	 * @see USettingsWidget::DeferredBindingsInternal */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
+	void TryRebindDeferredContexts();
 
 	/* ---------------------------------------------------
 	 *		Add by setting types
