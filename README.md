@@ -17,6 +17,9 @@ Check out our [Release](https://github.com/JanSeliv/SettingsWidgetConstructor/re
 Also, explore this [game project repository](https://github.com/JanSeliv/Bomber) to view the Settings Widget Constructor in action.
 
 ## 📅 Changelog
+#### 
+- Added '_Data Registry_' support for multiple Settings Data Tables usage.
+- Implemented '_Deferred Bindings_': now Getters and Setters are automatically rebound for failed settings. 
 #### 2023-05-26
 - 🎉 Initial public release on Unreal Engine 5.2
 
