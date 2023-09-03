@@ -42,7 +42,6 @@ void USettingsDataAsset::GetAllSettingRows(TMap<FName, FSettingsRow>& OutSetting
 		TMap<FName, FSettingsRow> TableRows;
 		TableIt->GetSettingRows(TableRows);
 
-		bool bCollectingOverrideBlock = false;
 		TArray<FSettingsRow> CurrentOverrideBlock;
 		FSettingTag CurrentOverrideTag;
 
@@ -51,14 +50,19 @@ void USettingsDataAsset::GetAllSettingRows(TMap<FName, FSettingsRow>& OutSetting
 			const FSettingsRow& Row = Pair.Value;
 			const FSettingTag& OverrideTag = Row.SettingsPicker.PrimaryData.ShowNextToSettingOverride;
 
-			if (bCollectingOverrideBlock)
+			if (OverrideTag.IsValid())
 			{
-				CurrentOverrideBlock.Emplace(Row);
-			}
-			else if (OverrideTag.IsValid())
-			{
-				bCollectingOverrideBlock = true;
+				// Store the previous block if any, then start a new block
+				if (CurrentOverrideBlock.Num() > 0)
+				{
+					OverrideBlocks.Emplace(CurrentOverrideTag, MoveTemp(CurrentOverrideBlock));
+				}
+				CurrentOverrideBlock.Empty();
 				CurrentOverrideTag = OverrideTag;
+			}
+
+			if (CurrentOverrideTag.IsValid())
+			{
 				CurrentOverrideBlock.Emplace(Row);
 			}
 			else
@@ -67,9 +71,10 @@ void USettingsDataAsset::GetAllSettingRows(TMap<FName, FSettingsRow>& OutSetting
 			}
 		}
 
-		if (bCollectingOverrideBlock)
+		// Add the last block if any
+		if (CurrentOverrideBlock.Num() > 0)
 		{
-			OverrideBlocks.Add(CurrentOverrideTag, MoveTemp(CurrentOverrideBlock));
+			OverrideBlocks.Emplace(CurrentOverrideTag, MoveTemp(CurrentOverrideBlock));
 		}
 	}
 
