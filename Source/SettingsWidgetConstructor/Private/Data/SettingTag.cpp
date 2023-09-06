@@ -2,7 +2,7 @@
 
 #include "Data/SettingTag.h"
 //---
-#include "GameplayTags/Classes/GameplayTagsManager.h"
+#include "GameplayTagsManager.h"
 //---
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SettingTag)
 
