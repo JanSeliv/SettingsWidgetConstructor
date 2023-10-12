@@ -68,6 +68,13 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSWCFunctionPicker
 	/** FName operator */
 	FORCEINLINE operator FName() const { return FunctionName; }
 
+#if WITH_EDITOR
+	/** Returns error if function is not valid.
+	 * To make this validation work, override IsDataValid(Context) in any UObject-derived class and call this function.
+	 * See example: https://github.com/JanSeliv/Bomber/commit/a29b933 */
+	EDataValidationResult IsDataValid(class FDataValidationContext& Context) const;
+#endif // WITH_EDITOR
+
 protected:
 	/** Contains cached function ptr for performance reasons. */
 	mutable TWeakObjectPtr<UFunction> CachedFunctionInternal = nullptr;

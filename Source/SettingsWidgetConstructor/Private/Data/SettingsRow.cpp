@@ -2,6 +2,10 @@
 
 #include "Data/SettingsRow.h"
 //---
+#if WITH_EDITOR
+#include "Misc/DataValidation.h" // IsDataValid func
+#endif
+//---
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsRow)
 
 // Empty settings primary row
@@ -15,6 +19,43 @@ bool FSettingsPrimary::operator==(const FSettingsPrimary& Other) const
 {
 	return GetTypeHash(*this) == GetTypeHash(Other);
 }
+
+#if WITH_EDITOR
+// Validates chosen data
+EDataValidationResult FSettingsPrimary::IsDataValid(FDataValidationContext& Context) const
+{
+	EDataValidationResult Result = EDataValidationResult::Valid;
+
+	if (!Tag.IsValid())
+	{
+		Context.AddError(FText::FromString(TEXT("`Tag` is not set for the setting, it can't be displayed!")));
+		Result = EDataValidationResult::Invalid;
+	}
+	
+	// Validate Owner if it has Setter or Getter function and validate set function itself
+	const bool bHasSetterFunc = Setter != FSettingFunctionPicker::EmptySettingFunction;
+	const bool bHasGetterFunc = Getter != FSettingFunctionPicker::EmptySettingFunction;
+	if (bHasSetterFunc || bHasGetterFunc)
+	{
+		const EDataValidationResult OwnerResult = Owner.IsDataValid(Context);
+		Result = CombineDataValidationResults(Result, OwnerResult);
+
+		if (bHasSetterFunc)
+		{
+			const EDataValidationResult SetterResult = Setter.IsDataValid(Context);
+			Result = CombineDataValidationResults(Result, SetterResult);
+		}
+
+		if (bHasGetterFunc)
+		{
+			const EDataValidationResult GetterResult = Getter.IsDataValid(Context);
+			Result = CombineDataValidationResults(Result, GetterResult);
+		}
+	}
+
+	return Result;
+}
+#endif // WITH_EDITOR
 
 // Is executed to obtain holding object
 UObject* FSettingsPrimary::GetSettingOwner(const UObject* WorldContext) const
@@ -72,3 +113,28 @@ uint32 GetTypeHash(const FSettingsPicker& Other)
 {
 	return GetTypeHash(Other.PrimaryData);
 }
+
+#if WITH_EDITOR
+// Validates chosen data
+EDataValidationResult FSettingsPicker::IsDataValid(FDataValidationContext& Context) const
+{
+	EDataValidationResult Result = EDataValidationResult::Valid;
+
+	const EDataValidationResult PrimaryDataResult = PrimaryData.IsDataValid(Context);
+	Result = CombineDataValidationResults(Result, PrimaryDataResult);
+
+	const FSettingsDataBase* ChosenData = GetChosenSettingsData();
+	if (ChosenData)
+	{
+		const EDataValidationResult ChosenDataResult = ChosenData->IsDataValid(Context);
+		Result = CombineDataValidationResults(Result, ChosenDataResult);
+	}
+	else
+	{
+		Context.AddError(FText::FromString(TEXT("`SettingsType` is not set")));
+		Result = EDataValidationResult::Invalid;
+	}
+
+	return Result;
+}
+#endif // WITH_EDITOR
