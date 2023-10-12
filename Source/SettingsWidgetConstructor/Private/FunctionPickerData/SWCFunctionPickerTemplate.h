@@ -9,7 +9,7 @@
 /**
   * Delegates wrapper that are used as templates for FFunctionPicker properties.
   * Has to have reflection to allow find its members by FFunctionPickerCustomization:
-  * UFunctionPickerTemplate::StaticClass()->FindFunctionByName("OnStaticContext__DelegateSignature");
+  * UFunctionPickerTemplate::StaticClass()->FindFunctionByName("OnGetterObject__DelegateSignature");
   * DECLARE_DYNAMIC_DELEGATE can't be declared under USTRUCT
   */
 UCLASS(Abstract, Const, Transient)
@@ -18,7 +18,7 @@ class USWCFunctionPickerTemplate : public UObject
 	GENERATED_BODY()
 
 public:
-	DECLARE_DYNAMIC_DELEGATE_RetVal(UObject*, FOnStaticContext);
+	DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(UObject*, FOnGetterObject, const UObject*, WorldContext);
 
 	DECLARE_DYNAMIC_DELEGATE(FOnButtonPressed);
 

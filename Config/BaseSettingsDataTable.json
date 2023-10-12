@@ -10,7 +10,7 @@
 				{
 					"TagName": "Settings.TextLine"
 				},
-				"StaticContext":
+				"Owner":
 				{
 					"FunctionClass": "None",
 					"FunctionName": "None"
@@ -25,7 +25,7 @@
 					"FunctionClass": "None",
 					"FunctionName": "None"
 				},
-				"Caption": "NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"B1FD8AB64A187ECF1AF534A23B1EB4B9\", \"SETTINGS\")",
+				"Caption": "NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"9B5F34484FB5155A7E20C0B96B5D76AB\", \"SETTINGS\")",
 				"Tooltip": "NSLOCTEXT(\"Core\", \"None\", \"None\")",
 				"Padding":
 				{
@@ -40,6 +40,10 @@
 				{
 					"GameplayTags": [],
 					"ParentTags": []
+				},
+				"ShowNextToSettingOverride":
+				{
+					"TagName": "None"
 				}
 			},
 			"Button":
@@ -94,23 +98,23 @@
 				{
 					"TagName": "Settings.Combobox"
 				},
-				"StaticContext":
+				"Owner":
 				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/SettingsWidgetConstructor.SettingsUtilsLibrary'",
+					"FunctionName": "GetGameUserSettings"
 				},
 				"Setter":
 				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/Engine.GameUserSettings'",
+					"FunctionName": "SetOverallScalabilityLevel"
 				},
 				"Getter":
 				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/Engine.GameUserSettings'",
+					"FunctionName": "GetOverallScalabilityLevel"
 				},
-				"Caption": "NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"C5758D8D4760AC9C55185480331D72DB\", \"Overall Quality\")",
-				"Tooltip": "NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"67193396456DFF30A0D91E85F3A0A62D\", \"Choose the overall quality level\")",
+				"Caption": "NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"3D05344D4AC20700809DC9B76E80BC28\", \"Overall Quality\")",
+				"Tooltip": "NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"9F345551422A4511C85D2B8E8D740C23\", \"Choose the overall quality level\")",
 				"Padding":
 				{
 					"Left": 0,
@@ -124,6 +128,10 @@
 				{
 					"GameplayTags": [],
 					"ParentTags": []
+				},
+				"ShowNextToSettingOverride":
+				{
+					"TagName": "None"
 				}
 			},
 			"Button":
@@ -147,97 +155,12 @@
 					"FunctionName": "None"
 				},
 				"Members": [
-					"NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"4BD5AC644E575D63EA6A51BAE630502E\", \"Custom\")",
-					"NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"9A1037DA4D94CD073C1A48A4E72533DB\", \"Low\")",
-					"NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"74DF82A24FD955EB28D2508AE0D01227\", \"Medium\")",
-					"NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"CE3E2FCE45CCF68724AEB2AAE98A46AA\", \"High\")",
-					"NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"402F856C457B291C5F3FC09F9136E9F8\", \"Very High\")",
-					"NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"BDDAE76445B3279B1F40D498D16C0C24\", \"Ultra\")"
+					"NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"CCA672154B5FEA29315F3EADAEF2019F\", \"Low\")",
+					"NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"3D9EECC54A0F8310659B85A3B3F7BB19\", \"Medium\")",
+					"NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"455615594854614F98882F94A79F65B1\", \"High\")",
+					"NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"80910DF74E3E587682422488BCBBD7A3\", \"Epic\")",
+					"NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"213FC09D4F9042E4C7F73BAE9D693D75\", \"Cinematic\")"
 				],
-				"TextJustify": "Center"
-			},
-			"Slider":
-			{
-			},
-			"TextLine":
-			{
-				"VerticalAlignment": "Content",
-				"HorizontalAlignment": "HAlign_Fill"
-			},
-			"UserInput":
-			{
-				"MaxCharactersNumber": 0
-			},
-			"CustomWidget":
-			{
-				"CustomWidgetClass": "None"
-			}
-		}
-	},
-	{
-		"Name": "Settings.Slider",
-		"SettingsPicker":
-		{
-			"SettingsType": "Slider",
-			"PrimaryData":
-			{
-				"Tag":
-				{
-					"TagName": "Settings.Slider"
-				},
-				"StaticContext":
-				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
-				},
-				"Setter":
-				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
-				},
-				"Getter":
-				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
-				},
-				"Caption": "NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"FDDC03E84D349EAC5743FEB1C9E6B87D\", \"Music Volume\")",
-				"Tooltip": "NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"3EC174FB4DEA3029A69CEEA9C382A9DD\", \"Set the sound volume for the background music\")",
-				"Padding":
-				{
-					"Left": 0,
-					"Top": 0,
-					"Right": 30,
-					"Bottom": 15
-				},
-				"LineHeight": 48,
-				"bStartOnNextColumn": false,
-				"SettingsToUpdate":
-				{
-					"GameplayTags": [],
-					"ParentTags": []
-				}
-			},
-			"Button":
-			{
-				"VerticalAlignment": "Content",
-				"HorizontalAlignment": "HAlign_Fill"
-			},
-			"Checkbox":
-			{
-			},
-			"Combobox":
-			{
-				"SetMembers":
-				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
-				},
-				"GetMembers":
-				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
-				},
-				"Members": [],
 				"TextJustify": "Center"
 			},
 			"Slider":
@@ -269,23 +192,23 @@
 				{
 					"TagName": "Settings.Checkbox"
 				},
-				"StaticContext":
+				"Owner":
 				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/SettingsWidgetConstructor.SettingsUtilsLibrary'",
+					"FunctionName": "GetGameUserSettings"
 				},
 				"Setter":
 				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/Engine.GameUserSettings'",
+					"FunctionName": "SetVSyncEnabled"
 				},
 				"Getter":
 				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/Engine.GameUserSettings'",
+					"FunctionName": "IsVSyncEnabled"
 				},
-				"Caption": "NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"30E1B9914168CFDFD022ACAAF72408A2\", \"Fullscreen\")",
-				"Tooltip": "NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"D4DAAF084A3BE24A202DE68898F1E2E5\", \"Check to enable  the fullscreen mode\")",
+				"Caption": "NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"4B34951E482BBA92506C3D8A3054B05B\", \"V-Sync\")",
+				"Tooltip": "NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"69E51E954CA7C3F7A9DB57A88A5B8BBA\", \"Check to enable the V-Sync\")",
 				"Padding":
 				{
 					"Left": 0,
@@ -299,6 +222,10 @@
 				{
 					"GameplayTags": [],
 					"ParentTags": []
+				},
+				"ShowNextToSettingOverride":
+				{
+					"TagName": "None"
 				}
 			},
 			"Button":
@@ -353,7 +280,7 @@
 				{
 					"TagName": "Settings.UserInput"
 				},
-				"StaticContext":
+				"Owner":
 				{
 					"FunctionClass": "None",
 					"FunctionName": "None"
@@ -368,8 +295,8 @@
 					"FunctionClass": "None",
 					"FunctionName": "None"
 				},
-				"Caption": "NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"0A4D44494F98A414FFD6F399B8C3DAFE\", \"Player Name\")",
-				"Tooltip": "NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"91BCE84A4CF9B58F61A9C8BB16663DB5\", \"Enter your nickname\")",
+				"Caption": "NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"27AF3120412B8FDA02FE3F951893C245\", \"Player Name\")",
+				"Tooltip": "NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"002E379E4E5144B9BB5A128E98C49EDD\", \"Enter your nickname\")",
 				"Padding":
 				{
 					"Left": 0,
@@ -383,6 +310,10 @@
 				{
 					"GameplayTags": [],
 					"ParentTags": []
+				},
+				"ShowNextToSettingOverride":
+				{
+					"TagName": "None"
 				}
 			},
 			"Button":
@@ -418,7 +349,95 @@
 			},
 			"UserInput":
 			{
-				"MaxCharactersNumber": 8
+				"MaxCharactersNumber": 16
+			},
+			"CustomWidget":
+			{
+				"CustomWidgetClass": "None"
+			}
+		}
+	},
+	{
+		"Name": "Settings.Slider",
+		"SettingsPicker":
+		{
+			"SettingsType": "Slider",
+			"PrimaryData":
+			{
+				"Tag":
+				{
+					"TagName": "Settings.Slider"
+				},
+				"Owner":
+				{
+					"FunctionClass": "None",
+					"FunctionName": "None"
+				},
+				"Setter":
+				{
+					"FunctionClass": "None",
+					"FunctionName": "None"
+				},
+				"Getter":
+				{
+					"FunctionClass": "None",
+					"FunctionName": "None"
+				},
+				"Caption": "NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"B93D9EA548CA0CFCED454784E1FD16D4\", \"Player Name Scale\")",
+				"Tooltip": "NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"921CAF0148DA0D735D5A358549AF2F1C\", \"Set the Player Scale Scale\")",
+				"Padding":
+				{
+					"Left": 0,
+					"Top": 0,
+					"Right": 30,
+					"Bottom": 15
+				},
+				"LineHeight": 48,
+				"bStartOnNextColumn": false,
+				"SettingsToUpdate":
+				{
+					"GameplayTags": [],
+					"ParentTags": []
+				},
+				"ShowNextToSettingOverride":
+				{
+					"TagName": "None"
+				}
+			},
+			"Button":
+			{
+				"VerticalAlignment": "Content",
+				"HorizontalAlignment": "HAlign_Fill"
+			},
+			"Checkbox":
+			{
+			},
+			"Combobox":
+			{
+				"SetMembers":
+				{
+					"FunctionClass": "None",
+					"FunctionName": "None"
+				},
+				"GetMembers":
+				{
+					"FunctionClass": "None",
+					"FunctionName": "None"
+				},
+				"Members": [],
+				"TextJustify": "Center"
+			},
+			"Slider":
+			{
+			},
+			"TextLine":
+			{
+				"VerticalAlignment": "Content",
+				"HorizontalAlignment": "HAlign_Fill"
+			},
+			"UserInput":
+			{
+				"MaxCharactersNumber": 0
 			},
 			"CustomWidget":
 			{
@@ -437,23 +456,23 @@
 				{
 					"TagName": "Settings.Button"
 				},
-				"StaticContext":
+				"Owner":
 				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/SettingsWidgetConstructor.SettingsUtilsLibrary'",
+					"FunctionName": "GetSettingsWidget"
 				},
 				"Setter":
 				{
-					"FunctionClass": "None",
-					"FunctionName": "None"
+					"FunctionClass": "/Script/CoreUObject.Class'/Script/SettingsWidgetConstructor.SettingsWidget'",
+					"FunctionName": "SaveSettings"
 				},
 				"Getter":
 				{
 					"FunctionClass": "None",
 					"FunctionName": "None"
 				},
-				"Caption": "NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"CFC97B654007D0E10720D4B425844586\", \"Back\")",
-				"Tooltip": "NSLOCTEXT(\"[F67605FD4FE1D83F0EC04D97554FA9A9]\", \"A31C26AB4E3A28D6819DC4A4D7EFA70D\", \"Return back to the main menu\")",
+				"Caption": "NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"2F0E1E0E4E3EC020E6020FB66C005751\", \"Apply\")",
+				"Tooltip": "NSLOCTEXT(\"[B300B6BE227CC798280E67264B750EDE]\", \"BFD2A32B4EDE7484E5AA3499437BB3D7\", \"Apply and save all settings to config\")",
 				"Padding":
 				{
 					"Left": 0,
@@ -467,6 +486,10 @@
 				{
 					"GameplayTags": [],
 					"ParentTags": []
+				},
+				"ShowNextToSettingOverride":
+				{
+					"TagName": "None"
 				}
 			},
 			"Button":

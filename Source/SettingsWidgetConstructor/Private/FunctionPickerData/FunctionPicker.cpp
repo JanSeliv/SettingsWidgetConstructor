@@ -8,7 +8,7 @@ const FSWCFunctionPicker FSWCFunctionPicker::Empty = FSWCFunctionPicker();
 // Custom constructor to set all members values
 FSWCFunctionPicker::FSWCFunctionPicker(UClass* InFunctionClass, FName InFunctionName)
 	: FunctionClass(InFunctionClass)
-	, FunctionName(InFunctionName) {}
+	  , FunctionName(InFunctionName) {}
 
 // Returns the function pointer based on set data to this structure
 UFunction* FSWCFunctionPicker::GetFunction() const
@@ -19,7 +19,7 @@ UFunction* FSWCFunctionPicker::GetFunction() const
 	}
 
 	if (FunctionClass
-	    && !FunctionName.IsNone())
+		&& !FunctionName.IsNone())
 	{
 		UFunction* FoundFunction = FunctionClass->FindFunctionByName(FunctionName, EIncludeSuperFlag::ExcludeSuper);
 		CachedFunctionInternal = FoundFunction;
@@ -29,11 +29,10 @@ UFunction* FSWCFunctionPicker::GetFunction() const
 	return nullptr;
 }
 
-// Compares for equality
-bool FSWCFunctionPicker::operator==(const FSWCFunctionPicker& Other) const
+// Returns string in text format: Class::Function
+FString FSWCFunctionPicker::ToDisplayString() const
 {
-	return Other.FunctionClass->IsChildOf(this->FunctionClass)
-	       && Other.FunctionName == this->FunctionName;
+	return IsValid() ? FString::Printf(TEXT("%s::%s"), *FunctionClass->GetName(), *FunctionName.ToString()) : FString();
 }
 
 // Creates a hash value

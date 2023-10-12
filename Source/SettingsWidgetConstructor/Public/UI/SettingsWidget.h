@@ -17,7 +17,6 @@ class SETTINGSWIDGETCONSTRUCTOR_API USettingsWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-public:
 	/* ---------------------------------------------------
 	 *		Public properties
 	 * --------------------------------------------------- */
@@ -55,6 +54,10 @@ public:
 	/** Flip-flop opens and closes the Settings menu. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
 	void ToggleSettings();
+
+	/** Is called on opening to focus the widget on UI if allowed. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
+	void TryFocusOnUI();
 
 	/** Returns true when this widget is fully constructed and ready to be used. */
 	UFUNCTION(BlueprintPure, Category = "C++")
@@ -322,9 +325,9 @@ public:
 
 protected:
 	/** Bind and set static object delegate.
-	* @see FSettingsPrimary::OnStaticContext */
+	* @see FSettingsPrimary::OwnerFunc */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
-	bool TryBindStaticContext(UPARAM(ref)FSettingsPrimary& Primary);
+	bool TryBindOwner(UPARAM(ref)FSettingsPrimary& Primary);
 
 	/** Attempts to rebind those Settings that failed to bind their Getter/Setter functions on initial construct.
 	 * @see USettingsWidget::DeferredBindingsInternal */

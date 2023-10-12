@@ -213,7 +213,7 @@ bool FFunctionPickerCustomization::IsSignatureCompatible(const UFunction* Functi
 			return true;
 		}
 
-		if (!A || !B) //one of properties is null
+		if (!A || !B)
 		{
 			return false;
 		}
@@ -230,14 +230,18 @@ bool FFunctionPickerCustomization::IsSignatureCompatible(const UFunction* Functi
 
 		if (!A->SameType(B)) // A->GetClass() == B->GetClass()
 		{
-			// That part is implemented: if is return param with the same flags
+			// --- That part is implemented: if is return param with the same flags
 			// Will return true for any derived UObject
-			if (A->PropertyFlags & B->PropertyFlags & CPF_ReturnParm
-				&& A->IsA(B->GetClass()))
+
+			if (!(A->PropertyFlags & B->PropertyFlags & CPF_OutParm))
 			{
-				return true;
+				return false;
 			}
-			return false;
+
+			if (!A->IsA<FObjectPropertyBase>() || !B->IsA<FObjectPropertyBase>())
+			{
+				return false;
+			}
 		}
 
 		return true;
@@ -261,7 +265,12 @@ bool FFunctionPickerCustomization::IsSignatureCompatible(const UFunction* Functi
 
 			// Check the flags as well
 			const uint64 PropertyMash = PropA->PropertyFlags ^ PropB->PropertyFlags;
-			if (!ArePropertiesTheSame(PropA, PropB) || ((PropertyMash & ~IgnoreFlags) != 0))
+			if ((PropertyMash & ~IgnoreFlags) != 0)
+			{
+				return false;
+			}
+
+			if (!ArePropertiesTheSame(PropA, PropB))
 			{
 				// Type mismatch between an argument of A and B
 				return false;

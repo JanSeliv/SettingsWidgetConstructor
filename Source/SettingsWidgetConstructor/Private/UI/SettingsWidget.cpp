@@ -3,6 +3,7 @@
 #include "UI/SettingsWidget.h"
 //---
 #include "Data/SettingsDataAsset.h"
+#include "MyUtilsLibraries/SettingsUtilsLibrary.h"
 #include "UI/SettingSubWidget.h"
 //---
 #include "Blueprint/WidgetLayoutLibrary.h"
@@ -59,7 +60,7 @@ void USettingsWidget::SaveSettings()
 
 	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
 	{
-		if (UObject* ContextObject = RowIt.Value.PrimaryData.StaticContextObject.Get())
+		if (UObject* ContextObject = RowIt.Value.PrimaryData.GetSettingOwner(this))
 		{
 			ContextObject->SaveConfig();
 		}
@@ -69,7 +70,7 @@ void USettingsWidget::SaveSettings()
 // Apply all current settings on device
 void USettingsWidget::ApplySettings()
 {
-	UGameUserSettings* GameUserSettings = GEngine->GetGameUserSettings();
+	UGameUserSettings* GameUserSettings = USettingsUtilsLibrary::GetGameUserSettings();
 	if (!GameUserSettings)
 	{
 		return;
@@ -103,13 +104,24 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 			continue;
 		}
 
-		if (FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData())
+		FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
+		if (!ChosenData)
 		{
-			// Obtain the latest value from configs and set it
-			FString Result;
-			ChosenData->GetSettingValue(*this, SettingTag, /*Out*/Result);
-			ChosenData->SetSettingValue(*this, SettingTag, Result);
+			continue;
 		}
+
+		UObject* Owner = Setting.PrimaryData.GetSettingOwner(this);
+		if (!Owner)
+		{
+			continue;
+		}
+
+		// Obtain the latest value from configs and set it
+		Owner->LoadConfig();
+
+		FString Result;
+		ChosenData->GetSettingValue(*this, SettingTag, /*Out*/Result);
+		ChosenData->SetSettingValue(*this, SettingTag, Result);
 	}
 }
 
@@ -581,6 +593,8 @@ void USettingsWidget::NativeConstruct()
 	{
 		TryConstructSettings();
 	}
+
+	TryFocusOnUI();
 }
 
 // Is called right after the game was started and windows size is set to construct settings
@@ -625,7 +639,7 @@ void USettingsWidget::ConstructSettings()
 void USettingsWidget::UpdateSettingsTableRows()
 {
 	TMap<FName, FSettingsRow> SettingRows;
-	USettingsDataAsset::Get().GetAllSettingRows(/*Out*/SettingRows);
+	USettingsUtilsLibrary::GetAllSettingRows(/*Out*/SettingRows);
 	if (!ensureMsgf(!SettingRows.IsEmpty(), TEXT("ASSERT: 'SettingRows' are empty")))
 	{
 		return;
@@ -658,18 +672,19 @@ void USettingsWidget::OnToggleSettings(bool bIsVisible)
 }
 
 // Bind and set static object delegate
-bool USettingsWidget::TryBindStaticContext(FSettingsPrimary& Primary)
+bool USettingsWidget::TryBindOwner(FSettingsPrimary& Primary)
 {
-	UObject* FoundContextObj = nullptr;
-	UFunction* FunctionPtr = Primary.StaticContext.GetFunction();
-	if (FunctionPtr)
+	const UObject* FoundContextObj = nullptr;
+	const FSettingFunctionPicker& Owner = Primary.Owner;
+	if (Owner.IsValid())
 	{
-		FunctionPtr->ProcessEvent(FunctionPtr, /*Out*/&FoundContextObj);
+		Primary.OwnerFunc.BindUFunction(Owner.FunctionClass->GetDefaultObject(), Owner.FunctionName);
+		FoundContextObj = Primary.GetSettingOwner(this);
 	}
 
 	if (!FoundContextObj)
 	{
-		if (FunctionPtr)
+		if (Owner.IsValid())
 		{
 			// Static context function is set, but returning object is null,
 			// most likely such object is not initialized yet,
@@ -679,8 +694,6 @@ bool USettingsWidget::TryBindStaticContext(FSettingsPrimary& Primary)
 
 		return false;
 	}
-
-	Primary.StaticContextObject = FoundContextObj;
 
 	const UClass* ContextClass = FoundContextObj->GetClass();
 	checkf(ContextClass, TEXT("ERROR: [%i] %s:\n'ContextClass' is null!"), __LINE__, *FString(__FUNCTION__));
@@ -697,7 +710,7 @@ bool USettingsWidget::TryBindStaticContext(FSettingsPrimary& Primary)
 		const FName FunctionNameIt = FunctionIt->GetFName();
 		if (!FunctionNameIt.IsNone())
 		{
-			Primary.StaticContextFunctionList.Emplace(FunctionNameIt);
+			Primary.OwnerFunctionList.Emplace(FunctionNameIt);
 		}
 	}
 
@@ -796,6 +809,8 @@ void USettingsWidget::OpenSettings()
 
 	OnToggleSettings(true);
 
+	TryFocusOnUI();
+
 	OnOpenSettings();
 }
 
@@ -831,6 +846,27 @@ void USettingsWidget::ToggleSettings()
 	}
 }
 
+// Is called on opening to focus the widget on UI if allowed
+void USettingsWidget::TryFocusOnUI()
+{
+	if (!USettingsDataAsset::Get().IsAutoFocusOnOpen())
+	{
+		return;
+	}
+
+	APlayerController* PlayerController = GetOwningPlayer();
+	if (!ensureMsgf(PlayerController, TEXT("ASSERT: [%i] %s:\n'PlayerController' is not valid!"), __LINE__, *FString(__FUNCTION__)))
+	{
+		return;
+	}
+
+	static const FInputModeGameAndUI GameAndUI{};
+	PlayerController->SetInputMode(GameAndUI);
+	PlayerController->SetShowMouseCursor(true);
+	PlayerController->bEnableClickEvents = true;
+	PlayerController->bEnableMouseOverEvents = true;
+}
+
 /* ---------------------------------------------------
  *		Bind by setting types
  * --------------------------------------------------- */
@@ -844,7 +880,7 @@ bool USettingsWidget::BindSetting(FSettingsPicker& Setting)
 		return false;
 	}
 
-	if (TryBindStaticContext(Setting.PrimaryData))
+	if (TryBindOwner(Setting.PrimaryData))
 	{
 		ChosenData->BindSetting(*this, Setting.PrimaryData);
 		return true;
@@ -861,20 +897,20 @@ bool USettingsWidget::BindSetting(FSettingsPicker& Setting)
  * @param SetterFunction		The setter function to bind
  * @param AdditionalFunctionCalls Any additional function calls needed for specific widgets
  */
-#define BIND_SETTING(Primary, Data, GetterFunction, SetterFunction)							\
+#define BIND_SETTING(Primary, Data, GetterFunction, SetterFunction)													\
 	do																												\
 	{																												\
-		if (UObject* StaticContextObject = Primary.StaticContextObject.Get())										\
+		if (UObject* OwnerObject = Primary.GetSettingOwner(this))													\
 		{																											\
 			const FName GetterFunctionName = Primary.Getter.FunctionName;											\
-			if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))										\
+			if (Primary.OwnerFunctionList.Contains(GetterFunctionName))												\
 			{																										\
-				Data.GetterFunction.BindUFunction(StaticContextObject, GetterFunctionName);							\
+				Data.GetterFunction.BindUFunction(OwnerObject, GetterFunctionName);							\
 			}																										\
 			const FName SetterFunctionName = Primary.Setter.FunctionName;											\
-			if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))										\
+			if (Primary.OwnerFunctionList.Contains(SetterFunctionName))										\
 			{																										\
-				Data.SetterFunction.BindUFunction(StaticContextObject, SetterFunctionName);							\
+				Data.SetterFunction.BindUFunction(OwnerObject, SetterFunctionName);							\
 			}																										\
 		}																											\
 	} while (0)
@@ -896,19 +932,19 @@ void USettingsWidget::BindCombobox(const FSettingsPrimary& Primary, FSettingsCom
 {
 	BIND_SETTING(Primary, Data, OnGetterInt, OnSetterInt);
 
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
+	if (UObject* OwnerObject = Primary.GetSettingOwner(this))
 	{
 		const FName GetMembersFunctionName = Data.GetMembers.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetMembersFunctionName))
+		if (Primary.OwnerFunctionList.Contains(GetMembersFunctionName))
 		{
-			Data.OnGetMembers.BindUFunction(StaticContextObject, GetMembersFunctionName);
+			Data.OnGetMembers.BindUFunction(OwnerObject, GetMembersFunctionName);
 			Data.OnGetMembers.ExecuteIfBound(Data.Members);
 		}
 
 		const FName SetMembersFunctionName = Data.SetMembers.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetMembersFunctionName))
+		if (Primary.OwnerFunctionList.Contains(SetMembersFunctionName))
 		{
-			Data.OnSetMembers.BindUFunction(StaticContextObject, SetMembersFunctionName);
+			Data.OnSetMembers.BindUFunction(OwnerObject, SetMembersFunctionName);
 			Data.OnSetMembers.ExecuteIfBound(Data.Members);
 		}
 	}
