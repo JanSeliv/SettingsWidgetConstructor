@@ -65,7 +65,7 @@ protected:
 
 	/** Contains property to by meta.
 	 * MetaName: SettingsFunctionContextTemplate, SettingsFunctionSetterTemplate, SettingsFunctionGetterTemplate.
-	 * SettingsFunctionProperty: FSettingsPicker::StaticContext, FSettingsPicker::Setter, FSettingsPicker::Getter, */
+	 * SettingsFunctionProperty: FSettingsPicker::Owner, FSettingsPicker::Setter, FSettingsPicker::Getter, */
 	TMap<FName/*TemplateMetaKey*/, FPropertyData/*SettingsFunctionProperty*/> SettingsFunctionProperties;
 
 	/** Pointer to the FSettingsDataBase struct. */

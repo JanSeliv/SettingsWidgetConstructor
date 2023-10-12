@@ -4,10 +4,12 @@
 
 #include "Engine/DeveloperSettings.h"
 //---
-#include "Data/SettingsDataTable.h"
 #include "Data/SettingsThemeData.h"
 //---
 #include "SettingsDataAsset.generated.h"
+
+class USettingsDataTable;
+class UDataRegistry;
 
 /**
  * Contains common settings data of the Constructor Widget plugin.
@@ -18,6 +20,9 @@ class SETTINGSWIDGETCONSTRUCTOR_API USettingsDataAsset : public UDeveloperSettin
 {
 	GENERATED_BODY()
 
+	/*********************************************************************************************
+	 * Getters
+	 ********************************************************************************************* */
 public:
 	/** Returns Project Settings Data of the Settings Widget Constructor plugin. */
 	static const FORCEINLINE USettingsDataAsset& Get() { return *GetDefault<ThisClass>(); }
@@ -32,9 +37,9 @@ public:
 	/** Gets the category for the settings, some high level grouping like, Editor, Engine, Game...etc. */
 	virtual FName GetCategoryName() const override { return TEXT("Plugins"); }
 
-	/** Returns the data table. */
+	/** Returns the project's main Settings Data Table, it has to be set manually. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
-	FORCEINLINE USettingsDataTable* GetSettingsDataTable() const { return SettingsDataTableInternal.LoadSynchronous(); }
+	const USettingsDataTable* GetSettingsDataTable() const;
 
 	/** Returns the sub-widget of Button settings. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
@@ -63,6 +68,10 @@ public:
 	/** Returns true, when USettingsWidget::TryConstructSettings is automatically called whenever the Settings Widget becomes constructed (e.g: on UUserWidget::AddToViewport call). */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	FORCEINLINE bool IsAutoConstruct() const { return bAutoConstructInternal; }
+
+	/** Returns true if should automatically focus the Settings Widget on UI each time it is opened. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
+	FORCEINLINE bool IsAutoFocusOnOpen() const { return bAutoFocusOnOpenInternal; }
 
 	/** Returns the width and height of the settings widget in percentages of an entire screen. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
@@ -108,10 +117,18 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	const FORCEINLINE FMiscThemeData& GetMiscThemeData() const { return MiscThemeDataInternal; }
 
+	/** Returns the Settings Data Registry asset, is automatically set by default to which 'Settings Data Table' is added by itself. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
+	const UDataRegistry* GetSettingsDataRegistry() const;
+	const TSoftObjectPtr<const UDataRegistry>& GetSettingsDataRegistrySoft() const { return SettingsDataRegistryInternal; }
+
+	/*********************************************************************************************
+	 * Protected properties
+	 ********************************************************************************************* */
 protected:
-	/** The data table with all settings, is config property. */
+	/** The project's main Settings Data Table, is config property and has to be set manually. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Settings Data Table", ShowOnlyInnerProperties))
-	TSoftObjectPtr<class USettingsDataTable> SettingsDataTableInternal;
+	TSoftObjectPtr<const USettingsDataTable> SettingsDataTableInternal;
 
 	/** The sub-widget class of Button settings, is config property. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Button Class", ShowOnlyInnerProperties))
@@ -140,6 +157,10 @@ protected:
 	/** If true, it will automatically call USettingsWidget::TryConstructSettings whenever the Settings Widget becomes constructed (e.g: on UUserWidget::AddToViewport call). */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Auto Construct", ShowOnlyInnerProperties))
 	bool bAutoConstructInternal;
+
+	/** If true, the Setting Widget will be automatically focused on UI each time it is opened. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Auto Focus On Open", ShowOnlyInnerProperties))
+	bool bAutoFocusOnOpenInternal;
 
 	/** The width and height of the settings widget in percentages of an entire screen. Is clamped between 0 and 1, is config property. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Settings Percent Size", ClampMin = "0", ClampMax = "1", ShowOnlyInnerProperties))
@@ -184,4 +205,23 @@ protected:
 	/** The misc theme data, is config property. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Misc Theme Data"))
 	FMiscThemeData MiscThemeDataInternal;
+
+	/** The Settings Data Registry asset, is automatically set by default to which 'Settings Data Table' is added by itself. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Settings Data Registry", ShowOnlyInnerProperties))
+	TSoftObjectPtr<const UDataRegistry> SettingsDataRegistryInternal;
+
+	/*********************************************************************************************
+	 * Internal
+	 ********************************************************************************************* */
+protected:
+	/** Overrides post init to register Settings Data Table by default on startup. */
+	virtual void PostInitProperties() override;
+
+	/** Is called once Engine is initialized, so we can register Settings Data Table by default on startup. */
+	void OnPostEngineInit();
+
+#if WITH_EDITOR
+	/** Overrides property change events to handle picking Settings Data Table. */
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 };

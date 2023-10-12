@@ -8,7 +8,8 @@ public class SettingsWidgetConstructor : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		CppStandard = CppStandardVersion.Latest;
-
+		bEnableNonInlinedGenCppWarnings = true;
+        
 		PublicDependencyModuleNames.AddRange(new[]
 			{
 				"Core"
@@ -21,6 +22,7 @@ public class SettingsWidgetConstructor : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new[]
 			{
 				"CoreUObject", "Engine", "Slate", "SlateCore" // Core
+				, "DataRegistry" // Multiple Data Tables support
 			}
 		);
 

@@ -2,15 +2,19 @@
 
 #include "UI/SettingsWidget.h"
 //---
+#include "Data/SettingsDataAsset.h"
+#include "MyUtilsLibraries/SettingsUtilsLibrary.h"
+#include "UI/SettingSubWidget.h"
+//---
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/SizeBox.h"
 #include "GameFramework/GameUserSettings.h"
 //---
-#include "Data/SettingsDataAsset.h"
-#include "Data/SettingsDataTable.h"
-#include "UI/SettingSubWidget.h"
-//---
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsWidget)
+
+/* ---------------------------------------------------
+ *		Public functions
+ * --------------------------------------------------- */
 
 // Try to find the setting row
 const FSettingsPicker& USettingsWidget::FindSettingRow(FName PotentialTagName) const
@@ -56,7 +60,7 @@ void USettingsWidget::SaveSettings()
 
 	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
 	{
-		if (UObject* ContextObject = RowIt.Value.PrimaryData.StaticContextObject.Get())
+		if (UObject* ContextObject = RowIt.Value.PrimaryData.GetSettingOwner(this))
 		{
 			ContextObject->SaveConfig();
 		}
@@ -66,7 +70,7 @@ void USettingsWidget::SaveSettings()
 // Apply all current settings on device
 void USettingsWidget::ApplySettings()
 {
-	UGameUserSettings* GameUserSettings = GEngine->GetGameUserSettings();
+	UGameUserSettings* GameUserSettings = USettingsUtilsLibrary::GetGameUserSettings();
 	if (!GameUserSettings)
 	{
 		return;
@@ -100,38 +104,24 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 			continue;
 		}
 
-		const FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
+		FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
 		if (!ChosenData)
 		{
 			continue;
 		}
 
-		if (ChosenData == &Setting.Checkbox)
+		UObject* Owner = Setting.PrimaryData.GetSettingOwner(this);
+		if (!Owner)
 		{
-			const bool NewValue = GetCheckboxValue(SettingTag);
-			SetSettingCheckbox(SettingTag, NewValue);
+			continue;
 		}
-		else if (ChosenData == &Setting.Combobox)
-		{
-			const int32 NewValue = GetComboboxIndex(SettingTag);
-			SetSettingComboboxIndex(SettingTag, NewValue);
-		}
-		else if (ChosenData == &Setting.Slider)
-		{
-			const double NewValue = GetSliderValue(SettingTag);
-			SetSettingSlider(SettingTag, NewValue);
-		}
-		else if (ChosenData == &Setting.TextLine)
-		{
-			FText NewValue = TEXT_NONE;
-			GetTextLineValue(SettingTag, /*Out*/NewValue);
-			SetSettingTextLine(SettingTag, NewValue);
-		}
-		else if (ChosenData == &Setting.UserInput)
-		{
-			const FName NewValue = GetUserInputValue(SettingTag);
-			SetSettingUserInput(SettingTag, NewValue);
-		}
+
+		// Obtain the latest value from configs and set it
+		Owner->LoadConfig();
+
+		FString Result;
+		ChosenData->GetSettingValue(*this, SettingTag, /*Out*/Result);
+		ChosenData->SetSettingValue(*this, SettingTag, Result);
 	}
 }
 
@@ -151,6 +141,10 @@ const FSettingTag& USettingsWidget::GetTagByFunction(const FSettingFunctionPicke
 	return FSettingTag::EmptySettingTag;
 }
 
+/* ---------------------------------------------------
+ *		Setters by setting types
+ * --------------------------------------------------- */
+
 // Set value to the option by tag
 void USettingsWidget::SetSettingValue(FName TagName, const FString& Value)
 {
@@ -160,65 +154,45 @@ void USettingsWidget::SetSettingValue(FName TagName, const FString& Value)
 		return;
 	}
 
-	const FSettingsDataBase* ChosenData = FoundRow.GetChosenSettingsData();
+	FSettingsDataBase* ChosenData = FoundRow.GetChosenSettingsData();
 	if (!ChosenData)
 	{
 		return;
 	}
 
 	const FSettingTag& Tag = FoundRow.PrimaryData.Tag;
-	if (!Tag.IsValid())
+	if (Tag.IsValid())
 	{
-		return;
-	}
-
-	if (ChosenData == &FoundRow.Button)
-	{
-		SetSettingButtonPressed(Tag);
-	}
-	else if (ChosenData == &FoundRow.Checkbox)
-	{
-		const bool NewValue = Value.ToBool();
-		SetSettingCheckbox(Tag, NewValue);
-	}
-	else if (ChosenData == &FoundRow.Combobox)
-	{
-		if (Value.IsNumeric())
-		{
-			const int32 NewValue = FCString::Atoi(*Value);
-			SetSettingComboboxIndex(Tag, NewValue);
-		}
-		else
-		{
-			static const FString Delimiter = TEXT(",");
-			TArray<FString> SeparatedStrings;
-			Value.ParseIntoArray(SeparatedStrings, *Delimiter);
-
-			TArray<FText> NewMembers;
-			NewMembers.Reserve(SeparatedStrings.Num());
-			for (FString& StringIt : SeparatedStrings)
-			{
-				NewMembers.Emplace(FText::FromString(MoveTemp(StringIt)));
-			}
-			SetSettingComboboxMembers(Tag, NewMembers);
-		}
-	}
-	else if (ChosenData == &FoundRow.Slider)
-	{
-		const double NewValue = FCString::Atod(*Value);
-		SetSettingSlider(Tag, NewValue);
-	}
-	else if (ChosenData == &FoundRow.TextLine)
-	{
-		const FText NewValue = FText::FromString(Value);
-		SetSettingTextLine(Tag, NewValue);
-	}
-	else if (ChosenData == &FoundRow.UserInput)
-	{
-		const FName NewValue = *Value;
-		SetSettingUserInput(Tag, NewValue);
+		ChosenData->SetSettingValue(*this, Tag, Value);
 	}
 }
+
+/** Executes the common pattern of setting a value, executing if bound, and updating the settings.
+ * @param Tag The tag used to find the setting row.
+ * @param DataMember The member that holds the desired value.
+ * @param MemberValue The specific member to set the value to.
+ * @param Value The new value to set.
+ * @param SetterExpression The expression to update the setter delegate. */
+#define SET_SETTING_VALUE(Tag, DataMember, MemberValue, Value, SetterExpression)	\
+	do {																			\
+		if (!Tag.IsValid())															\
+		{																			\
+			return;																	\
+		}																			\
+		FSettingsPicker* FoundRowPtr = SettingsTableRowsInternal.Find(Tag.GetTagName());\
+		if (!FoundRowPtr)															\
+		{																			\
+			return;																	\
+		}																			\
+		auto& Data = FoundRowPtr->DataMember;										\
+		if (Data.MemberValue == Value)												\
+		{																			\
+			return;																	\
+		}																			\
+		Data.MemberValue = Value;													\
+		Data.SetterExpression.ExecuteIfBound(Value);								\
+		UpdateSettings(FoundRowPtr->PrimaryData.SettingsToUpdate);					\
+	} while (0)
 
 // Press button
 void USettingsWidget::SetSettingButtonPressed(const FSettingTag& ButtonTag)
@@ -244,26 +218,7 @@ void USettingsWidget::SetSettingButtonPressed(const FSettingTag& ButtonTag)
 // Toggle checkbox
 void USettingsWidget::SetSettingCheckbox(const FSettingTag& CheckboxTag, bool InValue)
 {
-	if (!CheckboxTag.IsValid())
-	{
-		return;
-	}
-
-	FSettingsPicker* SettingsRowPtr = SettingsTableRowsInternal.Find(CheckboxTag.GetTagName());
-	if (!SettingsRowPtr)
-	{
-		return;
-	}
-
-	bool& bIsSetRef = SettingsRowPtr->Checkbox.bIsSet;
-	if (bIsSetRef == InValue)
-	{
-		return;
-	}
-
-	bIsSetRef = InValue;
-	SettingsRowPtr->Checkbox.OnSetterBool.ExecuteIfBound(InValue);
-	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+	SET_SETTING_VALUE(CheckboxTag, Checkbox, bIsSet, InValue, OnSetterBool);
 
 	// BP implementation
 	SetCheckbox(CheckboxTag, InValue);
@@ -273,32 +228,12 @@ void USettingsWidget::SetSettingCheckbox(const FSettingTag& CheckboxTag, bool In
 // Set chosen member index for a combobox
 void USettingsWidget::SetSettingComboboxIndex(const FSettingTag& ComboboxTag, int32 InValue)
 {
-	if (!ComboboxTag.IsValid())
-	{
-		return;
-	}
-
 	if (InValue == INDEX_NONE)
 	{
 		return;
 	}
 
-	FSettingsPicker* SettingsRowPtr = SettingsTableRowsInternal.Find(ComboboxTag.GetTagName());
-	if (!SettingsRowPtr)
-	{
-		return;
-	}
-
-	FSettingsPicker& SettingsRowRef = *SettingsRowPtr;
-	int32& ChosenMemberIndexRef = SettingsRowRef.Combobox.ChosenMemberIndex;
-	if (ChosenMemberIndexRef == InValue)
-	{
-		return;
-	}
-
-	ChosenMemberIndexRef = InValue;
-	SettingsRowRef.Combobox.OnSetterInt.ExecuteIfBound(InValue);
-	UpdateSettings(SettingsRowRef.PrimaryData.SettingsToUpdate);
+	SET_SETTING_VALUE(ComboboxTag, Combobox, ChosenMemberIndex, InValue, OnSetterInt);
 
 	// BP implementation
 	SetComboboxIndex(ComboboxTag, InValue);
@@ -328,29 +263,10 @@ void USettingsWidget::SetSettingComboboxMembers(const FSettingTag& ComboboxTag, 
 // Set current value for a slider
 void USettingsWidget::SetSettingSlider(const FSettingTag& SliderTag, double InValue)
 {
-	if (!SliderTag.IsValid())
-	{
-		return;
-	}
-
-	FSettingsPicker* SettingsRowPtr = SettingsTableRowsInternal.Find(SliderTag.GetTagName());
-	if (!SettingsRowPtr)
-	{
-		return;
-	}
-
 	static constexpr double MinValue = 0.0;
 	static constexpr float MaxValue = 1.0;
 	const double NewValue = FMath::Clamp(InValue, MinValue, MaxValue);
-	double& ChosenValueRef = SettingsRowPtr->Slider.ChosenValue;
-	if (ChosenValueRef == NewValue)
-	{
-		return;
-	}
-
-	ChosenValueRef = NewValue;
-	SettingsRowPtr->Slider.OnSetterFloat.ExecuteIfBound(InValue);
-	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+	SET_SETTING_VALUE(SliderTag, Slider, ChosenValue, NewValue, OnSetterFloat);
 
 	// BP implementation
 	SetSlider(SliderTag, InValue);
@@ -456,136 +372,86 @@ void USettingsWidget::SetSettingCustomWidget(const FSettingTag& CustomWidgetTag,
 	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
 }
 
+/* ---------------------------------------------------
+ *		Getters by setting types
+ * --------------------------------------------------- */
+
+/** Retrieve a specific setting row using a given tag.
+ * @param Tag The tag used to find the setting row.
+ * @param DataMember The member that holds the desired value. */
+#define GET_SETTING_ROW(Tag, DataMember)					\
+	const FSettingsPicker& FoundRow = GetSettingRow(Tag);	\
+	if (!FoundRow.IsValid()) { return; }					\
+	const auto& Data = FoundRow.DataMember;
+
+/** Executes the common pattern of getting a value from a data structure.
+ * @param Tag The tag used to find the setting row.
+ * @param DataMember The member that holds the desired value.
+ * @param ValueType The type of value to retrieve.
+ * @param ValueExpression The expression to retrieve the value.
+ * @param GetterExpression The expression to retrieve the getter delegate.
+ * @param DefaultValue The default value to return if no value is found. */
+#define GET_SETTING_VALUE(Tag, DataMember, ValueType, ValueExpression, GetterExpression, DefaultValue) \
+	{															\
+		const FSettingsPicker& FoundRow = GetSettingRow(Tag);	\
+		ValueType Value = DefaultValue;							\
+		if (FoundRow.IsValid())									\
+		{														\
+			const auto& Data = FoundRow.DataMember;				\
+			Value = ValueExpression;							\
+			const auto& Getter = GetterExpression;				\
+			if (Getter.IsBound())								\
+			{													\
+				Value = Getter.Execute();						\
+			}													\
+		}														\
+		return Value; \
+	}
+
 // Returns is a checkbox toggled
 bool USettingsWidget::GetCheckboxValue(const FSettingTag& CheckboxTag) const
 {
-	if (!CheckboxTag.IsValid())
-	{
-		return false;
-	}
-
-	const FSettingsPicker& FoundRow = GetSettingRow(CheckboxTag);
-	bool Value = false;
-	if (FoundRow.IsValid())
-	{
-		const FSettingsCheckbox& Data = FoundRow.Checkbox;
-		Value = Data.bIsSet;
-
-		const USettingFunctionTemplate::FOnGetterBool& Getter = Data.OnGetterBool;
-		if (Getter.IsBound())
-		{
-			Value = Getter.Execute();
-		}
-	}
-	return Value;
+	GET_SETTING_VALUE(CheckboxTag, Checkbox, bool, Data.bIsSet, Data.OnGetterBool, false);
 }
 
 // Returns chosen member index of a combobox
 int32 USettingsWidget::GetComboboxIndex(const FSettingTag& ComboboxTag) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(ComboboxTag);
-	int32 Value = false;
-	if (FoundRow.IsValid())
-	{
-		const FSettingsCombobox& Data = FoundRow.Combobox;
-		Value = Data.ChosenMemberIndex;
-
-		const USettingFunctionTemplate::FOnGetterInt& Getter = Data.OnGetterInt;
-		if (Getter.IsBound())
-		{
-			Value = Getter.Execute();
-		}
-	}
-	return Value;
+	GET_SETTING_VALUE(ComboboxTag, Combobox, int32, Data.ChosenMemberIndex, Data.OnGetterInt, 0);
 }
 
 // Get all members of a combobox
 void USettingsWidget::GetComboboxMembers(const FSettingTag& ComboboxTag, TArray<FText>& OutMembers) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(ComboboxTag);
-	if (FoundRow.IsValid())
-	{
-		const FSettingsCombobox& Data = FoundRow.Combobox;
-		OutMembers = Data.Members;
-
-		const USettingFunctionTemplate::FOnGetMembers& Getter = Data.OnGetMembers;
-		if (Getter.IsBound())
-		{
-			Getter.Execute(OutMembers);
-		}
-	}
+	GET_SETTING_ROW(ComboboxTag, Combobox)
+	OutMembers = Data.Members;
+	Data.OnGetMembers.ExecuteIfBound(OutMembers);
 }
 
 // Get current value of a slider [0...1]
 double USettingsWidget::GetSliderValue(const FSettingTag& SliderTag) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(SliderTag);
-	double Value = 0.0;
-	if (FoundRow.IsValid())
-	{
-		const FSettingsSlider& Data = FoundRow.Slider;
-		Value = Data.ChosenValue;
-
-		const USettingFunctionTemplate::FOnGetterFloat& Getter = Data.OnGetterFloat;
-		if (Getter.IsBound())
-		{
-			Value = Getter.Execute();
-		}
-	}
-	return Value;
+	GET_SETTING_VALUE(SliderTag, Slider, double, Data.ChosenValue, Data.OnGetterFloat, 0.f);
 }
 
 // Get current text of a simple text widget
 void USettingsWidget::GetTextLineValue(const FSettingTag& TextLineTag, FText& OutText) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(TextLineTag);
-	if (FoundRow.IsValid())
-	{
-		OutText = FoundRow.PrimaryData.Caption;
-
-		const USettingFunctionTemplate::FOnGetterText& Getter = FoundRow.TextLine.OnGetterText;
-		if (Getter.IsBound())
-		{
-			Getter.Execute(OutText);
-		}
-	}
+	GET_SETTING_ROW(TextLineTag, PrimaryData)
+	OutText = Data.Caption;
+	FoundRow.TextLine.OnGetterText.ExecuteIfBound(OutText);
 }
 
 // Get current input name of the text input
 FName USettingsWidget::GetUserInputValue(const FSettingTag& UserInputTag) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(UserInputTag);
-	FName Value = NAME_None;
-	if (FoundRow.IsValid())
-	{
-		const FSettingsUserInput& Data = FoundRow.UserInput;
-		Value = Data.UserInput;
-
-		const USettingFunctionTemplate::FOnGetterName& Getter = Data.OnGetterName;
-		if (Getter.IsBound())
-		{
-			Value = Getter.Execute();
-		}
-	}
-	return Value;
+	GET_SETTING_VALUE(UserInputTag, UserInput, FName, Data.UserInput, Data.OnGetterName, NAME_None);
 }
 
 // Get custom widget of the setting by specified tag
 USettingCustomWidget* USettingsWidget::GetCustomWidget(const FSettingTag& CustomWidgetTag) const
 {
-	const FSettingsPicker& FoundRow = GetSettingRow(CustomWidgetTag);
-	USettingCustomWidget* CustomWidget = nullptr;
-	if (FoundRow.IsValid())
-	{
-		CustomWidget = Cast<USettingCustomWidget>(FoundRow.PrimaryData.SettingSubWidget.Get());
-
-		const USettingFunctionTemplate::FOnGetterWidget& Getter = FoundRow.CustomWidget.OnGetterWidget;
-		if (Getter.IsBound())
-		{
-			CustomWidget = Getter.Execute();
-		}
-	}
-	return CustomWidget;
+	GET_SETTING_VALUE(CustomWidgetTag, CustomWidget, USettingCustomWidget*, Cast<USettingCustomWidget>(FoundRow.PrimaryData.SettingSubWidget.Get()), Data.OnGetterWidget, nullptr);
 }
 
 // Get setting widget object by specified tag
@@ -594,6 +460,10 @@ USettingSubWidget* USettingsWidget::GetSettingSubWidget(const FSettingTag& Setti
 	const FSettingsPrimary& PrimaryData = GetSettingRow(SettingTag).PrimaryData;
 	return PrimaryData.IsValid() ? PrimaryData.SettingSubWidget.Get() : nullptr;
 }
+
+/* ---------------------------------------------------
+ *		Style
+ * --------------------------------------------------- */
 
 // Returns the size of the Settings widget on the screen
 FVector2D USettingsWidget::GetSettingsSize() const
@@ -649,7 +519,6 @@ FVector2D USettingsWidget::GetSubWidgetsSize(int32 SectionsBitmask) const
 	return SubWidgetsHeight;
 }
 
-
 // Returns the height of a setting scrollbox on the screen
 float USettingsWidget::GetScrollBoxHeight() const
 {
@@ -679,7 +548,7 @@ float USettingsWidget::GetScrollBoxHeight() const
 }
 
 // Is blueprint-event called that returns the style brush by specified button state
-FSlateBrush USettingsWidget::GetButtonBrush(ESettingsButtonState State) const
+FSlateBrush USettingsWidget::GetButtonBrush(ESettingsButtonState State)
 {
 	const USettingsDataAsset& SettingsDataAsset = USettingsDataAsset::Get();
 	const FMiscThemeData& MiscThemeData = SettingsDataAsset.GetMiscThemeData();
@@ -711,6 +580,10 @@ FSlateBrush USettingsWidget::GetButtonBrush(ESettingsButtonState State) const
 	return SlateBrush;
 }
 
+/* ---------------------------------------------------
+ *		Protected functions
+ * --------------------------------------------------- */
+
 // Called after the underlying slate widget is constructed
 void USettingsWidget::NativeConstruct()
 {
@@ -720,6 +593,8 @@ void USettingsWidget::NativeConstruct()
 	{
 		TryConstructSettings();
 	}
+
+	TryFocusOnUI();
 }
 
 // Is called right after the game was started and windows size is set to construct settings
@@ -747,24 +622,24 @@ void USettingsWidget::ConstructSettings()
 	// BP implementation to cache some data before creating subwidgets
 	OnConstructSettings();
 
+	FGameplayTagContainer AddedSettings;
 	for (TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
 	{
-		AddSetting(RowIt.Value);
+		FSettingsPicker& SettingRef = RowIt.Value;
+		BindSetting(SettingRef);
+		AddSetting(SettingRef);
+		AddedSettings.AddTag(SettingRef.PrimaryData.Tag);
 	}
+
+	UpdateSettings(AddedSettings);
 
 	UpdateScrollBoxesHeight();
 }
 
 void USettingsWidget::UpdateSettingsTableRows()
 {
-	const USettingsDataTable* SettingsDataTable = USettingsDataAsset::Get().GetSettingsDataTable();
-	if (!ensureMsgf(SettingsDataTable, TEXT("ASSERT: 'SettingsDataTable' is not valid")))
-	{
-		return;
-	}
-
 	TMap<FName, FSettingsRow> SettingRows;
-	SettingsDataTable->GetSettingRows(/*Out*/SettingRows);
+	USettingsUtilsLibrary::GetAllSettingRows(/*Out*/SettingRows);
 	if (!ensureMsgf(!SettingRows.IsEmpty(), TEXT("ASSERT: 'SettingRows' are empty")))
 	{
 		return;
@@ -797,26 +672,31 @@ void USettingsWidget::OnToggleSettings(bool bIsVisible)
 }
 
 // Bind and set static object delegate
-void USettingsWidget::TryBindStaticContext(FSettingsPrimary& Primary)
+bool USettingsWidget::TryBindOwner(FSettingsPrimary& Primary)
 {
-	UObject* FoundContextObj = nullptr;
-	if (UFunction* FunctionPtr = Primary.StaticContext.GetFunction())
+	const UObject* FoundContextObj = nullptr;
+	const FSettingFunctionPicker& Owner = Primary.Owner;
+	if (Owner.IsValid())
 	{
-		FunctionPtr->ProcessEvent(FunctionPtr, /*Out*/&FoundContextObj);
+		Primary.OwnerFunc.BindUFunction(Owner.FunctionClass->GetDefaultObject(), Owner.FunctionName);
+		FoundContextObj = Primary.GetSettingOwner(this);
 	}
 
 	if (!FoundContextObj)
 	{
-		return;
-	}
+		if (Owner.IsValid())
+		{
+			// Static context function is set, but returning object is null,
+			// most likely such object is not initialized yet,
+			// defer binding to try to rebind it later
+			DeferredBindingsInternal.AddTag(Primary.Tag);
+		}
 
-	Primary.StaticContextObject = FoundContextObj;
+		return false;
+	}
 
 	const UClass* ContextClass = FoundContextObj->GetClass();
-	if (!ensureMsgf(ContextClass, TEXT("ASSERT: 'ContextClass' is not valid")))
-	{
-		return;
-	}
+	checkf(ContextClass, TEXT("ERROR: [%i] %s:\n'ContextClass' is null!"), __LINE__, *FString(__FUNCTION__));
 
 	// Cache all functions that are contained in returned object
 	for (TFieldIterator<UFunction> It(ContextClass, EFieldIteratorFlags::IncludeSuper); It; ++It)
@@ -830,9 +710,11 @@ void USettingsWidget::TryBindStaticContext(FSettingsPrimary& Primary)
 		const FName FunctionNameIt = FunctionIt->GetFName();
 		if (!FunctionNameIt.IsNone())
 		{
-			Primary.StaticContextFunctionList.Emplace(FunctionNameIt);
+			Primary.OwnerFunctionList.Emplace(FunctionNameIt);
 		}
 	}
+
+	return true;
 }
 
 // Creates new widget based on specified setting class and sets it to specified primary data
@@ -921,9 +803,13 @@ void USettingsWidget::OpenSettings()
 
 	TryConstructSettings();
 
+	TryRebindDeferredContexts();
+
 	SetVisibility(ESlateVisibility::Visible);
 
 	OnToggleSettings(true);
+
+	TryFocusOnUI();
 
 	OnOpenSettings();
 }
@@ -960,226 +846,178 @@ void USettingsWidget::ToggleSettings()
 	}
 }
 
+// Is called on opening to focus the widget on UI if allowed
+void USettingsWidget::TryFocusOnUI()
+{
+	if (!USettingsDataAsset::Get().IsAutoFocusOnOpen())
+	{
+		return;
+	}
+
+	APlayerController* PlayerController = GetOwningPlayer();
+	if (!ensureMsgf(PlayerController, TEXT("ASSERT: [%i] %s:\n'PlayerController' is not valid!"), __LINE__, *FString(__FUNCTION__)))
+	{
+		return;
+	}
+
+	static const FInputModeGameAndUI GameAndUI{};
+	PlayerController->SetInputMode(GameAndUI);
+	PlayerController->SetShowMouseCursor(true);
+	PlayerController->bEnableClickEvents = true;
+	PlayerController->bEnableMouseOverEvents = true;
+}
+
+/* ---------------------------------------------------
+ *		Bind by setting types
+ * --------------------------------------------------- */
+
+// Bind setting to specified Get/Set delegates, so both methods will be called
+bool USettingsWidget::BindSetting(FSettingsPicker& Setting)
+{
+	FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
+	if (!ChosenData)
+	{
+		return false;
+	}
+
+	if (TryBindOwner(Setting.PrimaryData))
+	{
+		ChosenData->BindSetting(*this, Setting.PrimaryData);
+		return true;
+	}
+
+	return false;
+}
+
+/**
+ * Macro to create and bind a UI widget.
+ * @param Primary				Primary settings for the widget
+ * @param Data					Data structure containing widget properties
+ * @param GetterFunction		The getter function to bind
+ * @param SetterFunction		The setter function to bind
+ * @param AdditionalFunctionCalls Any additional function calls needed for specific widgets
+ */
+#define BIND_SETTING(Primary, Data, GetterFunction, SetterFunction)													\
+	do																												\
+	{																												\
+		if (UObject* OwnerObject = Primary.GetSettingOwner(this))													\
+		{																											\
+			const FName GetterFunctionName = Primary.Getter.FunctionName;											\
+			if (Primary.OwnerFunctionList.Contains(GetterFunctionName))												\
+			{																										\
+				Data.GetterFunction.BindUFunction(OwnerObject, GetterFunctionName);							\
+			}																										\
+			const FName SetterFunctionName = Primary.Setter.FunctionName;											\
+			if (Primary.OwnerFunctionList.Contains(SetterFunctionName))										\
+			{																										\
+				Data.SetterFunction.BindUFunction(OwnerObject, SetterFunctionName);							\
+			}																										\
+		}																											\
+	} while (0)
+
+// Bind button to own Get/Set delegates
+void USettingsWidget::BindButton(const FSettingsPrimary& Primary, FSettingsButton& Data)
+{
+	BIND_SETTING(Primary, Data, OnButtonPressed, OnButtonPressed);
+}
+
+// Bind checkbox to own Get/Set delegates
+void USettingsWidget::BindCheckbox(const FSettingsPrimary& Primary, FSettingsCheckbox& Data)
+{
+	BIND_SETTING(Primary, Data, OnGetterBool, OnSetterBool);
+}
+
+// Bind combobox to own Get/Set delegates
+void USettingsWidget::BindCombobox(const FSettingsPrimary& Primary, FSettingsCombobox& Data)
+{
+	BIND_SETTING(Primary, Data, OnGetterInt, OnSetterInt);
+
+	if (UObject* OwnerObject = Primary.GetSettingOwner(this))
+	{
+		const FName GetMembersFunctionName = Data.GetMembers.FunctionName;
+		if (Primary.OwnerFunctionList.Contains(GetMembersFunctionName))
+		{
+			Data.OnGetMembers.BindUFunction(OwnerObject, GetMembersFunctionName);
+			Data.OnGetMembers.ExecuteIfBound(Data.Members);
+		}
+
+		const FName SetMembersFunctionName = Data.SetMembers.FunctionName;
+		if (Primary.OwnerFunctionList.Contains(SetMembersFunctionName))
+		{
+			Data.OnSetMembers.BindUFunction(OwnerObject, SetMembersFunctionName);
+			Data.OnSetMembers.ExecuteIfBound(Data.Members);
+		}
+	}
+}
+
+// Bind slider to own Get/Set delegates
+void USettingsWidget::BindSlider(const FSettingsPrimary& Primary, FSettingsSlider& Data)
+{
+	BIND_SETTING(Primary, Data, OnGetterFloat, OnSetterFloat);
+}
+
+// Bind simple text to own Get/Set delegates
+void USettingsWidget::BindTextLine(const FSettingsPrimary& Primary, FSettingsTextLine& Data)
+{
+	BIND_SETTING(Primary, Data, OnGetterText, OnSetterText);
+}
+
+// Bind text input to own Get/Set delegates
+void USettingsWidget::BindUserInput(const FSettingsPrimary& Primary, FSettingsUserInput& Data)
+{
+	BIND_SETTING(Primary, Data, OnGetterName, OnSetterName);
+}
+
+// Bind custom widget to own Get/Set delegates
+void USettingsWidget::BindCustomWidget(const FSettingsPrimary& Primary, FSettingsCustomWidget& Data)
+{
+	BIND_SETTING(Primary, Data, OnGetterWidget, OnSetterWidget);
+}
+
+// Attempts to rebind those Settings that failed to bind their Getter/Setter functions on initial construct
+void USettingsWidget::TryRebindDeferredContexts()
+{
+	if (DeferredBindingsInternal.IsEmpty())
+	{
+		// Nothing to rebind, we are done
+		return;
+	}
+
+	FGameplayTagContainer ReboundSettings;
+	for (const FGameplayTag& TagIt : DeferredBindingsInternal)
+	{
+		FSettingsPicker* FoundRowPtr = TagIt.IsValid() ? SettingsTableRowsInternal.Find(TagIt.GetTagName()) : nullptr;
+		if (FoundRowPtr
+			&& BindSetting(*FoundRowPtr))
+		{
+			ReboundSettings.AddTagFast(TagIt);
+		}
+	}
+
+	if (!ReboundSettings.IsEmpty())
+	{
+		// Some settings were successfully rebound, remove them from the deferred list and update them
+		DeferredBindingsInternal.RemoveTags(ReboundSettings);
+		UpdateSettings(ReboundSettings);
+	}
+}
+
 // Add setting on UI.
 void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 {
-	const FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
+	FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
 	if (!ChosenData)
 	{
 		return;
 	}
 
 	FSettingsPrimary& PrimaryData = Setting.PrimaryData;
-	TryBindStaticContext(PrimaryData);
 
 	if (Setting.PrimaryData.bStartOnNextColumn)
 	{
 		StartNextColumn();
 	}
 
-	if (ChosenData == &Setting.Button)
-	{
-		AddSettingButton(PrimaryData, Setting.Button);
-	}
-	else if (ChosenData == &Setting.Checkbox)
-	{
-		AddSettingCheckbox(PrimaryData, Setting.Checkbox);
-	}
-	else if (ChosenData == &Setting.Combobox)
-	{
-		AddSettingCombobox(PrimaryData, Setting.Combobox);
-	}
-	else if (ChosenData == &Setting.Slider)
-	{
-		AddSettingSlider(PrimaryData, Setting.Slider);
-	}
-	else if (ChosenData == &Setting.TextLine)
-	{
-		AddSettingTextLine(PrimaryData, Setting.TextLine);
-	}
-	else if (ChosenData == &Setting.UserInput)
-	{
-		AddSettingUserInput(PrimaryData, Setting.UserInput);
-	}
-	else if (ChosenData == &Setting.CustomWidget)
-	{
-		AddSettingCustomWidget(PrimaryData, Setting.CustomWidget);
-	}
-
-	UpdateSettings(FGameplayTagContainer(PrimaryData.Tag));
-}
-
-// Add button on UI
-void USettingsWidget::AddSettingButton(FSettingsPrimary& Primary, FSettingsButton& Data)
-{
-	const TSubclassOf<USettingButton> ButtonClass = USettingsDataAsset::Get().GetButtonClass();
-	CreateSettingSubWidget(Primary, ButtonClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnButtonPressed.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
-	AddButton(Primary, Data);
-}
-
-// Add checkbox on UI
-void USettingsWidget::AddSettingCheckbox(FSettingsPrimary& Primary, FSettingsCheckbox& Data)
-{
-	const TSubclassOf<USettingCheckbox> CheckboxClass = USettingsDataAsset::Get().GetCheckboxClass();
-	CreateSettingSubWidget(Primary, CheckboxClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterBool.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterBool.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
-	AddCheckbox(Primary, Data);
-}
-
-// Add combobox on UI
-void USettingsWidget::AddSettingCombobox(FSettingsPrimary& Primary, FSettingsCombobox& Data)
-{
-	const TSubclassOf<USettingCombobox> ComboboxClass = USettingsDataAsset::Get().GetComboboxClass();
-	CreateSettingSubWidget(Primary, ComboboxClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName GetMembersFunctionName = Data.GetMembers.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetMembersFunctionName))
-		{
-			Data.OnGetMembers.BindUFunction(StaticContextObject, GetMembersFunctionName);
-			Data.OnGetMembers.ExecuteIfBound(Data.Members);
-		}
-
-		const FName SetMembersFunctionName = Data.SetMembers.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetMembersFunctionName))
-		{
-			Data.OnSetMembers.BindUFunction(StaticContextObject, SetMembersFunctionName);
-			Data.OnSetMembers.ExecuteIfBound(Data.Members);
-		}
-
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterInt.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterInt.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
-	AddCombobox(Primary, Data);
-}
-
-// Add slider on UI
-void USettingsWidget::AddSettingSlider(FSettingsPrimary& Primary, FSettingsSlider& Data)
-{
-	const TSubclassOf<USettingSlider>& SliderClass = USettingsDataAsset::Get().GetSliderClass();
-	CreateSettingSubWidget(Primary, SliderClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterFloat.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterFloat.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
-	AddSlider(Primary, Data);
-}
-
-// Add simple text on UI
-void USettingsWidget::AddSettingTextLine(FSettingsPrimary& Primary, FSettingsTextLine& Data)
-{
-	const TSubclassOf<USettingTextLine>& TextLineClass = USettingsDataAsset::Get().GetTextLineClass();
-	CreateSettingSubWidget(Primary, TextLineClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterText.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterText.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
-	AddTextLine(Primary, Data);
-}
-
-// Add text input on UI
-void USettingsWidget::AddSettingUserInput(FSettingsPrimary& Primary, FSettingsUserInput& Data)
-{
-	const TSubclassOf<USettingUserInput>& UserInputClass = USettingsDataAsset::Get().GetUserInputClass();
-	CreateSettingSubWidget(Primary, UserInputClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterName.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterName.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
-	AddUserInput(Primary, Data);
-}
-
-// Add custom widget on UI
-void USettingsWidget::AddSettingCustomWidget(FSettingsPrimary& Primary, FSettingsCustomWidget& Data)
-{
-	CreateSettingSubWidget(Primary, Data.CustomWidgetClass);
-
-	if (UObject* StaticContextObject = Primary.StaticContextObject.Get())
-	{
-		const FName GetterFunctionName = Primary.Getter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(GetterFunctionName))
-		{
-			Data.OnGetterWidget.BindUFunction(StaticContextObject, GetterFunctionName);
-		}
-
-		const FName SetterFunctionName = Primary.Setter.FunctionName;
-		if (Primary.StaticContextFunctionList.Contains(SetterFunctionName))
-		{
-			Data.OnSetterWidget.BindUFunction(StaticContextObject, SetterFunctionName);
-		}
-	}
-
-	AddCustomWidget(Primary, Data);
+	CreateSettingSubWidget(PrimaryData, ChosenData->GetSubWidgetClass());
+	ChosenData->AddSetting(*this, PrimaryData);
 }

@@ -17,11 +17,10 @@ class SETTINGSWIDGETCONSTRUCTOR_API USettingsWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-public:
 	/* ---------------------------------------------------
 	 *		Public properties
 	 * --------------------------------------------------- */
-
+public:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToggledSettings, bool, bIsVisible);
 
 	/** Is called to notify listeners the Settings widget is opened or closed. */
@@ -31,7 +30,7 @@ public:
 	/* ---------------------------------------------------
 	 *		Public functions
 	 * --------------------------------------------------- */
-
+public:
 	/** Constructs settings if viewport is ready otherwise wait until viewport become initialized. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
 	void TryConstructSettings();
@@ -55,6 +54,10 @@ public:
 	/** Flip-flop opens and closes the Settings menu. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
 	void ToggleSettings();
+
+	/** Is called on opening to focus the widget on UI if allowed. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
+	void TryFocusOnUI();
 
 	/** Returns true when this widget is fully constructed and ready to be used. */
 	UFUNCTION(BlueprintPure, Category = "C++")
@@ -100,7 +103,7 @@ public:
 	/* ---------------------------------------------------
 	 *		Style
 	 * --------------------------------------------------- */
-
+public:
 	/** Returns the size of the Settings widget on the screen. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	FVector2D GetSettingsSize() const;
@@ -116,12 +119,12 @@ public:
 
 	/** Is blueprint-event called that returns the style brush by specified button state. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Style")
-	FSlateBrush GetButtonBrush(ESettingsButtonState State) const;
+	static FSlateBrush GetButtonBrush(ESettingsButtonState State);
 
 	/* ---------------------------------------------------
 	 *		Setters by setting types
 	 * --------------------------------------------------- */
-
+public:
 	/**
    	  * Set value to the option by tag.
    	  * Common function to set setting of an any type by the string.
@@ -177,7 +180,7 @@ public:
 	/* ---------------------------------------------------
 	 *		Getters by setting types
 	 * --------------------------------------------------- */
-
+public:
 	/** Returns is a checkbox toggled. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Getters", meta = (AutoCreateRefTerm = "CheckboxTag"))
 	bool GetCheckboxValue(const FSettingTag& CheckboxTag) const;
@@ -214,7 +217,7 @@ protected:
 	/* ---------------------------------------------------
 	 *		Protected properties
 	 * --------------------------------------------------- */
-
+protected:
 	/** Contains all settings. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Settings Table Rows"))
 	TMap<FName/*Tag*/, FSettingsPicker/*Row*/> SettingsTableRowsInternal;
@@ -231,10 +234,15 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Setting ScrollBoxes"))
 	TArray<TObjectPtr<class USettingScrollBox>> SettingScrollBoxesInternal;
 
+	/** Contains all Setting tags that failed to bind their Getter/Setter functions on initial construct, so it's stored to be rebound later.
+	 * @see USettingsWidget::TryRebindDeferredContexts */
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "DeferredBindings"))
+	FGameplayTagContainer DeferredBindingsInternal;
+
 	/* ---------------------------------------------------
 	 *		Bound widget properties
 	 * --------------------------------------------------- */
-
+protected:
 	/** The section in the top margin of Settings, usually contains a title. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UVerticalBox> HeaderVerticalBox = nullptr;
@@ -250,7 +258,7 @@ protected:
 	/* ---------------------------------------------------
 	*		Protected functions
 	* --------------------------------------------------- */
-
+protected:
 	/** Called after the underlying slate widget is constructed.
 	* May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
@@ -271,11 +279,6 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
 	void OnToggleSettings(bool bIsVisible);
 
-	/** Bind and set static object delegate.
-	* @see FSettingsPrimary::OnStaticContext */
-	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
-	void TryBindStaticContext(UPARAM(ref)FSettingsPrimary& Primary);
-
 	/** Starts adding settings on the next column. */
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
 	void StartNextColumn();
@@ -285,9 +288,56 @@ protected:
 	void UpdateScrollBoxesHeight();
 
 	/* ---------------------------------------------------
+	 *		Bind by setting types
+	 * --------------------------------------------------- */
+public:
+	/** Bind setting to specified in table Get/Set delegates, so both methods will be called. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
+	bool BindSetting(UPARAM(ref)FSettingsPicker& Setting);
+
+	/** Bind button to own Get/Set delegates. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Binders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
+	void BindButton(const FSettingsPrimary& Primary, FSettingsButton& Data);
+
+	/** Bind checkbox to own Get/Set delegates. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Binders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
+	void BindCheckbox(const FSettingsPrimary& Primary, FSettingsCheckbox& Data);
+
+	/** Bind combobox to own Get/Set delegates. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Binders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
+	void BindCombobox(const FSettingsPrimary& Primary, FSettingsCombobox& Data);
+
+	/** Bind slider to own Get/Set delegates. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Binders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
+	void BindSlider(const FSettingsPrimary& Primary, FSettingsSlider& Data);
+
+	/** Bind simple text to own Get/Set delegates. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Binders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
+	void BindTextLine(const FSettingsPrimary& Primary, FSettingsTextLine& Data);
+
+	/** Bind text input to own Get/Set delegates. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Binders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
+	void BindUserInput(const FSettingsPrimary& Primary, FSettingsUserInput& Data);
+
+	/** Bind custom widget to own Get/Set delegates.  */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Binders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
+	void BindCustomWidget(const FSettingsPrimary& Primary, FSettingsCustomWidget& Data);
+
+protected:
+	/** Bind and set static object delegate.
+	* @see FSettingsPrimary::OwnerFunc */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
+	bool TryBindOwner(UPARAM(ref)FSettingsPrimary& Primary);
+
+	/** Attempts to rebind those Settings that failed to bind their Getter/Setter functions on initial construct.
+	 * @see USettingsWidget::DeferredBindingsInternal */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
+	void TryRebindDeferredContexts();
+
+	/* ---------------------------------------------------
 	 *		Add by setting types
 	 * --------------------------------------------------- */
-
+public:
 	/** Add setting on UI. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected))
 	void AddSetting(UPARAM(ref)FSettingsPicker& Setting);
@@ -295,59 +345,54 @@ protected:
 	/** Add button on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddButton(const FSettingsPrimary& Primary, const FSettingsButton& Data);
-	void AddSettingButton(FSettingsPrimary& Primary, FSettingsButton& Data);
 
 	/** Add checkbox on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddCheckbox(const FSettingsPrimary& Primary, const FSettingsCheckbox& Data);
-	void AddSettingCheckbox(FSettingsPrimary& Primary, FSettingsCheckbox& Data);
 
 	/** Add combobox on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddCombobox(const FSettingsPrimary& Primary, const FSettingsCombobox& Data);
-	void AddSettingCombobox(FSettingsPrimary& Primary, FSettingsCombobox& Data);
 
 	/** Add slider on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddSlider(const FSettingsPrimary& Primary, const FSettingsSlider& Data);
-	void AddSettingSlider(FSettingsPrimary& Primary, FSettingsSlider& Data);
 
 	/** Add simple text on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddTextLine(const FSettingsPrimary& Primary, const FSettingsTextLine& Data);
-	void AddSettingTextLine(FSettingsPrimary& Primary, FSettingsTextLine& Data);
 
 	/** Add text input on UI. */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddUserInput(const FSettingsPrimary& Primary, const FSettingsUserInput& Data);
-	void AddSettingUserInput(FSettingsPrimary& Primary, FSettingsUserInput& Data);
 
 	/** Add custom widget on UI.  */
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
 	void AddCustomWidget(const FSettingsPrimary& Primary, const FSettingsCustomWidget& Data);
-	void AddSettingCustomWidget(FSettingsPrimary& Primary, FSettingsCustomWidget& Data);
 
 	/* ---------------------------------------------------
 	 *		Blueprint implementable setters
+	 *
+	 *		Don't call these functions directly, use 'Set Setting X' functions instead.
 	 * --------------------------------------------------- */
-
+protected:
 	/** Internal blueprint function to toggle checkbox. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "CheckboxTag"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "CheckboxTag"))
 	void SetCheckbox(const FSettingTag& CheckboxTag, bool InValue);
 
 	/** Internal blueprint function to set chosen member index for a combobox. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "ComboboxTag"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "ComboboxTag"))
 	void SetComboboxIndex(const FSettingTag& ComboboxTag, int32 InValue);
 
 	/** Internal blueprint function to set new members for a combobox. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "ComboboxTag,InValue"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "ComboboxTag,InValue"))
 	void SetComboboxMembers(const FSettingTag& ComboboxTag, const TArray<FText>& InValue);
 
 	/** Internal blueprint function to set current value for a slider [0...1]. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "SliderTag"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "SliderTag"))
 	void SetSlider(const FSettingTag& SliderTag, float InValue);
 
 	/** Internal blueprint function to set new text for an input box. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "UserInputTag"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "UserInputTag"))
 	void SetUserInput(const FSettingTag& UserInputTag, FName InValue);
 };

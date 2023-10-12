@@ -2,6 +2,8 @@
 
 #include "Data/SettingsDataTable.h"
 //---
+#include "Data/SettingsRow.h"
+//---
 #if WITH_EDITOR
 #include "DataTableEditorUtils.h" // FDataTableEditorUtils::RenameRow
 #endif

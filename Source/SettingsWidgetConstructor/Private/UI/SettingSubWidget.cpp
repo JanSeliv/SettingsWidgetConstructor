@@ -14,6 +14,7 @@
 #include "Components/Slider.h"
 #include "Components/TextBlock.h"
 #include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Widgets/Input/SSlider.h"
 //---
