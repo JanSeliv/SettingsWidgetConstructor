@@ -25,7 +25,7 @@ struct FSWCMyTableRow : public FTableRowBase
  * Provides additional in-editor functionality like reexporting .json on data table change.
  * Its RowStruct structure must inherit from FSWCMyTableRow.
  */
-UCLASS()
+UCLASS(Abstract)
 class USWCMyDataTable : public UDataTable
 {
 	GENERATED_BODY()
@@ -36,10 +36,12 @@ public:
 
 	/** Returns the table rows. */
 	template <typename T>
-	void GetRows(TMap<FName, T>& OutRows) const;
+	void GetRows(TMap<FName, T>& OutRows) const { GetRows(*this, OutRows); }
+
+	template <typename T>
+	static void GetRows(const UDataTable& DataTable, TMap<FName, T>& OutRows);
 
 protected:
-#pragma region OnDataTableChange
 #if WITH_EDITOR
 	friend FSWCMyTableRow;
 
@@ -47,26 +49,37 @@ protected:
 	 * Is created to let child data tables reacts on changes without binding to its delegate,
 	 * can't use UDataTable::HandleDataTableChanged() since it is not virtual.
 	 * Is in runtime module since FDataTableEditor is private. */
-	virtual void OnThisDataTableChanged(FName RowName, const uint8& RowData);
+	virtual void OnThisDataTableChanged(FName RowName, const uint8& RowData) {}
+
+	/** Is called on saving the data table. */
+	virtual void PostSaveRoot(FObjectPostSaveRootContext ObjectSaveContext) override;
+
+	/** Reexports this table to .json. */
+	virtual void ReexportToJson();
 #endif // WITH_EDITOR
-#pragma endregion OnDataTableChange
 };
 
 /** Returns the table rows. */
 template <typename T>
-void USWCMyDataTable::GetRows(TMap<FName, T>& OutRows) const
+void USWCMyDataTable::GetRows(const UDataTable& DataTable, TMap<FName, T>& OutRows)
 {
-	static_assert(TIsDerivedFrom<T, FSWCMyTableRow>::Value, "Type is not derived from FSWCMyTableRow.");
-	if (ensureAlwaysMsgf(RowStruct && RowStruct->IsChildOf(T::StaticStruct()), TEXT("ASSERT: 'RowStruct' is not child of specified struct")))
+	if (!ensureAlwaysMsgf(DataTable.RowStruct && DataTable.RowStruct->IsChildOf(T::StaticStruct()), TEXT("ASSERT: 'RowStruct' is not child of specified struct")))
+	{
+		return;
+	}
+
+	if (!OutRows.IsEmpty())
 	{
 		OutRows.Empty();
-		OutRows.Reserve(RowMap.Num());
-		for (const TTuple<FName, uint8*>& RowIt : RowMap)
+	}
+
+	const TMap<FName, uint8*>& RowMap = DataTable.GetRowMap();
+	OutRows.Reserve(RowMap.Num());
+	for (const TTuple<FName, uint8*>& RowIt : RowMap)
+	{
+		if (const T* FoundRowPtr = reinterpret_cast<const T*>(RowIt.Value))
 		{
-			if (const T* FoundRowPtr = reinterpret_cast<const T*>(RowIt.Value))
-			{
-				OutRows.Emplace(RowIt.Key, *FoundRowPtr);
-			}
+			OutRows.Emplace(RowIt.Key, *FoundRowPtr);
 		}
 	}
 }
