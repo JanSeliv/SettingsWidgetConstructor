@@ -5,7 +5,6 @@
 #include "Blueprint/UserWidget.h"
 //---
 #include "Data/SettingsRow.h"
-#include "Widgets/Input/SComboBox.h"
 //---
 #include "SettingSubWidget.generated.h"
 
@@ -148,6 +147,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Sub-Widget", meta = (BlueprintProtected))
 	void OnCheckStateChanged(bool bIsChecked);
 };
+
+template <typename T>
+class SComboBox;
 
 /**
  * The sub-widget of Combobox settings.

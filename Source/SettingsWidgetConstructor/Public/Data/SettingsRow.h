@@ -18,7 +18,7 @@
  *		╚═══╦FSettingsPicker
  *			╠═══╦FSettingsPrimary
  *			║	╠════FSettingTag
- *			║	╚════FSettingFunctionPicker (StaticContext, Setter, Getter)
+ *			║	╚════FSettingFunctionPicker (Owner, Setter, Getter)
  *			╚════FSettingsDataBase
  */
 
@@ -41,24 +41,24 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsPrimary
 	/** The static function to obtain object to call Setters and Getters.
 	  * The FunctionContextTemplate meta will contain a name of one UFunctionPickerTemplate delegate. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (FunctionContextTemplate))
-	FSettingFunctionPicker StaticContext = FSettingFunctionPicker::EmptySettingFunction;
+	FSettingFunctionPicker Owner = FSettingFunctionPicker::EmptySettingFunction;
 
-	/** The Setter function to be called to set the setting value for the Static Context object.
+	/** The Setter function to be called to set the setting value for the Owner object.
 	  * The FunctionSetterTemplate meta will contain a name of one UFunctionPickerTemplate delegate. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (FunctionSetterTemplate))
 	FSettingFunctionPicker Setter = FSettingFunctionPicker::EmptySettingFunction;
 
-	/** The Getter function to be called to get the setting value from the Static Context object.
+	/** The Getter function to be called to get the setting value from the Owner object.
 	  * The FunctionGetterTemplate meta will contain a name of one UFunctionPickerTemplate delegate. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (FunctionGetterTemplate))
 	FSettingFunctionPicker Getter = FSettingFunctionPicker::EmptySettingFunction;
 
 	/** The setting name. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MultiLine = "true"))
 	FText Caption = TEXT_NONE;
 
 	/** The description to be shown as tooltip. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MultiLine = "true"))
 	FText Tooltip = TEXT_NONE;
 
 	/** The padding of this setting. */
@@ -77,14 +77,18 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsPrimary
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Categories = "Settings"))
 	FGameplayTagContainer SettingsToUpdate = FGameplayTagContainer::EmptyContainer;
 
+	/** If set, it will override own position to be shown after specified setting.
+	 * Is useful when should be shown after setting that is created in another Settings Data Table.
+	 * All the next settings after ShowNextToSettingOverride in the same table will be also shown next to it.
+	 * @see 'Data Registr'y category of 'Settings Data Asset'. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FSettingTag ShowNextToSettingOverride = FSettingTag::EmptySettingTag;
+
 	/** Created widget of the chosen setting (button, checkbox, combobox, slider, text line, user input). */
 	TWeakObjectPtr<class USettingSubWidget> SettingSubWidget = nullptr;
 
-	/** The cached object obtained from the Static Context function. */
-	TWeakObjectPtr<UObject> StaticContextObject = nullptr;
-
-	/** Contains all cached functions of the Static Context object. */
-	TArray<FName> StaticContextFunctionList;
+	/** Contains all cached functions of the Owner object. */
+	TArray<FName> OwnerFunctionList;
 
 	/** Returns true if is valid. */
 	FORCEINLINE bool IsValid() const { return Tag.IsValid(); }
@@ -96,6 +100,17 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsPrimary
 	/** Creates a hash value.
 	* @param Other the other object to create a hash value for. */
 	friend SETTINGSWIDGETCONSTRUCTOR_API uint32 GetTypeHash(const FSettingsPrimary& Other);
+
+	/*********************************************************************************************
+	 * Setting Owner
+	 * Is living object that contains specific Setter and Getter functions.
+	 ********************************************************************************************* */
+public:
+	/** Is executed to obtain holding object. */
+	UObject* GetSettingOwner(const UObject* WorldContext) const;
+
+	/** The cached bound delegate that returns holding object. */
+	USettingFunctionTemplate::FOnGetterObject OwnerFunc;
 };
 
 /**
@@ -152,7 +167,7 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsPicker
 	/** Returns the pointer to one of the chosen in-game type.
 	  * It searches the member property of this struct by a value of SettingsType.
 	  * @see FSettingsPicker::SettingsType */
-	const FSettingsDataBase* GetChosenSettingsData() const;
+	FSettingsDataBase* GetChosenSettingsData() const;
 
 	/** Returns true if row is valid. */
 	FORCEINLINE bool IsValid() const { return !(*this == Empty); }
