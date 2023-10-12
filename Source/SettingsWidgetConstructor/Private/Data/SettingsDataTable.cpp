@@ -20,6 +20,8 @@ USettingsDataTable::USettingsDataTable()
 // Called on every change in this data table to automatic set the key name by specified setting tag
 void USettingsDataTable::OnThisDataTableChanged(FName RowKey, const uint8& RowData)
 {
+	Super::OnThisDataTableChanged(RowKey, RowData);
+
 	// Set row name by specified tag
 	const FSettingsRow& Row = reinterpret_cast<const FSettingsRow&>(RowData);
 	const FName RowValueTag = Row.SettingsPicker.PrimaryData.Tag.GetTagName();
@@ -29,8 +31,5 @@ void USettingsDataTable::OnThisDataTableChanged(FName RowKey, const uint8& RowDa
 	{
 		FDataTableEditorUtils::RenameRow(this, RowKey, RowValueTag);
 	}
-
-	// Export to .json
-	Super::OnThisDataTableChanged(RowKey, RowData);
 }
 #endif // WITH_EDITOR
