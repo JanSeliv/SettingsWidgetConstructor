@@ -6,6 +6,7 @@
 //---
 #if WITH_EDITOR
 #include "DataTableEditorUtils.h" // FDataTableEditorUtils::RenameRow
+#include "Misc/DataValidation.h" // IsDataValid func
 #endif
 //---
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsDataTable)
@@ -31,5 +32,28 @@ void USettingsDataTable::OnThisDataTableChanged(FName RowKey, const uint8& RowDa
 	{
 		FDataTableEditorUtils::RenameRow(this, RowKey, RowValueTag);
 	}
+}
+
+// Is called to validate the data table setup
+EDataValidationResult USettingsDataTable::IsDataValid(FDataValidationContext& Context) const
+{
+	EDataValidationResult Result = CombineDataValidationResults(Super::IsDataValid(Context), EDataValidationResult::Valid);
+
+	int32 RowIndex = 1; // Tables indexing starts from 1
+	TMap<FName, FSettingsRow> SettingsRows;
+	GetSettingRows(SettingsRows);
+	for (const TTuple<FName, FSettingsRow>& RowIt : SettingsRows)
+	{
+		const EDataValidationResult RowResult = RowIt.Value.SettingsPicker.IsDataValid(Context);
+		Result = CombineDataValidationResults(Result, RowResult);
+		if (RowResult == EDataValidationResult::Invalid)
+		{
+			Context.AddError(FText::FromString(FString::Printf(TEXT("ERROR: Next setting row is invalid: index [%d], name: '%s'"), RowIndex, *RowIt.Key.ToString())));
+		}
+
+		++RowIndex;
+	}
+
+	return Result;
 }
 #endif // WITH_EDITOR
