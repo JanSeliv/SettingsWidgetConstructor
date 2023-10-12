@@ -16,11 +16,22 @@ bool FSettingsPrimary::operator==(const FSettingsPrimary& Other) const
 	return GetTypeHash(*this) == GetTypeHash(Other);
 }
 
+// Is executed to obtain holding object
+UObject* FSettingsPrimary::GetSettingOwner(const UObject* WorldContext) const
+{
+	if (OwnerFunc.IsBound())
+	{
+		return OwnerFunc.Execute(WorldContext);
+	}
+
+	return nullptr;
+}
+
 // Creates a hash value
 uint32 GetTypeHash(const FSettingsPrimary& Other)
 {
 	const uint32 TagHash = GetTypeHash(Other.Tag);
-	const uint32 ObjectContextHash = GetTypeHash(Other.StaticContext);
+	const uint32 ObjectContextHash = GetTypeHash(Other.Owner);
 	const uint32 SetterHash = GetTypeHash(Other.Setter);
 	const uint32 GetterHash = GetTypeHash(Other.Getter);
 	const uint32 CaptionHash = GetTypeHash(Other.Caption.ToString());

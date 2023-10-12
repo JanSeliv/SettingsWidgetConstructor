@@ -21,7 +21,7 @@
   *
   * Example:
   * UPROPERTY(EditDefaultsOnly, meta = (FunctionSetterTemplate = "/Script/FunctionPicker.FunctionPickerTemplate::OnSetMembers__DelegateSignature"))
-  * FFunctionPicker SetMembers = FFunctionPicker::Empty;
+  * FSWCFunctionPicker SetMembers = FSWCFunctionPicker::Empty;
   */
 USTRUCT(BlueprintType)
 struct SETTINGSWIDGETCONSTRUCTOR_API FSWCFunctionPicker
@@ -38,26 +38,35 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSWCFunctionPicker
 	FSWCFunctionPicker(UClass* InFunctionClass, FName InFunctionName);
 
 	/** The class where function can be found. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Class"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Class", AllowAbstract, ShowOnlyInnerProperties))
 	TObjectPtr<UClass> FunctionClass = nullptr;
 
 	/** The function name to choose for specified class.*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Function"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Function", ShowOnlyInnerProperties))
 	FName FunctionName = NAME_None;
 
 	/** Returns true if is valid. */
-	FORCEINLINE bool IsValid() const { return !(*this == Empty); }
+	FORCEINLINE bool IsValid() const { return FunctionClass && !FunctionName.IsNone(); }
 
 	/** Returns the function pointer based on set data to this structure. */
 	UFunction* GetFunction() const;
 
+	/** Returns string in text format: Class::Function. */
+	FString ToDisplayString() const;
+
 	/** Compares for equality.
 	  * @param Other The other object being compared. */
-	bool operator==(const FSWCFunctionPicker& Other) const;
+	FORCEINLINE bool operator==(const FSWCFunctionPicker& Other) const { return GetTypeHash(*this) == GetTypeHash(Other); }
 
 	/** Creates a hash value.
 	  * @param Other the other object to create a hash value for. */
-	friend uint32 GetTypeHash(const FSWCFunctionPicker& Other);
+	friend SETTINGSWIDGETCONSTRUCTOR_API uint32 GetTypeHash(const FSWCFunctionPicker& Other);
+
+	/** bool operator */
+	FORCEINLINE operator bool() const { return IsValid(); }
+
+	/** FName operator */
+	FORCEINLINE operator FName() const { return FunctionName; }
 
 protected:
 	/** Contains cached function ptr for performance reasons. */

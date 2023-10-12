@@ -24,7 +24,7 @@ class USettingSubWidget;
   * @see FFunctionPicker
   */
 USTRUCT(BlueprintType, meta = (
-	FunctionContextTemplate = "/Script/SettingsWidgetConstructor.SettingFunctionTemplate::OnStaticContext__DelegateSignature"))
+	FunctionContextTemplate = "/Script/SettingsWidgetConstructor.SettingFunctionTemplate::OnGetterObject__DelegateSignature"))
 struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsDataBase
 {
 	GENERATED_BODY()
