@@ -31,6 +31,11 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsDataBase
 
 	virtual ~FSettingsDataBase() = default;
 
+#if WITH_EDITOR
+	/** Validates chosen data. */
+	virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const { return EDataValidationResult::Valid; }
+#endif // WITH_EDITOR
+
 	/*********************************************************************************************
 	 * Base methods to override
 	 *
