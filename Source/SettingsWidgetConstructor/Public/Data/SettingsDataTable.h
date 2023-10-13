@@ -21,12 +21,15 @@ public:
 
 	/** Returns the table rows.
 	 * @see USettingsDataAsset::SettingsDataTableInternal */
-	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	void GetSettingRows(TMap<FName, struct FSettingsRow>& OutRows) const { GetRows(OutRows); }
 
 protected:
 #if WITH_EDITOR
 	/** Called on every change in this data table to automatic set the key name by specified setting tag. */
 	virtual void OnThisDataTableChanged(FName RowKey, const uint8& RowData) override;
+
+	/** Is called to validate the data table setup. */
+	virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif // WITH_EDITOR
 };

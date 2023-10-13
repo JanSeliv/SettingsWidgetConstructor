@@ -101,6 +101,11 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsPrimary
 	* @param Other the other object to create a hash value for. */
 	friend SETTINGSWIDGETCONSTRUCTOR_API uint32 GetTypeHash(const FSettingsPrimary& Other);
 
+#if WITH_EDITOR
+	/** Validates chosen data. */
+	EDataValidationResult IsDataValid(class FDataValidationContext& Context) const;
+#endif // WITH_EDITOR
+
 	/*********************************************************************************************
 	 * Setting Owner
 	 * Is living object that contains specific Setter and Getter functions.
@@ -179,6 +184,11 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsPicker
 	/** Creates a hash value.
 	  * @param Other the other object to create a hash value for. */
 	friend SETTINGSWIDGETCONSTRUCTOR_API uint32 GetTypeHash(const FSettingsPicker& Other);
+
+#if WITH_EDITOR
+	/** Validates chosen data. */
+	EDataValidationResult IsDataValid(class FDataValidationContext& Context) const;
+#endif // WITH_EDITOR
 };
 
 /**
