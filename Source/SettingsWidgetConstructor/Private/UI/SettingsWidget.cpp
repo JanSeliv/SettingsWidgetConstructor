@@ -91,7 +91,7 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 
 	if (SettingsTableRowsInternal.IsEmpty())
 	{
-		UpdateSettingsTableRows();
+		CacheTable();
 	}
 
 	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
@@ -617,7 +617,7 @@ void USettingsWidget::ConstructSettings()
 		return;
 	}
 
-	UpdateSettingsTableRows();
+	CacheTable();
 
 	// BP implementation to cache some data before creating subwidgets
 	OnConstructSettings();
@@ -636,7 +636,8 @@ void USettingsWidget::ConstructSettings()
 	UpdateScrollBoxesHeight();
 }
 
-void USettingsWidget::UpdateSettingsTableRows()
+// Internal function to cache setting rows from Settings Data Table
+void USettingsWidget::CacheTable()
 {
 	TMap<FName, FSettingsRow> SettingRows;
 	USettingsUtilsLibrary::GetAllSettingRows(/*Out*/SettingRows);
@@ -646,17 +647,12 @@ void USettingsWidget::UpdateSettingsTableRows()
 	}
 
 	// Reset values if currently are set
-	OverallColumnsNumInternal = 1;
 	SettingsTableRowsInternal.Empty();
-
 	SettingsTableRowsInternal.Reserve(SettingRows.Num());
 	for (const TTuple<FName, FSettingsRow>& SettingRowIt : SettingRows)
 	{
 		const FSettingsPicker& SettingsPicker = SettingRowIt.Value.SettingsPicker;
 		SettingsTableRowsInternal.Emplace(SettingRowIt.Key, SettingsPicker);
-
-		// Set overall columns num by amount of rows that are marked to be started on next column
-		OverallColumnsNumInternal += static_cast<int32>(SettingsPicker.PrimaryData.bStartOnNextColumn);
 	}
 }
 
@@ -733,13 +729,6 @@ USettingSubWidget* USettingsWidget::CreateSettingSubWidget(FSettingsPrimary& InO
 	SettingSubWidget->SetCaptionText(InOutPrimary.Caption);
 
 	return SettingSubWidget;
-}
-
-// Starts adding settings on the next column
-void USettingsWidget::StartNextColumn_Implementation()
-{
-	// BP implementation
-	// ...
 }
 
 // Automatically sets the height for all scrollboxes in the Settings
@@ -897,22 +886,22 @@ bool USettingsWidget::BindSetting(FSettingsPicker& Setting)
  * @param SetterFunction		The setter function to bind
  * @param AdditionalFunctionCalls Any additional function calls needed for specific widgets
  */
-#define BIND_SETTING(Primary, Data, GetterFunction, SetterFunction)													\
-	do																												\
-	{																												\
-		if (UObject* OwnerObject = Primary.GetSettingOwner(this))													\
-		{																											\
-			const FName GetterFunctionName = Primary.Getter.FunctionName;											\
-			if (Primary.OwnerFunctionList.Contains(GetterFunctionName))												\
-			{																										\
-				Data.GetterFunction.BindUFunction(OwnerObject, GetterFunctionName);							\
-			}																										\
-			const FName SetterFunctionName = Primary.Setter.FunctionName;											\
-			if (Primary.OwnerFunctionList.Contains(SetterFunctionName))										\
-			{																										\
-				Data.SetterFunction.BindUFunction(OwnerObject, SetterFunctionName);							\
-			}																										\
-		}																											\
+#define BIND_SETTING(Primary, Data, GetterFunction, SetterFunction)					\
+	do																				\
+	{																				\
+		if (UObject* OwnerObject = Primary.GetSettingOwner(this))					\
+		{																			\
+			const FName GetterFunctionName = Primary.Getter.FunctionName;			\
+			if (Primary.OwnerFunctionList.Contains(GetterFunctionName))				\
+			{																		\
+				Data.GetterFunction.BindUFunction(OwnerObject, GetterFunctionName);	\
+			}																		\
+			const FName SetterFunctionName = Primary.Setter.FunctionName;			\
+			if (Primary.OwnerFunctionList.Contains(SetterFunctionName))				\
+			{																		\
+				Data.SetterFunction.BindUFunction(OwnerObject, SetterFunctionName);	\
+			}																		\
+		}																			\
 	} while (0)
 
 // Bind button to own Get/Set delegates
@@ -1015,9 +1004,75 @@ void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 
 	if (Setting.PrimaryData.bStartOnNextColumn)
 	{
-		StartNextColumn();
+		AddColumn(GetColumnIndexBySetting(PrimaryData.Tag));
 	}
 
 	CreateSettingSubWidget(PrimaryData, ChosenData->GetSubWidgetClass());
 	ChosenData->AddSetting(*this, PrimaryData);
+}
+
+/*********************************************************************************************
+ * Columns builder
+ ********************************************************************************************* */
+
+// Returns the index of a Setting by specified tag in own column or -1 if not found
+int32 USettingsWidget::GetPositionInColumn(const FSettingTag& SettingTag) const
+{
+	int32 SettingIndex = 0;
+	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
+	{
+		const FSettingsPrimary& PrimaryData = RowIt.Value.PrimaryData;
+		if (PrimaryData.bStartOnNextColumn)
+		{
+			// Skip to the next column
+			SettingIndex = 0;
+			continue;
+		}
+
+		if (PrimaryData.Tag == SettingTag)
+		{
+			return SettingIndex;
+		}
+
+		++SettingIndex;
+	}
+
+	// Not found
+	return INDEX_NONE;
+}
+
+// Returns the index of column for a Setting by specified tag or -1 if not found
+int32 USettingsWidget::GetColumnIndexBySetting(const FSettingTag& SettingTag) const
+{
+	int32 ColumnIndex = 0;
+	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
+	{
+		const FSettingsPrimary& PrimaryData = RowIt.Value.PrimaryData;
+		if (PrimaryData.bStartOnNextColumn)
+		{
+			++ColumnIndex;
+		}
+
+		if (PrimaryData.Tag == SettingTag)
+		{
+			return ColumnIndex;
+		}
+	}
+
+	return INDEX_NONE;
+}
+
+// Calculates the number of all columns. By result of this function columns will be created
+int32 USettingsWidget::GetOverallColumnsNum() const
+{
+	int32 OverallColumnsNum = 1;
+	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
+	{
+		if (RowIt.Value.PrimaryData.bStartOnNextColumn)
+		{
+			++OverallColumnsNum;
+		}
+	}
+
+	return OverallColumnsNum;
 }
