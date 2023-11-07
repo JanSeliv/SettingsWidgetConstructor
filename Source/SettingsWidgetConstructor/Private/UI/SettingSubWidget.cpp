@@ -51,6 +51,28 @@ void USettingSubWidget::SetSettingsWidget(USettingsWidget* InSettingsWidget)
 	SettingsWidgetInternal = InSettingsWidget;
 }
 
+// Sets the parent widget element in hierarchy of this subwidget
+UPanelSlot* USettingSubWidget::AttachTo(UPanelWidget* InPanelWidget)
+{
+	if (!ensureMsgf(InPanelWidget, TEXT("ASSERT: [%i] %s:\n'InPanelWidget' is not valid!"), __LINE__, *FString(__FUNCTION__)))
+	{
+		return nullptr;
+	}
+
+	const int32 RowIndex = GetSettingsWidgetChecked().GetPositionInColumn(GetSettingTag());
+	if (RowIndex != INDEX_NONE)
+	{
+		ParentSlotInternal = InPanelWidget->InsertChildAt(RowIndex, this);
+	}
+	else
+	{
+		ParentSlotInternal = InPanelWidget->AddChild(this);
+	}
+
+	ensureMsgf(ParentSlotInternal, TEXT("ASSERT: [%i] %s:\nFailed to attached the Setting subwidget with the next tag: '%s'"), __LINE__, *FString(__FUNCTION__), *GetSettingTag().ToString());
+	return ParentSlotInternal;
+}
+
 // Returns the custom line height for this setting
 float USettingSubWidget::GetLineHeight() const
 {
@@ -278,7 +300,7 @@ void USettingUserInput::OnTextChanged(const FText& Text)
 void USettingScrollBox::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
+
 	if (ScrollBoxWidget)
 	{
 		SlateScrollBoxInternal = FSWCWidgetUtilsLibrary::GetSlateWidget<SScrollBox>(ScrollBoxWidget);

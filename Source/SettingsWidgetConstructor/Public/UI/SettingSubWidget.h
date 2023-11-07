@@ -55,12 +55,22 @@ public:
 
 	/** Returns the main setting widget (the outer of this subwidget). */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Sub-Widget")
-	class USettingsWidget* GetSettingsWidget() const;
+	USettingsWidget* GetSettingsWidget() const;
 	USettingsWidget& GetSettingsWidgetChecked() const;
 
 	/** Sets the main settings widget for this subwidget. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Sub-Widget")
 	void SetSettingsWidget(USettingsWidget* InSettingsWidget);
+
+	/** Returns parent widget element in hierarchy of this subwidget: it could be a header/footer vertical box or column. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Sub-Widget")
+	FORCEINLINE UPanelSlot* GetParentSlot() const { return ParentSlotInternal; }
+
+	/** Sets the parent widget element in hierarchy of this subwidget.
+	 * @param InPanelWidget header/footer vertical box or column.
+	 * @return The slot where this widget was added, or null if the add failed. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Sub-Widget")
+	UPanelSlot* AttachTo(UPanelWidget* InPanelWidget);
 
 protected:
 	/** The Size Box widget. */
@@ -77,7 +87,11 @@ protected:
 
 	/** The main settings widget. */
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor|Sub-Widget", meta = (BlueprintProtected, DisplayName = "Settings Widget"))
-	TObjectPtr<class USettingsWidget> SettingsWidgetInternal = nullptr;
+	TObjectPtr<USettingsWidget> SettingsWidgetInternal = nullptr;
+
+	/** The parent widget element in hierarchy of this subwidget: it could be a header/footer vertical box or column. */
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor|Sub-Widget", meta = (BlueprintProtected, DisplayName = "Panel Widget"))
+	TObjectPtr<UPanelSlot> ParentSlotInternal = nullptr;
 };
 
 /**

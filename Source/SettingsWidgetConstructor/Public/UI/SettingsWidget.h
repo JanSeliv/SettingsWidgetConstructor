@@ -61,7 +61,7 @@ public:
 
 	/** Returns true when this widget is fully constructed and ready to be used. */
 	UFUNCTION(BlueprintPure, Category = "C++")
-	FORCEINLINE bool IsSettingsWidgetConstructed() const { return SettingsTableRowsInternal.Num() > 0; }
+	FORCEINLINE bool IsSettingsWidgetConstructed() const { return !SettingsTableRowsInternal.IsEmpty(); }
 
 	/** Is called to player sound effect on any setting click. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor")
@@ -222,18 +222,6 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Settings Table Rows"))
 	TMap<FName/*Tag*/, FSettingsPicker/*Row*/> SettingsTableRowsInternal;
 
-	/** The index of the current column. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Current Column Index"))
-	int32 CurrentColumnIndexInternal = 0;
-
-	/** Is set automatically on started by amount of rows that are marked to be started on next column. Settings have at least one column. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Overall Columns Num"))
-	int32 OverallColumnsNumInternal = 1;
-
-	/** Contains all setting scrollboxes added to columns. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Setting ScrollBoxes"))
-	TArray<TObjectPtr<class USettingScrollBox>> SettingScrollBoxesInternal;
-
 	/** Contains all Setting tags that failed to bind their Getter/Setter functions on initial construct, so it's stored to be rebound later.
 	 * @see USettingsWidget::TryRebindDeferredContexts */
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "DeferredBindings"))
@@ -273,15 +261,11 @@ protected:
 
 	/** Internal function to cache setting rows from Settings Data Table. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
-	void UpdateSettingsTableRows();
+	void CacheTable();
 
 	/** Is called when In-Game menu became opened or closed. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
 	void OnToggleSettings(bool bIsVisible);
-
-	/** Starts adding settings on the next column. */
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
-	void StartNextColumn();
 
 	/** Automatically sets the height for all scrollboxes in the Settings. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
@@ -395,4 +379,46 @@ protected:
 	/** Internal blueprint function to set new text for an input box. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "UserInputTag"))
 	void SetUserInput(const FSettingTag& UserInputTag, FName InValue);
+
+	/*********************************************************************************************
+	 * Columns builder
+	 ********************************************************************************************* */
+public:
+	/** Returns the index of a Setting by specified tag in own column or -1 if not found. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns", meta = (AutoCreateRefTerm = "SettingTag"))
+	int32 GetPositionInColumn(const FSettingTag& SettingTag) const;
+
+	/** Returns the index of column for a Setting by specified tag or -1 if not found. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns", meta = (AutoCreateRefTerm = "SettingTag"))
+	int32 GetColumnIndexBySetting(const FSettingTag& SettingTag) const;
+
+	/** Returns a column by specified index. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns")
+	UUserWidget* GetColumnByIndex(int32 ColumnIndex) const { return ColumnsInternal.IsValidIndex(ColumnIndex) ? ColumnsInternal[ColumnIndex] : nullptr; }
+
+	/** Returns a column by specified setting tag. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns", meta = (AutoCreateRefTerm = "SettingTag"))
+	FORCEINLINE UUserWidget* GetColumnBySetting(const FSettingTag& SettingTag) const { return GetColumnByIndex(GetColumnIndexBySetting(SettingTag)); }
+
+	/** Calculates the number of all columns. By result of this function columns will be created. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns")
+	int32 GetOverallColumnsNum() const;
+
+protected:
+	/** Contains all setting columns. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected, DisplayName = "Columns"))
+	TArray<TObjectPtr<class UUserWidget>> ColumnsInternal;
+
+	/** Contains all setting scrollboxes added to columns. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected, DisplayName = "Setting ScrollBoxes"))
+	TArray<TObjectPtr<class USettingScrollBox>> SettingScrollBoxesInternal;
+
+protected:
+	/** Adds new settings on the next column index. */
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected))
+	UUserWidget* AddColumn(int32 ColumnIndex);
+
+	/** Adds new scrollbox in the column by index. */
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected))
+	USettingScrollBox* AddScrollBox(int32 ColumnIndex);
 };
