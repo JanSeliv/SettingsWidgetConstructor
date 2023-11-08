@@ -59,6 +59,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsDataBase
 
 	/** Base method to add the setting to the Settings Widget, where appropriate Add method of Settings Widget will be called. */
 	virtual void AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData) PURE_VIRTUAL(FSettingsDataBase::AddSetting,);
+
+	/** Override this method to return header/footer/content used by the setting. Only some settings like button or text can be added to the margin area (header/footer). */
+	virtual EMyVerticalAlignment GetVerticalAlignment() const { return EMyVerticalAlignment::Content; }
 };
 
 /**
@@ -107,6 +110,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsButton : public FSettingsDataBase
 
 	/** Calls the Add function of the Settings Widget of this setting type. */
 	virtual void AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& PrimaryData) override;
+
+	/** Is overriden to provide support to be added to any area (header/footer/content). */
+	virtual EMyVerticalAlignment GetVerticalAlignment() const override { return VerticalAlignment; }
 };
 
 /**
@@ -322,6 +328,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsTextLine : public FSettingsDataBas
 
 	/** Calls the Add function of the Settings Widget of this setting type. */
 	virtual void AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData) override;
+
+	/** Is overriden to provide support to be added to any area (header/footer/content). */
+	virtual EMyVerticalAlignment GetVerticalAlignment() const override { return VerticalAlignment; }
 };
 
 /**
