@@ -23,7 +23,7 @@
 // Set the new setting tag for this widget
 void USettingSubWidget::SetSettingPrimaryRow(const FSettingsPrimary& InSettingPrimaryRow)
 {
-	SettingPrimaryRowInternal = InSettingPrimaryRow;
+	PrimaryDataInternal = InSettingPrimaryRow;
 }
 
 // Returns the main setting widget (the outer of this subwidget)
@@ -69,6 +69,8 @@ UPanelSlot* USettingSubWidget::AttachTo(UPanelWidget* InPanelWidget)
 		ParentSlotInternal = InPanelWidget->AddChild(this);
 	}
 
+	ApplyTheme();
+
 	ensureMsgf(ParentSlotInternal, TEXT("ASSERT: [%i] %s:\nFailed to attached the Setting subwidget with the next tag: '%s'"), __LINE__, *FString(__FUNCTION__), *GetSettingTag().ToString());
 	return ParentSlotInternal;
 }
@@ -106,6 +108,12 @@ void USettingSubWidget::SetCaptionText(const FText& NewCaptionText)
 	}
 }
 
+// Set the new button setting data for this widget
+void USettingButton::SetButtonData(const FSettingsButton& InButtonData)
+{
+	ButtonDataInternal = InButtonData;
+}
+
 // Called after the underlying slate widget is constructed
 void USettingButton::NativeConstruct()
 {
@@ -132,6 +140,12 @@ void USettingButton::OnButtonPressed()
 	SettingsWidgetInternal->SetSettingButtonPressed(GetSettingTag());
 }
 
+// Set the new checkbox setting data for this widget
+void USettingCheckbox::SetCheckboxData(const FSettingsCheckbox& InCheckboxData)
+{
+	CheckboxDataInternal = InCheckboxData;
+}
+
 // Called after the underlying slate widget is constructed
 void USettingCheckbox::NativeConstruct()
 {
@@ -155,6 +169,12 @@ void USettingCheckbox::OnCheckStateChanged(bool bIsChecked)
 	}
 
 	SettingsWidgetInternal->SetSettingCheckbox(GetSettingTag(), bIsChecked);
+}
+
+// Set the new combobox setting data for this widget
+void USettingCombobox::SetComboboxData(const FSettingsCombobox& InComboboxData)
+{
+	ComboboxDataInternal = InComboboxData;
 }
 
 // Called after the underlying slate widget is constructed
@@ -198,6 +218,12 @@ void USettingCombobox::OnMenuOpenChanged()
 	{
 		SettingsWidgetInternal->PlayUIClickSFX();
 	}
+}
+
+// Set the new slider setting data for this widget
+void USettingSlider::SetSliderData(const FSettingsSlider& InSliderData)
+{
+	SliderDataInternal = InSliderData;
 }
 
 // Called when a new item is selected in the combobox
@@ -249,6 +275,12 @@ void USettingSlider::OnValueChanged(float Value)
 	SettingsWidgetInternal->SetSettingSlider(GetSettingTag(), Value);
 }
 
+// Set the new Text Line setting data for this widget
+void USettingTextLine::SetTextLineData(const FSettingsTextLine& InTextLineData)
+{
+	TextLineDataInternal = InTextLineData;
+}
+
 // Returns current text set in the Editable Text Box
 void USettingUserInput::GetEditableText(FText& OutText) const
 {
@@ -268,6 +300,12 @@ void USettingUserInput::SetEditableText(const FText& InText)
 	}
 
 	EditableTextBox->SetText(InText);
+}
+
+// Set the new user input setting data for this widget
+void USettingUserInput::SetUserInputData(const FSettingsUserInput& InUserInputData)
+{
+	UserInputDataInternal = InUserInputData;
 }
 
 // Called after the underlying slate widget is constructed
@@ -294,6 +332,12 @@ void USettingUserInput::OnTextChanged(const FText& Text)
 
 	const FName MewValue(Text.ToString());
 	SettingsWidgetInternal->SetSettingUserInput(GetSettingTag(), MewValue);
+}
+
+// Set the new custom widget setting data for this widget
+void USettingCustomWidget::SetCustomWidgetData(const FSettingsCustomWidget& InCustomWidgetData)
+{
+	CustomWidgetDataInternal = InCustomWidgetData;
 }
 
 // Called after the underlying slate widget is constructed
