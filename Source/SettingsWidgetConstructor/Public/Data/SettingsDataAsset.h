@@ -117,6 +117,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	const FORCEINLINE FMiscThemeData& GetMiscThemeData() const { return MiscThemeDataInternal; }
 
+	/** Returns the tooltip class applied to each setting. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
+	FORCEINLINE TSubclassOf<class USettingTooltip> GetTooltipClass() const { return TooltipClassInternal; }
+
 	/** Returns the Settings Data Registry asset, is automatically set by default to which 'Settings Data Table' is added by itself. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	const UDataRegistry* GetSettingsDataRegistry() const;
@@ -153,6 +157,10 @@ protected:
 	/** The sub-widget class of User Input settings, is config property. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "User Input Class", ShowOnlyInnerProperties))
 	TSubclassOf<class USettingUserInput> UserInputClassInternal;
+
+	/** The tooltip class applied to all settings, is config property. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Tooltip Class", ShowOnlyInnerProperties))
+	TSubclassOf<class USettingTooltip> TooltipClassInternal;
 
 	/** If true, it will automatically call USettingsWidget::TryConstructSettings whenever the Settings Widget becomes constructed (e.g: on UUserWidget::AddToViewport call). */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Auto Construct", ShowOnlyInnerProperties))
