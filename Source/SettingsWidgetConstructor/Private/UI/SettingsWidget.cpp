@@ -1007,8 +1007,15 @@ void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 		AddColumn(GetColumnIndexBySetting(PrimaryData.Tag));
 	}
 
-	CreateSettingSubWidget(PrimaryData, ChosenData->GetSubWidgetClass());
+	USettingSubWidget* SettingSubWidget = CreateSettingSubWidget(PrimaryData, ChosenData->GetSubWidgetClass());
+	checkf(SettingSubWidget, TEXT("ERROR: [%i] %s:\n'SettingSubWidget' is null!"), __LINE__, *FString(__FUNCTION__));
+	SettingSubWidget->OnAddSetting(Setting);
+	SettingSubWidget->BPOnAddSetting();
+
+	// @TODO JanSeliv - Move to sub-widgets
 	ChosenData->AddSetting(*this, PrimaryData);
+
+	SettingSubWidget->ApplyTheme();
 }
 
 /*********************************************************************************************

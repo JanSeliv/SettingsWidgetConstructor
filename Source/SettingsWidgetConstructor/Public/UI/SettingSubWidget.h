@@ -72,10 +72,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget")
 	UPanelSlot* AttachTo(UPanelWidget* InPanelWidget);
 
+	/** Adds given widget as tooltip to this setting. */
+	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget")
+	void AddTooltipWidget();
+
+	/*********************************************************************************************
+	 * Events
+	 ********************************************************************************************* */
+public:
+	/** Base method that is called when the underlying slate widget is constructed.
+	 * May be called multiple times due to adding and removing from the hierarchy. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, DisplayName = "On Add Setting"))
+	void BPOnAddSetting();
+	virtual void OnAddSetting(const FSettingsPicker& Setting);
+
 	/** Applies 'Style', paddings, colors, etc. */
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "SettingSubWidget|Theme")
 	void ApplyTheme();
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
 protected:
 	/** The Size Box widget. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
@@ -122,6 +139,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InButtonData"))
 	void SetButtonData(const FSettingsButton& InButtonData);
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
 protected:
 	/** The slate button.*/
 	TWeakPtr<class SButton> SlateButtonInternal = nullptr;
@@ -134,9 +154,16 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Button Data"))
 	FSettingsButton ButtonDataInternal;
 
+	/*********************************************************************************************
+	 * Events
+	 ********************************************************************************************* */
+protected:
 	/** Called after the underlying slate widget is constructed.
 	 * May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
+
+	/** Is overridden to construct the button. */
+	virtual void OnAddSetting(const FSettingsPicker& Setting) override;
 
 	/** Called when the Button Widget is pressed.
 	 * @see USettingButton::OnSettingButtonPressed */
@@ -168,6 +195,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InCheckboxData"))
 	void SetCheckboxData(const FSettingsCheckbox& InCheckboxData);
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
 protected:
 	/** The slate checkbox.*/
 	TWeakPtr<class SCheckBox> SlateCheckboxInternal = nullptr;
@@ -180,6 +210,10 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Checkbox Data"))
 	FSettingsCheckbox CheckboxDataInternal;
 
+	/*********************************************************************************************
+	 * Events
+	 ********************************************************************************************* */
+public:
 	/** Called after the underlying slate widget is constructed.
  	 * May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
@@ -188,6 +222,9 @@ protected:
 	 * @see USettingCheckbox::CheckboxWidgetInternal */
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (BlueprintProtected))
 	void OnCheckStateChanged(bool bIsChecked);
+
+	/** Is overridden to construct the checkbox. */
+	virtual void OnAddSetting(const FSettingsPicker& Setting) override;
 };
 
 template <typename T>
@@ -223,6 +260,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InComboboxData"))
 	void SetComboboxData(const FSettingsCombobox& InComboboxData);
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
 protected:
 	/** The slate combobox.*/
 	TWeakPtr<SComboboxString> SlateComboboxInternal = nullptr;
@@ -239,6 +279,10 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Combobox Data"))
 	FSettingsCombobox ComboboxDataInternal;
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
+protected:
 	/** Called after the underlying slate widget is constructed.
 	 * May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
@@ -246,6 +290,10 @@ protected:
 	/** Is executed every tick when widget is enabled. */
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
+	/*********************************************************************************************
+	 * Events
+	 ********************************************************************************************* */
+protected:
 	/** Called when a new item is selected in the combobox
 	 * @see USettingCheckbox::ComboboxWidgetInternal */
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (BlueprintProtected))
@@ -254,6 +302,9 @@ protected:
 	/** Called when the combobox is opened or closed. */
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (BlueprintProtected))
 	void OnMenuOpenChanged();
+
+	/** Is overridden to construct the combobox. */
+	virtual void OnAddSetting(const FSettingsPicker& Setting) override;
 };
 
 /**
@@ -280,6 +331,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InSliderData"))
 	void SetSliderData(const FSettingsSlider& InSliderData);
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
 protected:
 	/** The slate slider.*/
 	TWeakPtr<class SSlider> SlateSliderInternal = nullptr;
@@ -292,6 +346,10 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Slider Data"))
 	FSettingsSlider SliderDataInternal;
 
+	/*********************************************************************************************
+	 * Events
+	 ********************************************************************************************* */
+protected:
 	/** Called after the underlying slate widget is constructed.
 	 * May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
@@ -304,6 +362,9 @@ protected:
 	 * @see USettingCheckbox::SliderWidgetInternal */
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (BlueprintProtected))
 	void OnValueChanged(float Value);
+
+	/** Is overridden to construct the slider. */
+	virtual void OnAddSetting(const FSettingsPicker& Setting) override;
 };
 
 /**
@@ -327,6 +388,9 @@ protected:
 	/** The text line setting data. */
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Text Line Data"))
 	FSettingsTextLine TextLineDataInternal;
+
+	/** Is overridden to construct the text line. */
+	virtual void OnAddSetting(const FSettingsPicker& Setting) override;
 };
 
 /**
@@ -361,6 +425,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InUserInputData"))
 	void SetUserInputData(const FSettingsUserInput& InUserInputData);
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
 protected:
 	/** The slate editable text box.*/
 	TWeakPtr<class SEditableTextBox> SlateEditableTextBoxInternal = nullptr;
@@ -373,6 +440,10 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "User Input Data"))
 	FSettingsUserInput UserInputDataInternal;
 
+	/*********************************************************************************************
+	 * Events
+	 ********************************************************************************************* */
+protected:
 	/** Called after the underlying slate widget is constructed.
 	* May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
@@ -381,6 +452,9 @@ protected:
 	 * @see USettingCheckbox::EditableTextBoxInternal */
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (BlueprintProtected, AutoCreateRefTerm = "Text"))
 	void OnTextChanged(const FText& Text);
+
+	/** Is overridden to construct the user input. */
+	virtual void OnAddSetting(const FSettingsPicker& Setting) override;
 };
 
 /**
@@ -404,6 +478,9 @@ protected:
 	/** The custom widget setting data. */
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Custom Widget Data"))
 	FSettingsCustomWidget CustomWidgetDataInternal;
+
+	/** Is overridden to construct the custom widget. */
+	virtual void OnAddSetting(const FSettingsPicker& Setting) override;
 };
 
 /**
@@ -433,4 +510,15 @@ protected:
 	/** Called after the underlying slate widget is constructed.
 	 * May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
+};
+
+/**
+ * Represents the ToolTip widget that is shown when the mouse is over the setting.
+ */
+UCLASS()
+class SETTINGSWIDGETCONSTRUCTOR_API USettingTooltip : public USettingSubWidget
+{
+	GENERATED_BODY()
+
+public:
 };
