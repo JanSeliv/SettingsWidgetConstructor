@@ -2,6 +2,7 @@
 
 #include "UI/SettingSubWidget.h"
 //---
+#include "Data/SettingsDataAsset.h"
 #include "MyUtilsLibraries/SWCWidgetUtilsLibrary.h"
 #include "UI/SettingsWidget.h"
 //---
@@ -59,20 +60,33 @@ UPanelSlot* USettingSubWidget::AttachTo(UPanelWidget* InPanelWidget)
 		return nullptr;
 	}
 
-	const int32 RowIndex = GetSettingsWidgetChecked().GetPositionInColumn(GetSettingTag());
-	if (RowIndex != INDEX_NONE)
-	{
-		ParentSlotInternal = InPanelWidget->InsertChildAt(RowIndex, this);
-	}
-	else
-	{
-		ParentSlotInternal = InPanelWidget->AddChild(this);
-	}
-
-	ApplyTheme();
+	ParentSlotInternal = InPanelWidget->AddChild(this);
 
 	ensureMsgf(ParentSlotInternal, TEXT("ASSERT: [%i] %s:\nFailed to attached the Setting subwidget with the next tag: '%s'"), __LINE__, *FString(__FUNCTION__), *GetSettingTag().ToString());
 	return ParentSlotInternal;
+}
+
+// Adds given widget as tooltip to this setting
+void USettingSubWidget::AddTooltipWidget()
+{
+	if (PrimaryDataInternal.Tooltip.IsEmpty()
+		|| PrimaryDataInternal.Tooltip.EqualToCaseIgnored(FCoreTexts::Get().None))
+	{
+		return;
+	}
+
+	USettingTooltip* CreatedWidget = CreateWidget<USettingTooltip>(GetOwningPlayer(), USettingsDataAsset::Get().GetTooltipClass());
+	checkf(CreatedWidget, TEXT("ERROR: [%i] %s:\n'CreatedWidget' is null!"), __LINE__, *FString(__FUNCTION__));
+
+	SetToolTip(CreatedWidget);
+	CreatedWidget->SetToolTipText(PrimaryDataInternal.Tooltip);
+	CreatedWidget->ApplyTheme();
+}
+
+// Base method that is called when the underlying slate widget is constructed
+void USettingSubWidget::OnAddSetting(const FSettingsPicker& Setting)
+{
+	AddTooltipWidget();
 }
 
 // Returns the custom line height for this setting
@@ -129,6 +143,14 @@ void USettingButton::NativeConstruct()
 	}
 }
 
+// Is overridden to construct the button
+void USettingButton::OnAddSetting(const FSettingsPicker& Setting)
+{
+	ButtonDataInternal = Setting.Button;
+
+	Super::OnAddSetting(Setting);
+}
+
 // Called when the Button Widget is pressed
 void USettingButton::OnButtonPressed()
 {
@@ -169,6 +191,14 @@ void USettingCheckbox::OnCheckStateChanged(bool bIsChecked)
 	}
 
 	SettingsWidgetInternal->SetSettingCheckbox(GetSettingTag(), bIsChecked);
+}
+
+// Is overridden to construct the checkbox
+void USettingCheckbox::OnAddSetting(const FSettingsPicker& Setting)
+{
+	CheckboxDataInternal = Setting.Checkbox;
+
+	Super::OnAddSetting(Setting);
 }
 
 // Set the new combobox setting data for this widget
@@ -218,6 +248,14 @@ void USettingCombobox::OnMenuOpenChanged()
 	{
 		SettingsWidgetInternal->PlayUIClickSFX();
 	}
+}
+
+// Is overridden to construct the combobox
+void USettingCombobox::OnAddSetting(const FSettingsPicker& Setting)
+{
+	ComboboxDataInternal = Setting.Combobox;
+
+	Super::OnAddSetting(Setting);
 }
 
 // Set the new slider setting data for this widget
@@ -275,10 +313,26 @@ void USettingSlider::OnValueChanged(float Value)
 	SettingsWidgetInternal->SetSettingSlider(GetSettingTag(), Value);
 }
 
+// Is overridden to construct the slider
+void USettingSlider::OnAddSetting(const FSettingsPicker& Setting)
+{
+	SliderDataInternal = Setting.Slider;
+
+	Super::OnAddSetting(Setting);
+}
+
 // Set the new Text Line setting data for this widget
 void USettingTextLine::SetTextLineData(const FSettingsTextLine& InTextLineData)
 {
 	TextLineDataInternal = InTextLineData;
+}
+
+// Is overridden to construct the text line
+void USettingTextLine::OnAddSetting(const FSettingsPicker& Setting)
+{
+	TextLineDataInternal = Setting.TextLine;
+
+	Super::OnAddSetting(Setting);
 }
 
 // Returns current text set in the Editable Text Box
@@ -334,10 +388,26 @@ void USettingUserInput::OnTextChanged(const FText& Text)
 	SettingsWidgetInternal->SetSettingUserInput(GetSettingTag(), MewValue);
 }
 
+// Is overridden to construct the user input
+void USettingUserInput::OnAddSetting(const FSettingsPicker& Setting)
+{
+	UserInputDataInternal = Setting.UserInput;
+
+	Super::OnAddSetting(Setting);
+}
+
 // Set the new custom widget setting data for this widget
 void USettingCustomWidget::SetCustomWidgetData(const FSettingsCustomWidget& InCustomWidgetData)
 {
 	CustomWidgetDataInternal = InCustomWidgetData;
+}
+
+// Is overridden to construct the custom widget
+void USettingCustomWidget::OnAddSetting(const FSettingsPicker& Setting)
+{
+	CustomWidgetDataInternal = Setting.CustomWidget;
+
+	Super::OnAddSetting(Setting);
 }
 
 // Called after the underlying slate widget is constructed
