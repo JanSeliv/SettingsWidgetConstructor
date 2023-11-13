@@ -394,11 +394,11 @@ public:
 
 	/** Returns a column by specified index. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns")
-	UUserWidget* GetColumnByIndex(int32 ColumnIndex) const { return ColumnsInternal.IsValidIndex(ColumnIndex) ? ColumnsInternal[ColumnIndex] : nullptr; }
+	class USettingColumn* GetColumnByIndex(int32 ColumnIndex) const { return ColumnsInternal.IsValidIndex(ColumnIndex) ? ColumnsInternal[ColumnIndex] : nullptr; }
 
 	/** Returns a column by specified setting tag. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns", meta = (AutoCreateRefTerm = "SettingTag"))
-	FORCEINLINE UUserWidget* GetColumnBySetting(const FSettingTag& SettingTag) const { return GetColumnByIndex(GetColumnIndexBySetting(SettingTag)); }
+	FORCEINLINE USettingColumn* GetColumnBySetting(const FSettingTag& SettingTag) const { return GetColumnByIndex(GetColumnIndexBySetting(SettingTag)); }
 
 	/** Calculates the number of all columns. By result of this function columns will be created. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns")
@@ -407,18 +407,10 @@ public:
 protected:
 	/** Contains all setting columns. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected, DisplayName = "Columns"))
-	TArray<TObjectPtr<class UUserWidget>> ColumnsInternal;
-
-	/** Contains all setting scrollboxes added to columns. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected, DisplayName = "Setting ScrollBoxes"))
-	TArray<TObjectPtr<class USettingScrollBox>> SettingScrollBoxesInternal;
+	TArray<TObjectPtr<class USettingColumn>> ColumnsInternal;
 
 protected:
 	/** Adds new settings on the next column index. */
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected))
-	UUserWidget* AddColumn(int32 ColumnIndex);
-
-	/** Adds new scrollbox in the column by index. */
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected))
-	USettingScrollBox* AddScrollBox(int32 ColumnIndex);
+	USettingColumn* AddColumn(int32 ColumnIndex);
 };

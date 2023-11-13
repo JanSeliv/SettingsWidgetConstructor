@@ -737,9 +737,9 @@ void USettingsWidget::UpdateScrollBoxesHeight()
 	ForceLayoutPrepass(); // Call it to make GetSettingsHeight work since it is called during widget construction
 	const float ScrollBoxHeight = GetScrollBoxHeight();
 
-	for (const USettingScrollBox* ScrollBoxIt : SettingScrollBoxesInternal)
+	for (const USettingColumn* ColumnIt : ColumnsInternal)
 	{
-		USizeBox* SizeBoxWidget = ScrollBoxIt ? ScrollBoxIt->GetSizeBoxWidget() : nullptr;
+		USizeBox* SizeBoxWidget = ColumnIt ? ColumnIt->GetSizeBoxWidget() : nullptr;
 		if (SizeBoxWidget)
 		{
 			SizeBoxWidget->SetMaxDesiredHeight(ScrollBoxHeight);
