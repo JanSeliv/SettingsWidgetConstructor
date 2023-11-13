@@ -484,10 +484,10 @@ protected:
 };
 
 /**
-* The sub-widget of the Scrollbox widget settings.
+* Represents the column which holds scrollbox and sub-settings inside.
  */
 UCLASS()
-class SETTINGSWIDGETCONSTRUCTOR_API USettingScrollBox : public USettingSubWidget
+class SETTINGSWIDGETCONSTRUCTOR_API USettingColumn : public USettingSubWidget
 {
 	GENERATED_BODY()
 

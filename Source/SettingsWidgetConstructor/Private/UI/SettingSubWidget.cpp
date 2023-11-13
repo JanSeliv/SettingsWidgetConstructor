@@ -411,7 +411,7 @@ void USettingCustomWidget::OnAddSetting(const FSettingsPicker& Setting)
 }
 
 // Called after the underlying slate widget is constructed
-void USettingScrollBox::NativeConstruct()
+void USettingColumn::NativeConstruct()
 {
 	Super::NativeConstruct();
 
