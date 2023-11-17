@@ -66,11 +66,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "SettingSubWidget")
 	FORCEINLINE UPanelSlot* GetParentSlot() const { return ParentSlotInternal; }
 
-	/** Sets the parent widget element in hierarchy of this subwidget.
-	 * @return The slot where this widget was added, or null if the add failed. */
-	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget")
-	UPanelSlot* Attach();
-
 	/** Adds given widget as tooltip to this setting. */
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget")
 	void AddTooltipWidget();
@@ -87,6 +82,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, DisplayName = "On Add Setting"))
 	void BPOnAddSetting();
 	virtual void OnAddSetting(const FSettingsPicker& Setting);
+
+protected:
+	/** Sets the parent widget element in hierarchy of this subwidget.
+	 * @return The slot where this widget was added, or null if the add failed. */
+	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget")
+	virtual UPanelSlot* Attach();
 
 	/** Applies 'Style', paddings, colors, etc. */
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "SettingSubWidget|Theme")
@@ -557,6 +558,13 @@ protected:
 	/** The vertical box that holds all the settings in this column, is attached to the ScrollBox. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UVerticalBox> VerticalHolderBox = nullptr;
+
+	/*********************************************************************************************
+	 * Events and overrides
+	 ********************************************************************************************* */
+protected:
+	/** Is overridden to attach the column to the Settings Widget. */
+	virtual UPanelSlot* Attach() override;
 
 	/** Called after the underlying slate widget is constructed.
 	 * May be called multiple times due to adding and removing from the hierarchy. */

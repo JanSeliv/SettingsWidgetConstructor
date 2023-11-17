@@ -10,6 +10,7 @@
 #include "Components/CheckBox.h"
 #include "Components/ComboBoxString.h"
 #include "Components/EditableTextBox.h"
+#include "Components/HorizontalBox.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Components/Slider.h"
@@ -446,6 +447,21 @@ void USettingCustomWidget::OnAddSetting(const FSettingsPicker& Setting)
 	CustomWidgetDataInternal = Setting.CustomWidget;
 
 	Super::OnAddSetting(Setting);
+}
+
+// Is overridden to attach the column to the Settings Widget
+UPanelSlot* USettingColumn::Attach()
+{
+	if (ParentSlotInternal)
+	{
+		// is already attached
+		return ParentSlotInternal;
+	}
+	
+	UHorizontalBox* ContentHorizontalBox = GetSettingsWidgetChecked().GetContentHorizontalBox();
+	checkf(ContentHorizontalBox, TEXT("ERROR: [%i] %s:\n'ContentHorizontalBox' is null!"), __LINE__, *FString(__FUNCTION__));
+	ParentSlotInternal = ContentHorizontalBox->AddChild(this);
+	return ParentSlotInternal;
 }
 
 // Called after the underlying slate widget is constructed
