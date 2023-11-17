@@ -14,6 +14,7 @@
 #include "Components/SizeBox.h"
 #include "Components/Slider.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SEditableTextBox.h"
@@ -53,14 +54,45 @@ void USettingSubWidget::SetSettingsWidget(USettingsWidget* InSettingsWidget)
 }
 
 // Sets the parent widget element in hierarchy of this subwidget
-UPanelSlot* USettingSubWidget::AttachTo(UPanelWidget* InPanelWidget)
+UPanelSlot* USettingSubWidget::Attach()
 {
-	if (!ensureMsgf(InPanelWidget, TEXT("ASSERT: [%i] %s:\n'InPanelWidget' is not valid!"), __LINE__, *FString(__FUNCTION__)))
+	if (ParentSlotInternal)
+	{
+		// is already attached
+		return ParentSlotInternal;
+	}
+
+	const FSettingsDataBase* SettingData = GetSettingData();
+	const EMyVerticalAlignment Alignment = SettingData ? SettingData->GetVerticalAlignment() : EMyVerticalAlignment::None;
+	if (!ensureMsgf(Alignment != EMyVerticalAlignment::None, TEXT("ASSERT: [%i] %s:\n'This widget '%s' can not be attached to the parent widget, because it has no alignment!"), __LINE__, *FString(__FUNCTION__), *GetName()))
 	{
 		return nullptr;
 	}
 
-	ParentSlotInternal = InPanelWidget->AddChild(this);
+	UPanelWidget* ParentWidget = nullptr;
+	switch (Alignment)
+	{
+	case EMyVerticalAlignment::Header:
+		ParentWidget = GetSettingsWidgetChecked().GetHeaderVerticalBox();
+		break;
+	case EMyVerticalAlignment::Content:
+		if (const USettingColumn* Column = GetSettingsWidgetChecked().GetColumnBySetting(GetSettingTag()))
+		{
+			ParentWidget = Column->GetVerticalHolderBox();
+		}
+		break;
+	case EMyVerticalAlignment::Footer:
+		ParentWidget = GetSettingsWidgetChecked().GetFooterVerticalBox();
+		break;
+	default: break;
+	}
+
+	if (!ensureMsgf(ParentWidget, TEXT("ASSERT: [%i] %s:\n'ParentWidget' is not found for the setting '%s'"), __LINE__, *FString(__FUNCTION__), *GetSettingTag().ToString()))
+	{
+		return nullptr;
+	}
+
+	ParentSlotInternal = ParentWidget->AddChild(this);
 
 	ensureMsgf(ParentSlotInternal, TEXT("ASSERT: [%i] %s:\nFailed to attached the Setting subwidget with the next tag: '%s'"), __LINE__, *FString(__FUNCTION__), *GetSettingTag().ToString());
 	return ParentSlotInternal;
@@ -86,7 +118,13 @@ void USettingSubWidget::AddTooltipWidget()
 // Base method that is called when the underlying slate widget is constructed
 void USettingSubWidget::OnAddSetting(const FSettingsPicker& Setting)
 {
+	BPOnAddSetting();
+
 	AddTooltipWidget();
+
+	Attach();
+
+	ApplyTheme();
 }
 
 // Returns the custom line height for this setting
