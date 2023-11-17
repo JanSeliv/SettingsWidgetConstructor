@@ -535,7 +535,7 @@ float USettingsWidget::GetScrollBoxHeight() const
 	float Paddings = 0.f;
 	const FMargin SettingsPadding = SettingsData.GetSettingsPadding();
 	Paddings += SettingsPadding.Top + SettingsPadding.Bottom;
-	const FMargin ScrollBoxPadding = SettingsData.GetScrollboxPadding();
+	const FMargin ScrollBoxPadding = SettingsData.GetColumnPadding();
 	Paddings += ScrollBoxPadding.Top + ScrollBoxPadding.Bottom;
 
 	const float ScrollBoxHeight = (SettingsSize - MarginsSize).Y - Paddings;
@@ -1035,4 +1035,13 @@ int32 USettingsWidget::GetColumnIndexBySetting(const FSettingTag& SettingTag) co
 	}
 
 	return INDEX_NONE;
+}
+
+// Creates new column on specified index
+void USettingsWidget::AddColumn(int32 ColumnIndex)
+{
+	USettingColumn* NewColumn = CreateWidget<USettingColumn>(this, USettingsDataAsset::Get().GetColumnClass());
+	NewColumn->SetSettingsWidget(this);
+	ColumnsInternal.Insert(NewColumn, ColumnIndex);
+	NewColumn->OnAddSetting(FSettingsPicker());
 }

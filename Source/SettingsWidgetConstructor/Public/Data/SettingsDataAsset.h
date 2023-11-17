@@ -65,6 +65,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	FORCEINLINE TSubclassOf<class USettingUserInput> GetUserInputClass() const { return UserInputClassInternal; }
 
+	/** Returns the tooltip class applied to each setting. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
+	FORCEINLINE TSubclassOf<class USettingTooltip> GetTooltipClass() const { return TooltipClassInternal; }
+
+	/** Returns the column class which holds scrollbox and sub-settings inside. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
+	FORCEINLINE TSubclassOf<class USettingColumn> GetColumnClass() const { return ColumnClassInternal; }
+
 	/** Returns true, when USettingsWidget::TryConstructSettings is automatically called whenever the Settings Widget becomes constructed (e.g: on UUserWidget::AddToViewport call). */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	FORCEINLINE bool IsAutoConstruct() const { return bAutoConstructInternal; }
@@ -87,11 +95,7 @@ public:
 
 	/** Returns the padding of the scrollbox widget. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
-	const FORCEINLINE FMargin& GetScrollboxPadding() const { return ScrollboxPaddingInternal; }
-
-	/** Return the padding space, used on adding next column. */
-	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
-	FORCEINLINE float GetSpaceBetweenColumns() const { return SpaceBetweenColumnsInternal; }
+	const FORCEINLINE FMargin& GetColumnPadding() const { return ColumnPaddingInternal; }
 
 	/** Return the button theme data. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
@@ -116,10 +120,6 @@ public:
 	/** Returns the misc theme data. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	const FORCEINLINE FMiscThemeData& GetMiscThemeData() const { return MiscThemeDataInternal; }
-
-	/** Returns the tooltip class applied to each setting. */
-	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
-	FORCEINLINE TSubclassOf<class USettingTooltip> GetTooltipClass() const { return TooltipClassInternal; }
 
 	/** Returns the Settings Data Registry asset, is automatically set by default to which 'Settings Data Table' is added by itself. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
@@ -162,6 +162,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Tooltip Class", ShowOnlyInnerProperties))
 	TSubclassOf<class USettingTooltip> TooltipClassInternal;
 
+	/** The column class which holds scrollbox and sub-settings inside, is config property. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Column Class", ShowOnlyInnerProperties))
+	TSubclassOf<class USettingColumn> ColumnClassInternal;
+
 	/** If true, it will automatically call USettingsWidget::TryConstructSettings whenever the Settings Widget becomes constructed (e.g: on UUserWidget::AddToViewport call). */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Auto Construct", ShowOnlyInnerProperties))
 	bool bAutoConstructInternal;
@@ -182,13 +186,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Scrollbox Percent Height", ClampMin = "0", ClampMax = "1", ShowOnlyInnerProperties))
 	float ScrollboxPercentHeightInternal;
 
-	/** The padding of the scrollbox widget, is config property. */
+	/** The padding of the Column, is config property. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Scrollbox Padding", ShowOnlyInnerProperties))
-	FMargin ScrollboxPaddingInternal;
-
-	/** The padding space, used on adding next column, is config property. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Space Between Columns", ShowOnlyInnerProperties))
-	float SpaceBetweenColumnsInternal;
+	FMargin ColumnPaddingInternal;
 
 	/** The button theme data, is config property. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Button Theme Data"))
