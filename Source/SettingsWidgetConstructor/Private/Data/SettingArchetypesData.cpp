@@ -31,16 +31,6 @@ void FSettingsButton::BindSetting(USettingsWidget& SettingsWidget, const FSettin
 	SettingsWidget.BindButton(PrimaryData, *this);
 }
 
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsButton::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& PrimaryData)
-{
-	USettingButton* ButtonSubWidget = CastChecked<USettingButton>(PrimaryData.SettingSubWidget.Get());
-	checkf(ButtonSubWidget, TEXT("ERROR: [%i] %s:\n'ButtonSubWidget' is null!"), __LINE__, *FString(__FUNCTION__));
-	ButtonSubWidget->SetButtonData(*this);
-
-	SettingsWidget.AddButton(PrimaryData, *this);
-}
-
 /*********************************************************************************************
  * FSettingsCheckbox
  ********************************************************************************************* */
@@ -69,16 +59,6 @@ void FSettingsCheckbox::SetSettingValue(USettingsWidget& SettingsWidget, const F
 void FSettingsCheckbox::BindSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& PrimaryData)
 {
 	SettingsWidget.BindCheckbox(PrimaryData, *this);
-}
-
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsCheckbox::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	USettingCheckbox* CheckboxSubWidget = CastChecked<USettingCheckbox>(InOutPrimaryData.SettingSubWidget.Get());
-	checkf(CheckboxSubWidget, TEXT("ERROR: [%i] %s:\n'CheckboxSubWidget' is null!"), __LINE__, *FString(__FUNCTION__));
-	CheckboxSubWidget->SetCheckboxData(*this);
-
-	SettingsWidget.AddCheckbox(InOutPrimaryData, *this);
 }
 
 /*********************************************************************************************
@@ -128,16 +108,6 @@ void FSettingsCombobox::BindSetting(USettingsWidget& SettingsWidget, const FSett
 	SettingsWidget.BindCombobox(PrimaryData, *this);
 }
 
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsCombobox::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	USettingCombobox* ComboboxSubWidget = CastChecked<USettingCombobox>(InOutPrimaryData.SettingSubWidget.Get());
-	checkf(ComboboxSubWidget, TEXT("ERROR: [%i] %s:\n'ComboboxSubWidget' is null!"), __LINE__, *FString(__FUNCTION__));
-	ComboboxSubWidget->SetComboboxData(*this);
-
-	SettingsWidget.AddCombobox(InOutPrimaryData, *this);
-}
-
 /*********************************************************************************************
  * FSettingsSlider
  ********************************************************************************************* */
@@ -166,16 +136,6 @@ void FSettingsSlider::SetSettingValue(USettingsWidget& SettingsWidget, const FSe
 void FSettingsSlider::BindSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& PrimaryData)
 {
 	SettingsWidget.BindSlider(PrimaryData, *this);
-}
-
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsSlider::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	USettingSlider* SliderSubWidget = CastChecked<USettingSlider>(InOutPrimaryData.SettingSubWidget.Get());
-	checkf(SliderSubWidget, TEXT("ERROR: [%i] %s:\n'SliderSubWidget' is null!"), __LINE__, *FString(__FUNCTION__));
-	SliderSubWidget->SetSliderData(*this);
-
-	SettingsWidget.AddSlider(InOutPrimaryData, *this);
 }
 
 /*********************************************************************************************
@@ -209,16 +169,6 @@ void FSettingsTextLine::BindSetting(USettingsWidget& SettingsWidget, const FSett
 	SettingsWidget.BindTextLine(PrimaryData, *this);
 }
 
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsTextLine::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	USettingTextLine* TextLineSubWidget = CastChecked<USettingTextLine>(InOutPrimaryData.SettingSubWidget.Get());
-	checkf(TextLineSubWidget, TEXT("ERROR: [%i] %s:\n'TextLineSubWidget' is null!"), __LINE__, *FString(__FUNCTION__));
-	TextLineSubWidget->SetTextLineData(*this);
-
-	SettingsWidget.AddTextLine(InOutPrimaryData, *this);
-}
-
 /*********************************************************************************************
  * FSettingsUserInput
  ********************************************************************************************* */
@@ -249,16 +199,6 @@ void FSettingsUserInput::BindSetting(USettingsWidget& SettingsWidget, const FSet
 	SettingsWidget.BindUserInput(PrimaryData, *this);
 }
 
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsUserInput::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	USettingUserInput* UserInputSubWidget = CastChecked<USettingUserInput>(InOutPrimaryData.SettingSubWidget.Get());
-	checkf(UserInputSubWidget, TEXT("ERROR: [%i] %s:\n'UserInputSubWidget' is null!"), __LINE__, *FString(__FUNCTION__));
-	UserInputSubWidget->SetUserInputData(*this);
-
-	SettingsWidget.AddUserInput(InOutPrimaryData, *this);
-}
-
 /*********************************************************************************************
  * FSettingsCustomWidget
  ********************************************************************************************* */
@@ -280,14 +220,4 @@ void FSettingsCustomWidget::GetSettingValue(const USettingsWidget& SettingsWidge
 void FSettingsCustomWidget::BindSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& PrimaryData)
 {
 	SettingsWidget.BindCustomWidget(PrimaryData, *this);
-}
-
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsCustomWidget::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	USettingCustomWidget* CustomWidgetSubWidget = CastChecked<USettingCustomWidget>(InOutPrimaryData.SettingSubWidget.Get());
-	checkf(CustomWidgetSubWidget, TEXT("ERROR: [%i] %s:\n'CustomWidgetSubWidget' is null!"), __LINE__, *FString(__FUNCTION__));
-	CustomWidgetSubWidget->SetCustomWidgetData(*this);
-
-	SettingsWidget.AddCustomWidget(InOutPrimaryData, *this);
 }

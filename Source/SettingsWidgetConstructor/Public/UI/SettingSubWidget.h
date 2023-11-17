@@ -67,19 +67,21 @@ public:
 	FORCEINLINE UPanelSlot* GetParentSlot() const { return ParentSlotInternal; }
 
 	/** Sets the parent widget element in hierarchy of this subwidget.
-	 * @param InPanelWidget header/footer vertical box or column.
 	 * @return The slot where this widget was added, or null if the add failed. */
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget")
-	UPanelSlot* AttachTo(UPanelWidget* InPanelWidget);
+	UPanelSlot* Attach();
 
 	/** Adds given widget as tooltip to this setting. */
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget")
 	void AddTooltipWidget();
 
 	/*********************************************************************************************
-	 * Events
+	 * Events and overrides
 	 ********************************************************************************************* */
 public:
+	/** Base method that returns the setting data of this widget. */
+	virtual const FSettingsDataBase* GetSettingData() const { return nullptr; }
+
 	/** Base method that is called when the underlying slate widget is constructed.
 	 * May be called multiple times due to adding and removing from the hierarchy. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, DisplayName = "On Add Setting"))
@@ -155,8 +157,12 @@ protected:
 	FSettingsButton ButtonDataInternal;
 
 	/*********************************************************************************************
-	 * Events
+	 * Events and overrides
 	 ********************************************************************************************* */
+public:
+	/** Is overridden to return the button data of this widget. */
+	virtual const FSettingsDataBase* GetSettingData() const override { return &ButtonDataInternal; }
+
 protected:
 	/** Called after the underlying slate widget is constructed.
 	 * May be called multiple times due to adding and removing from the hierarchy. */
@@ -211,9 +217,13 @@ protected:
 	FSettingsCheckbox CheckboxDataInternal;
 
 	/*********************************************************************************************
-	 * Events
+	 * Events and overrides
 	 ********************************************************************************************* */
 public:
+	/** Is overridden to return the checkbox data of this widget. */
+	virtual const FSettingsDataBase* GetSettingData() const override { return &CheckboxDataInternal; }
+
+protected:
 	/** Called after the underlying slate widget is constructed.
  	 * May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
@@ -280,8 +290,12 @@ protected:
 	FSettingsCombobox ComboboxDataInternal;
 
 	/*********************************************************************************************
-	 * Data
+	 * Events and overrides
 	 ********************************************************************************************* */
+public:
+	/** Is overridden to return the combobox data of this widget. */
+	virtual const FSettingsDataBase* GetSettingData() const override { return &ComboboxDataInternal; }
+
 protected:
 	/** Called after the underlying slate widget is constructed.
 	 * May be called multiple times due to adding and removing from the hierarchy. */
@@ -290,10 +304,6 @@ protected:
 	/** Is executed every tick when widget is enabled. */
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
-	/*********************************************************************************************
-	 * Events
-	 ********************************************************************************************* */
-protected:
 	/** Called when a new item is selected in the combobox
 	 * @see USettingCheckbox::ComboboxWidgetInternal */
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (BlueprintProtected))
@@ -347,8 +357,12 @@ protected:
 	FSettingsSlider SliderDataInternal;
 
 	/*********************************************************************************************
-	 * Events
+	 * Events and overrides
 	 ********************************************************************************************* */
+public:
+	/** Is overridden to return the slider data of this widget. */
+	virtual const FSettingsDataBase* GetSettingData() const override { return &SliderDataInternal; }
+
 protected:
 	/** Called after the underlying slate widget is constructed.
 	 * May be called multiple times due to adding and removing from the hierarchy. */
@@ -384,11 +398,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InTextLineData"))
 	void SetTextLineData(const FSettingsTextLine& InTextLineData);
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
 protected:
 	/** The text line setting data. */
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Text Line Data"))
 	FSettingsTextLine TextLineDataInternal;
 
+	/*********************************************************************************************
+	 * Events and overrides
+	 ********************************************************************************************* */
+public:
+	/** Is overridden to return the text line data of this widget. */
+	virtual const FSettingsDataBase* GetSettingData() const override { return &TextLineDataInternal; }
+
+protected:
 	/** Is overridden to construct the text line. */
 	virtual void OnAddSetting(const FSettingsPicker& Setting) override;
 };
@@ -441,8 +466,12 @@ protected:
 	FSettingsUserInput UserInputDataInternal;
 
 	/*********************************************************************************************
-	 * Events
+	 * Events and overrides
 	 ********************************************************************************************* */
+public:
+	/** Is overridden to return the user input data of this widget. */
+	virtual const FSettingsDataBase* GetSettingData() const override { return &UserInputDataInternal; }
+
 protected:
 	/** Called after the underlying slate widget is constructed.
 	* May be called multiple times due to adding and removing from the hierarchy. */
@@ -474,11 +503,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InCustomWidgetData"))
 	void SetCustomWidgetData(const FSettingsCustomWidget& InCustomWidgetData);
 
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
 protected:
 	/** The custom widget setting data. */
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Custom Widget Data"))
 	FSettingsCustomWidget CustomWidgetDataInternal;
 
+	/*********************************************************************************************
+	 * Events and overrides
+	 ********************************************************************************************* */
+public:
+	/** Is overridden to return the custom widget data of this widget. */
+	virtual const FSettingsDataBase* GetSettingData() const override { return &CustomWidgetDataInternal; }
+
+protected:
 	/** Is overridden to construct the custom widget. */
 	virtual void OnAddSetting(const FSettingsPicker& Setting) override;
 };
@@ -499,6 +539,13 @@ public:
 	/** Returns the slate ScrollBox. */
 	FORCEINLINE TSharedPtr<class SScrollBox> GetSlateScrollBox() const { return SlateScrollBoxInternal.Pin(); }
 
+	/** Returns the vertical box that holds all the settings in this column, is attached to the ScrollBox. */
+	UFUNCTION(BlueprintPure, Category = "SettingSubWidget")
+	FORCEINLINE class UVerticalBox* GetVerticalHolderBox() const { return VerticalHolderBox; }
+
+	/*********************************************************************************************
+	 * Data
+	 ********************************************************************************************* */
 protected:
 	/** The slate ScrollBox.*/
 	TWeakPtr<class SScrollBox> SlateScrollBoxInternal = nullptr;
@@ -506,6 +553,10 @@ protected:
 	/** The actual ScrollBox widget of this setting. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UScrollBox> ScrollBoxWidget = nullptr;
+
+	/** The vertical box that holds all the settings in this column, is attached to the ScrollBox. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
+	TObjectPtr<class UVerticalBox> VerticalHolderBox = nullptr;
 
 	/** Called after the underlying slate widget is constructed.
 	 * May be called multiple times due to adding and removing from the hierarchy. */

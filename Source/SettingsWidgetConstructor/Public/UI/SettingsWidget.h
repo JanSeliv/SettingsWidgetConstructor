@@ -230,6 +230,19 @@ protected:
 	/* ---------------------------------------------------
 	 *		Bound widget properties
 	 * --------------------------------------------------- */
+public:
+	/** Returns the widget of the header section. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Widgets")
+	FORCEINLINE class UVerticalBox* GetHeaderVerticalBox() const { return HeaderVerticalBox; }
+
+	/** Returns the widget of the content section. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Widgets")
+	FORCEINLINE class UHorizontalBox* GetContentHorizontalBox() const { return ContentHorizontalBox; }
+
+	/** Returns the widget of the footer section. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Widgets")
+	FORCEINLINE class UVerticalBox* GetFooterVerticalBox() const { return FooterVerticalBox; }
+
 protected:
 	/** The section in the top margin of Settings, usually contains a title. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
@@ -318,41 +331,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
 	void TryRebindDeferredContexts();
 
-	/* ---------------------------------------------------
-	 *		Add by setting types
-	 * --------------------------------------------------- */
-public:
 	/** Add setting on UI. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected))
 	void AddSetting(UPARAM(ref)FSettingsPicker& Setting);
-
-	/** Add button on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddButton(const FSettingsPrimary& Primary, const FSettingsButton& Data);
-
-	/** Add checkbox on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddCheckbox(const FSettingsPrimary& Primary, const FSettingsCheckbox& Data);
-
-	/** Add combobox on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddCombobox(const FSettingsPrimary& Primary, const FSettingsCombobox& Data);
-
-	/** Add slider on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddSlider(const FSettingsPrimary& Primary, const FSettingsSlider& Data);
-
-	/** Add simple text on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddTextLine(const FSettingsPrimary& Primary, const FSettingsTextLine& Data);
-
-	/** Add text input on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddUserInput(const FSettingsPrimary& Primary, const FSettingsUserInput& Data);
-
-	/** Add custom widget on UI.  */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddCustomWidget(const FSettingsPrimary& Primary, const FSettingsCustomWidget& Data);
 
 	/* ---------------------------------------------------
 	 *		Blueprint implementable setters
@@ -384,10 +365,6 @@ protected:
 	 * Columns builder
 	 ********************************************************************************************* */
 public:
-	/** Returns the index of a Setting by specified tag in own column or -1 if not found. */
-	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns", meta = (AutoCreateRefTerm = "SettingTag"))
-	int32 GetPositionInColumn(const FSettingTag& SettingTag) const;
-
 	/** Returns the index of column for a Setting by specified tag or -1 if not found. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns", meta = (AutoCreateRefTerm = "SettingTag"))
 	int32 GetColumnIndexBySetting(const FSettingTag& SettingTag) const;
@@ -399,10 +376,6 @@ public:
 	/** Returns a column by specified setting tag. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns", meta = (AutoCreateRefTerm = "SettingTag"))
 	FORCEINLINE USettingColumn* GetColumnBySetting(const FSettingTag& SettingTag) const { return GetColumnByIndex(GetColumnIndexBySetting(SettingTag)); }
-
-	/** Calculates the number of all columns. By result of this function columns will be created. */
-	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns")
-	int32 GetOverallColumnsNum() const;
 
 protected:
 	/** Contains all setting columns. */
