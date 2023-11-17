@@ -383,7 +383,7 @@ protected:
 	TArray<TObjectPtr<class USettingColumn>> ColumnsInternal;
 
 protected:
-	/** Adds new settings on the next column index. */
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected))
-	USettingColumn* AddColumn(int32 ColumnIndex);
+	/** Creates new column on specified index. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected))
+	void AddColumn(int32 ColumnIndex);
 };
