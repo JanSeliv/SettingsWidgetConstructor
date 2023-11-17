@@ -994,7 +994,7 @@ void USettingsWidget::TryRebindDeferredContexts()
 // Add setting on UI.
 void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 {
-	FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
+	const FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
 	if (!ChosenData)
 	{
 		return;
@@ -1010,43 +1010,11 @@ void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 	USettingSubWidget* SettingSubWidget = CreateSettingSubWidget(PrimaryData, ChosenData->GetSubWidgetClass());
 	checkf(SettingSubWidget, TEXT("ERROR: [%i] %s:\n'SettingSubWidget' is null!"), __LINE__, *FString(__FUNCTION__));
 	SettingSubWidget->OnAddSetting(Setting);
-	SettingSubWidget->BPOnAddSetting();
-
-	// @TODO JanSeliv - Move to sub-widgets
-	ChosenData->AddSetting(*this, PrimaryData);
-
-	SettingSubWidget->ApplyTheme();
 }
 
 /*********************************************************************************************
  * Columns builder
  ********************************************************************************************* */
-
-// Returns the index of a Setting by specified tag in own column or -1 if not found
-int32 USettingsWidget::GetPositionInColumn(const FSettingTag& SettingTag) const
-{
-	int32 SettingIndex = 0;
-	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
-	{
-		const FSettingsPrimary& PrimaryData = RowIt.Value.PrimaryData;
-		if (PrimaryData.bStartOnNextColumn)
-		{
-			// Skip to the next column
-			SettingIndex = 0;
-			continue;
-		}
-
-		if (PrimaryData.Tag == SettingTag)
-		{
-			return SettingIndex;
-		}
-
-		++SettingIndex;
-	}
-
-	// Not found
-	return INDEX_NONE;
-}
 
 // Returns the index of column for a Setting by specified tag or -1 if not found
 int32 USettingsWidget::GetColumnIndexBySetting(const FSettingTag& SettingTag) const
@@ -1067,19 +1035,4 @@ int32 USettingsWidget::GetColumnIndexBySetting(const FSettingTag& SettingTag) co
 	}
 
 	return INDEX_NONE;
-}
-
-// Calculates the number of all columns. By result of this function columns will be created
-int32 USettingsWidget::GetOverallColumnsNum() const
-{
-	int32 OverallColumnsNum = 1;
-	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
-	{
-		if (RowIt.Value.PrimaryData.bStartOnNextColumn)
-		{
-			++OverallColumnsNum;
-		}
-	}
-
-	return OverallColumnsNum;
 }
