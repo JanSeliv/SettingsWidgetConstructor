@@ -123,8 +123,8 @@ public:
 
 	/** Returns the Settings Data Registry asset, is automatically set by default to which 'Settings Data Table' is added by itself. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
-	const UDataRegistry* GetSettingsDataRegistry() const;
-	const TSoftObjectPtr<const UDataRegistry>& GetSettingsDataRegistrySoft() const { return SettingsDataRegistryInternal; }
+	UDataRegistry* GetSettingsDataRegistry() const;
+	const TSoftObjectPtr<UDataRegistry>& GetSettingsDataRegistrySoft() const { return SettingsDataRegistryInternal; }
 
 	/*********************************************************************************************
 	 * Protected properties
@@ -216,7 +216,7 @@ protected:
 
 	/** The Settings Data Registry asset, is automatically set by default to which 'Settings Data Table' is added by itself. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Settings Data Registry", ShowOnlyInnerProperties))
-	TSoftObjectPtr<const UDataRegistry> SettingsDataRegistryInternal;
+	TSoftObjectPtr<UDataRegistry> SettingsDataRegistryInternal;
 
 	/*********************************************************************************************
 	 * Internal
