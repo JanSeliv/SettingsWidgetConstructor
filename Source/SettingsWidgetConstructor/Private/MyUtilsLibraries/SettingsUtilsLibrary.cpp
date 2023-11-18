@@ -30,7 +30,7 @@ UGameUserSettings* USettingsUtilsLibrary::GetGameUserSettings(const UObject* Opt
 }
 
 // Returns all Settings Rows from project's Settings Data Table and all other additional Data Tables from 'SettingsDataTable' Data Registry
-void USettingsUtilsLibrary::GetAllSettingRows(TMap<FName, FSettingsRow>& OutSettingRows)
+void USettingsUtilsLibrary::GenerateAllSettingRows(TMap<FName, FSettingsPicker>& OutSettingRows)
 {
 	if (!OutSettingRows.IsEmpty())
 	{
@@ -102,7 +102,7 @@ void USettingsUtilsLibrary::GetAllSettingRows(TMap<FName, FSettingsRow>& OutSett
 	for (const FSettingsRow& Row : OrderedSettings)
 	{
 		const FName Tag = Row.SettingsPicker.PrimaryData.Tag.GetTagName();
-		OutSettingRows.Add(Tag, Row);
+		OutSettingRows.Add(Tag, Row.SettingsPicker);
 
 		// Check if there's an override block for this tag
 		const FSettingTag SettingTag = Row.SettingsPicker.PrimaryData.Tag;
@@ -113,7 +113,7 @@ void USettingsUtilsLibrary::GetAllSettingRows(TMap<FName, FSettingsRow>& OutSett
 			for (const FSettingsRow& OverrideRow : *OverrideBlock)
 			{
 				const FName OverrideTag = OverrideRow.SettingsPicker.PrimaryData.Tag.GetTagName();
-				OutSettingRows.Add(OverrideTag, OverrideRow);
+				OutSettingRows.Add(OverrideTag, OverrideRow.SettingsPicker);
 			}
 		}
 	}
@@ -129,7 +129,7 @@ void USettingsUtilsLibrary::RegisterDataTable(const TSoftObjectPtr<const USettin
 	UDataRegistrySubsystem* DataRegistrySubsystem = UDataRegistrySubsystem::Get();
 	checkf(DataRegistrySubsystem, TEXT("ERROR: [%i] %s:\n'DataRegistrySubsystem' is null!"), __LINE__, *FString(__FUNCTION__));
 
-	const TSoftObjectPtr<const UDataRegistry>& SettingsDataRegistry = USettingsDataAsset::Get().GetSettingsDataRegistrySoft();
+	const TSoftObjectPtr<UDataRegistry>& SettingsDataRegistry = USettingsDataAsset::Get().GetSettingsDataRegistrySoft();
 	if (ensureMsgf(!SettingsDataRegistry.IsNull(), TEXT("ASSERT: 'SettingsDataRegistry' is null, it has to be set automatically, something went wrong!")))
 	{
 		// Initialize the Settings Data Registry

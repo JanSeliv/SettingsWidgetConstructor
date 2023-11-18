@@ -4,8 +4,11 @@
 //---
 #include "Data/SettingsDataAsset.h"
 #include "MyUtilsLibraries/SettingsUtilsLibrary.h"
+#include "MyUtilsLibraries/SWCWidgetUtilsLibrary.h"
 #include "UI/SettingSubWidget.h"
 //---
+#include "DataRegistry.h"
+#include "DataRegistryTypes.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/SizeBox.h"
 #include "GameFramework/GameUserSettings.h"
@@ -594,7 +597,7 @@ void USettingsWidget::NativeConstruct()
 		TryConstructSettings();
 	}
 
-	TryFocusOnUI();
+	BindOnSettingsDataRegistryChanged();
 }
 
 // Is called right after the game was started and windows size is set to construct settings
@@ -639,8 +642,8 @@ void USettingsWidget::ConstructSettings()
 // Internal function to cache setting rows from Settings Data Table
 void USettingsWidget::CacheTable()
 {
-	TMap<FName, FSettingsRow> SettingRows;
-	USettingsUtilsLibrary::GetAllSettingRows(/*Out*/SettingRows);
+	TMap<FName, FSettingsPicker> SettingRows;
+	USettingsUtilsLibrary::GenerateAllSettingRows(/*Out*/SettingRows);
 	if (!ensureMsgf(!SettingRows.IsEmpty(), TEXT("ASSERT: 'SettingRows' are empty")))
 	{
 		return;
@@ -649,11 +652,34 @@ void USettingsWidget::CacheTable()
 	// Reset values if currently are set
 	SettingsTableRowsInternal.Empty();
 	SettingsTableRowsInternal.Reserve(SettingRows.Num());
-	for (const TTuple<FName, FSettingsRow>& SettingRowIt : SettingRows)
+	for (const TTuple<FName, FSettingsPicker>& SettingRowIt : SettingRows)
 	{
-		const FSettingsPicker& SettingsPicker = SettingRowIt.Value.SettingsPicker;
+		const FSettingsPicker& SettingsPicker = SettingRowIt.Value;
 		SettingsTableRowsInternal.Emplace(SettingRowIt.Key, SettingsPicker);
 	}
+}
+
+// Clears all added settings
+void USettingsWidget::RemoveAllSettings()
+{
+	for (TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
+	{
+		USettingSubWidget* SubWidget = RowIt.Value.PrimaryData.SettingSubWidget.Get();
+		if (ensureMsgf(SubWidget, TEXT("ASSERT: [%i] %s:\n'SubWidget' is not valid!"), __LINE__, *FString(__FUNCTION__)))
+		{
+			FSWCWidgetUtilsLibrary::DestroyWidget(*SubWidget);
+		}
+	}
+	SettingsTableRowsInternal.Empty();
+
+	for (USettingColumn* ColumnIt : ColumnsInternal)
+	{
+		if (ensureMsgf(ColumnIt, TEXT("ASSERT: [%i] %s:\n'ColumnIt' is not valid!"), __LINE__, *FString(__FUNCTION__)))
+		{
+			FSWCWidgetUtilsLibrary::DestroyWidget(*ColumnIt);
+		}
+	}
+	ColumnsInternal.Empty();
 }
 
 // Is called when In-Game menu became opened or closed
@@ -1044,4 +1070,36 @@ void USettingsWidget::AddColumn(int32 ColumnIndex)
 	NewColumn->SetSettingsWidget(this);
 	ColumnsInternal.Insert(NewColumn, ColumnIndex);
 	NewColumn->OnAddSetting(FSettingsPicker());
+}
+
+/*********************************************************************************************
+ * Multiple Data Tables support
+ ********************************************************************************************* */
+
+// Is called when the Settings Data Registry is changed
+void USettingsWidget::OnSettingsDataRegistryChanged_Implementation(class UDataRegistry* SettingsDataRegistry)
+{
+	if (GetWorld()->bIsTearingDown
+		|| !SettingsDataRegistry
+		|| SettingsDataRegistry->GetLowestAvailability() == EDataRegistryAvailability::DoesNotExist)
+	{
+		return;
+	}
+
+	// Perfectly, we should insert new settings here,
+	// But inserting anything in between to scrollbox is not supported by UE at all
+	// So, clear all settings first
+	RemoveAllSettings();
+	ConstructSettings();
+}
+
+void USettingsWidget::BindOnSettingsDataRegistryChanged()
+{
+	UDataRegistry* SettingsDataRegistry = USettingsDataAsset::Get().GetSettingsDataRegistry();
+	checkf(SettingsDataRegistry, TEXT("ERROR: [%i] %s:\n'SettingsDataRegistry' is not set in Project Settings!"), __LINE__, *FString(__FUNCTION__));
+	FDataRegistryCacheVersionCallback& SettingsDataRegistryDelegate = SettingsDataRegistry->OnCacheVersionInvalidated();
+	if (!SettingsDataRegistryDelegate.IsBoundToObject(this))
+	{
+		SettingsDataRegistryDelegate.AddUObject(this, &ThisClass::OnSettingsDataRegistryChanged);
+	}
 }
