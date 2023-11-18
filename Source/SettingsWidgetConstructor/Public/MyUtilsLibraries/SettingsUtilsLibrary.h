@@ -26,7 +26,7 @@ public:
 	/** Returns all Settings Rows from project's Settings Data Table and all other additional Data Tables from 'SettingsDataTable' Data Registry.
 	 * Note: Is expensive function, prefer to cache the result once! */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
-	static void GetAllSettingRows(TMap<FName, struct FSettingsRow>& OutSettingRows);
+	static void GenerateAllSettingRows(TMap<FName, struct FSettingsPicker>& OutSettingRows);
 
 	/*********************************************************************************************
 	 * Multiple Data Tables support

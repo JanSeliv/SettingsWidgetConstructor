@@ -5,6 +5,8 @@
 #include "Data/SettingsDataTable.h"
 #include "MyUtilsLibraries/SettingsUtilsLibrary.h"
 //---
+#include "DataRegistry.h"
+//---
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsDataAsset)
 
 // Returns the data table, it has to be set manually
@@ -14,7 +16,7 @@ const USettingsDataTable* USettingsDataAsset::GetSettingsDataTable() const
 }
 
 // Returns the Settings Data Registry asset, is automatically set by default to which 'Settings Data Table' is added by itself
-const UDataRegistry* USettingsDataAsset::GetSettingsDataRegistry() const
+UDataRegistry* USettingsDataAsset::GetSettingsDataRegistry() const
 {
 	return SettingsDataRegistryInternal.LoadSynchronous();
 }

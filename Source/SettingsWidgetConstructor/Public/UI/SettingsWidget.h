@@ -276,6 +276,10 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
 	void CacheTable();
 
+	/** Clears all added settings. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
+	void RemoveAllSettings();
+
 	/** Is called when In-Game menu became opened or closed. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
 	void OnToggleSettings(bool bIsVisible);
@@ -386,4 +390,13 @@ protected:
 	/** Creates new column on specified index. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected))
 	void AddColumn(int32 ColumnIndex);
+
+	/*********************************************************************************************
+	 * Multiple Data Tables support
+	 ********************************************************************************************* */
+protected:
+	/** Is called when the Settings Data Registry is changed. */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
+	void OnSettingsDataRegistryChanged(class UDataRegistry* SettingsDataRegistry);
+	void BindOnSettingsDataRegistryChanged();
 };
