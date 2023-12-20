@@ -1079,10 +1079,14 @@ void USettingsWidget::AddColumn(int32 ColumnIndex)
 // Is called when the Settings Data Registry is changed
 void USettingsWidget::OnSettingsDataRegistryChanged_Implementation(class UDataRegistry* SettingsDataRegistry)
 {
-	if (GetWorld()->bIsTearingDown
-		|| !SettingsDataRegistry
-		|| SettingsDataRegistry->GetLowestAvailability() == EDataRegistryAvailability::DoesNotExist)
+	const UWorld* World = GetWorld();
+	const APlayerController* PC = GetOwningPlayer();
+	if (!World || World->bIsTearingDown
+		|| !PC || !PC->HasActorBegunPlay()
+		|| !IsInViewport()
+		|| !SettingsDataRegistry || SettingsDataRegistry->GetLowestAvailability() == EDataRegistryAvailability::DoesNotExist)
 	{
+		// The game was ended or no data registry is set
 		return;
 	}
 
