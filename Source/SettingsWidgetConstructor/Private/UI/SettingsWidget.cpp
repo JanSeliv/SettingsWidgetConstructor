@@ -1068,6 +1068,7 @@ void USettingsWidget::AddColumn(int32 ColumnIndex)
 {
 	USettingColumn* NewColumn = CreateWidget<USettingColumn>(this, USettingsDataAsset::Get().GetColumnClass());
 	NewColumn->SetSettingsWidget(this);
+	ColumnIndex = FMath::Clamp(ColumnIndex, 0, ColumnsInternal.Num());
 	ColumnsInternal.Insert(NewColumn, ColumnIndex);
 	NewColumn->OnAddSetting(FSettingsPicker());
 }
