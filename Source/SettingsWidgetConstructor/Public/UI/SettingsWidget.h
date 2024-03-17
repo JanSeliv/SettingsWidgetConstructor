@@ -24,7 +24,7 @@ public:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToggledSettings, bool, bIsVisible);
 
 	/** Is called to notify listeners the Settings widget is opened or closed. */
-	UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "Settings Widget Constructor")
+	UPROPERTY(BlueprintCallable, BlueprintAssignable, Transient, Category = "Settings Widget Constructor")
 	FOnToggledSettings OnToggledSettings;
 
 	/* ---------------------------------------------------
