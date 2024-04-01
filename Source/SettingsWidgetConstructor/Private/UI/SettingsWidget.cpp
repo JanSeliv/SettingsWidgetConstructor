@@ -11,6 +11,10 @@
 #include "DataRegistryTypes.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/SizeBox.h"
+#include "Components/Viewport.h"
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
+#include "Engine/Texture.h"
 #include "GameFramework/GameUserSettings.h"
 //---
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsWidget)
@@ -129,13 +133,13 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 }
 
 // Returns the name of found tag by specified function
-const FSettingTag& USettingsWidget::GetTagByFunction(const FSettingFunctionPicker& FunctionPicker) const
+const FSettingTag& USettingsWidget::GetTagByFunction(const FSettingFunctionPicker& SettingFunction) const
 {
 	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
 	{
 		const FSettingsPrimary& PrimaryData = RowIt.Value.PrimaryData;
-		if (PrimaryData.Getter == FunctionPicker
-			|| PrimaryData.Setter == FunctionPicker)
+		if (PrimaryData.Getter == SettingFunction
+			|| PrimaryData.Setter == SettingFunction)
 		{
 			return PrimaryData.Tag;
 		}
