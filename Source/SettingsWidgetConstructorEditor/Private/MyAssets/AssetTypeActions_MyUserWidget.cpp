@@ -8,8 +8,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
 #include "Kismet2/KismetEditorUtilities.h"
-
-#define LOCTEXT_NAMESPACE "AssetTypeActions"
+#include "Misc/MessageDialog.h"
 
 void USWCMyUserWidgetBlueprint::GetReparentingRules(TSet<const UClass*>& AllowedChildrenOfClasses, TSet<const UClass*>& DisallowedChildrenOfClasses) const
 {
@@ -27,7 +26,7 @@ USWCMyUserWidgetFactory::USWCMyUserWidgetFactory()
 
 FText USWCMyUserWidgetFactory::GetDisplayName() const
 {
-	return LOCTEXT("MyUserWidget", "My User Widget");
+	return NSLOCTEXT("AssetTypeActions", "MyUserWidget", "My User Widget");
 }
 
 UObject* USWCMyUserWidgetFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn, FName CallingContext)
@@ -100,9 +99,7 @@ void FAssetTypeActions_MyUserWidget::OpenAssetEditor(const TArray<UObject*>& InO
 		}
 		else
 		{
-			FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("FailedToLoadWidgetBlueprint", "Widget Blueprint could not be loaded because it derives from an invalid class.\nCheck to make sure the parent class for this blueprint hasn't been removed!"));
+			FMessageDialog::Open(EAppMsgType::Ok, NSLOCTEXT("AssetTypeActions", "FailedToLoadWidgetBlueprint", "Widget Blueprint could not be loaded because it derives from an invalid class.\nCheck to make sure the parent class for this blueprint hasn't been removed!"));
 		}
 	}
 }
-
-#undef LOCTEXT_NAMESPACE

@@ -5,7 +5,9 @@
 #include "Data/SettingTypes.h"
 //---
 #include "Data/SettingFunction.h"
+//---
 #include "Framework/Text/TextLayout.h"
+#include "Templates/SubclassOf.h"
 //---
 #include "SettingArchetypesData.generated.h"
 
@@ -46,7 +48,7 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsDataBase
 	 ********************************************************************************************* */
 
 	/** Base method to get the sub-widget class of this setting type. */
-	virtual TSubclassOf<USettingSubWidget> GetSubWidgetClass() const PURE_VIRTUAL(FSettingsDataBase::GetSubWidgetClass, return nullptr;);
+	virtual TSubclassOf<class USettingSubWidget> GetSubWidgetClass() const PURE_VIRTUAL(FSettingsDataBase::GetSubWidgetClass, return nullptr;);
 
 	/** Base method to get the setting value, where appropriate Getter of Settings Widget will be called. */
 	virtual void GetSettingValue(const USettingsWidget& SettingsWidget, const FSettingTag& Tag, FString& OutResult) const PURE_VIRTUAL(FSettingsDataBase::GetSettingValue,);

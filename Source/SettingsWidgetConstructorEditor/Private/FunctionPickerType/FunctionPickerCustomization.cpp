@@ -3,6 +3,10 @@
 #include "FunctionPickerType/FunctionPickerCustomization.h"
 //---
 #include "Data/SettingFunction.h"
+//---
+#include "PropertyEditorModule.h"
+#include "PropertyHandle.h"
+#include "Modules/ModuleManager.h"
 
 // The name of class to be customized: SettingFunctionPicker
 const FName FFunctionPickerCustomization::PropertyClassName = FSettingFunctionPicker::StaticStruct()->GetFName();

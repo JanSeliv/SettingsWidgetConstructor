@@ -6,6 +6,8 @@
 //---
 #include "Data/SettingsThemeData.h"
 //---
+#include "Templates/SubclassOf.h"
+//---
 #include "SettingsDataAsset.generated.h"
 
 class USettingsDataTable;
