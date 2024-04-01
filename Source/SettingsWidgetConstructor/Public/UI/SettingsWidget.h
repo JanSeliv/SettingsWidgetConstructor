@@ -213,7 +213,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Getters", meta = (AutoCreateRefTerm = "SettingTag"))
 	class USettingSubWidget* GetSettingSubWidget(const FSettingTag& SettingTag) const;
 
-protected:
 	/* ---------------------------------------------------
 	 *		Protected properties
 	 * --------------------------------------------------- */

@@ -2,6 +2,10 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
+#include "Layout/Visibility.h"
+#include "Misc/Attribute.h"
+
 /**
  * Contains data that describes property.
  */
@@ -17,7 +21,7 @@ struct FPropertyData
 	FPropertyData() = default;
 
 	/** Custom constructor, is not required, but fully init property data. */
-	explicit FPropertyData(TSharedRef<IPropertyHandle> InPropertyHandle);
+	explicit FPropertyData(TSharedRef<class IPropertyHandle> InPropertyHandle);
 
 	/** The name of a property. */
 	FName PropertyName = NAME_None;
@@ -26,7 +30,7 @@ struct FPropertyData
 	FName PropertyValue = NAME_None;
 
 	/** The handle of a property. */
-	TSharedPtr<IPropertyHandle> PropertyHandle = nullptr;
+	TSharedPtr<class IPropertyHandle> PropertyHandle = nullptr;
 
 	/** Determines if property is active (not greyed out). */
 	TAttribute<bool> bIsEnabled = true;

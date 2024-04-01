@@ -6,6 +6,8 @@
 #include "DesktopPlatformModule.h"
 #include "ToolMenus.h"
 #include "EditorFramework/AssetImportData.h"
+#include "Engine/DataTable.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Misc/FileHelper.h"
 #include "Misc/MessageDialog.h"
 
@@ -39,7 +41,7 @@ bool USWCMyDataTableFactory::DoesSupportClass(UClass* Class)
 
 FText FAssetTypeActions_MyDataTable::GetName() const
 {
-	return NSLOCTEXT("AssetTypeActions", "AssetTypeActions_MyDataTable", "My Data Table");
+	return LOCTEXT("AssetTypeActions_MyDataTable", "My Data Table");
 }
 
 UClass* FAssetTypeActions_MyDataTable::GetSupportedClass() const
@@ -143,7 +145,7 @@ void FAssetTypeActions_MyDataTable::ExecuteExportAsJSON(TArray<TWeakObjectPtr<UO
 
 	for (auto ObjIt = Objects.CreateConstIterator(); ObjIt; ++ObjIt)
 	{
-		auto DataTable = Cast<UDataTable>((*ObjIt).Get());
+		const UDataTable* DataTable = ObjIt ? Cast<UDataTable>(ObjIt->Get()) : nullptr;
 		if (DataTable)
 		{
 			const FText Title = FText::Format(LOCTEXT("DataTable_ExportJSONDialogTitle", "Export '{0}' as JSON..."), FText::FromString(*DataTable->GetName()));

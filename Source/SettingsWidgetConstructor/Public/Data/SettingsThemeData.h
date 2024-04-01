@@ -4,6 +4,9 @@
 
 #include "Components/SlateWrapperTypes.h"
 //---
+#include "Fonts/SlateFontInfo.h"
+#include "Styling/SlateBrush.h"
+//---
 #include "SettingsThemeData.generated.h"
 
 /*	--- Settings Theme Data dependencies ---
