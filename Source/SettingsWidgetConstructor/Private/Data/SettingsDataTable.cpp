@@ -17,6 +17,12 @@ USettingsDataTable::USettingsDataTable()
 	RowStruct = FSettingsRow::StaticStruct();
 }
 
+// Returns the table rows
+void USettingsDataTable::GetSettingRows(TMap<FName, FSettingsRow>& OutRows) const
+{
+	GetRows(OutRows);
+}
+
 #if WITH_EDITOR
 // Called on every change in this data table to automatic set the key name by specified setting tag
 void USettingsDataTable::OnThisDataTableChanged(FName RowKey, const uint8& RowData)
