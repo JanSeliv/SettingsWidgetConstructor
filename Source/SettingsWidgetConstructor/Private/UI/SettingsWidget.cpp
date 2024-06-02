@@ -88,7 +88,7 @@ void USettingsWidget::ApplySettings()
 }
 
 // Update settings on UI
-void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpdate)
+void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpdate, bool bLoadFromConfig/* = false*/)
 {
 	if (SettingsToUpdate.IsEmpty()
 		|| !SettingsToUpdate.IsValidIndex(0))
@@ -123,8 +123,11 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 			continue;
 		}
 
-		// Obtain the latest value from configs and set it
-		Owner->LoadConfig();
+		if (bLoadFromConfig)
+		{
+			// Obtain the latest value from configs and set it
+			Owner->LoadConfig();
+		}
 
 		FString Result;
 		ChosenData->GetSettingValue(*this, SettingTag, /*Out*/Result);
@@ -638,7 +641,7 @@ void USettingsWidget::ConstructSettings()
 		AddedSettings.AddTag(SettingRef.PrimaryData.Tag);
 	}
 
-	UpdateSettings(AddedSettings);
+	UpdateSettings(AddedSettings, /*bLoadFromConfig*/true);
 
 	UpdateScrollBoxesHeight();
 }
@@ -1017,7 +1020,7 @@ void USettingsWidget::TryRebindDeferredContexts()
 	{
 		// Some settings were successfully rebound, remove them from the deferred list and update them
 		DeferredBindingsInternal.RemoveTags(ReboundSettings);
-		UpdateSettings(ReboundSettings);
+		UpdateSettings(ReboundSettings, /*bLoadFromConfig*/true);
 	}
 }
 
