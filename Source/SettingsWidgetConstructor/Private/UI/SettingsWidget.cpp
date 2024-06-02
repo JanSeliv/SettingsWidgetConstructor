@@ -1090,7 +1090,7 @@ void USettingsWidget::OnSettingsDataRegistryChanged_Implementation(class UDataRe
 	const UWorld* World = GetWorld();
 	const APlayerController* PC = GetOwningPlayer();
 	if (!World || World->bIsTearingDown
-		|| !PC || !PC->HasActorBegunPlay()
+		|| !PC
 		|| !IsInViewport()
 		|| !SettingsDataRegistry || SettingsDataRegistry->GetLowestAvailability() == EDataRegistryAvailability::DoesNotExist)
 	{
