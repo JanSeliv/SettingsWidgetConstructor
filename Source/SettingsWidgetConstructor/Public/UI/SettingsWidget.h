@@ -91,10 +91,12 @@ public:
 	void ApplySettings();
 
 	/** Update settings on UI.
-	 * @param SettingsToUpdate Contains tags of settings that are needed to update. */
+	 * @param SettingsToUpdate Contains tags of settings that are needed to update.
+	 * @param bLoadFromConfig If true, then load settings from config file, otherwise just update UI. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (AutoCreateRefTerm = "SettingsToUpdate"))
 	void UpdateSettings(
-		UPARAM(meta = (Categories = "Settings")) const FGameplayTagContainer& SettingsToUpdate);
+		UPARAM(meta = (Categories = "Settings")) const FGameplayTagContainer& SettingsToUpdate,
+		bool bLoadFromConfig = false);
 
 	/** Returns the name of found tag by specified function. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor", meta = (AutoCreateRefTerm = "SettingFunction"))
