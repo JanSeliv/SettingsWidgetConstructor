@@ -112,7 +112,8 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 		}
 
 		FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
-		if (!ChosenData)
+		if (!ChosenData
+			|| !ChosenData->CanUpdateSetting())
 		{
 			continue;
 		}

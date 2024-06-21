@@ -59,6 +59,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsDataBase
 	/** Base method to Bind setting to specified in table Get/Set delegates, so both methods will be called. */
 	virtual void BindSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData) PURE_VIRTUAL(FSettingsDataBase::BindSetting,);
 
+	/** Returns true if the settings can be updated on opening the settings widget. */
+	virtual FORCEINLINE bool CanUpdateSetting() const { return true; }
+
 	/** Override this method to return header/footer/content used by the setting. Only some settings like button or text can be added to the margin area (header/footer). */
 	virtual EMyVerticalAlignment GetVerticalAlignment() const { return EMyVerticalAlignment::Content; }
 };
@@ -106,6 +109,9 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsButton : public FSettingsDataBase
 
 	/** Calls the Bind function of the Settings Widget of this setting type. */
 	virtual void BindSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& PrimaryData) override;
+
+	/** Is overridden to prevent sending the button press events on opening the settings widget. */
+	virtual FORCEINLINE bool CanUpdateSetting() const override { return false; }
 
 	/** Is overriden to provide support to be added to any area (header/footer/content). */
 	virtual EMyVerticalAlignment GetVerticalAlignment() const override { return VerticalAlignment; }
