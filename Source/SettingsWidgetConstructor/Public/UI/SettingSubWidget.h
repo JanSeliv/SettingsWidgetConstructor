@@ -98,23 +98,23 @@ protected:
 	 ********************************************************************************************* */
 protected:
 	/** The Size Box widget. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class USizeBox> SizeBoxWidget = nullptr;
 
 	/** The widget that shows the caption text of this setting. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UTextBlock> CaptionWidget = nullptr;
 
 	/** The setting primary row of this widget. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Primary Data"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Primary Data"))
 	FSettingsPrimary PrimaryDataInternal = FSettingsPrimary::EmptyPrimary;
 
 	/** The main settings widget. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Settings Widget"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Settings Widget"))
 	TObjectPtr<USettingsWidget> SettingsWidgetInternal = nullptr;
 
 	/** The parent widget element in hierarchy of this subwidget: it could be a header/footer vertical box or column. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Panel Widget"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Panel Widget"))
 	TObjectPtr<UPanelSlot> ParentSlotInternal = nullptr;
 };
 
@@ -150,11 +150,11 @@ protected:
 	TWeakPtr<class SButton> SlateButtonInternal = nullptr;
 
 	/** The actual button widget of this setting. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UButton> ButtonWidget = nullptr;
 
 	/** The button setting data. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Button Data"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Button Data"))
 	FSettingsButton ButtonDataInternal;
 
 	/*********************************************************************************************
@@ -210,11 +210,11 @@ protected:
 	TWeakPtr<class SCheckBox> SlateCheckboxInternal = nullptr;
 
 	/** The actual checkbox widget of this setting. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UCheckBox> CheckboxWidget = nullptr;
 
 	/** The checkbox setting data. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Checkbox Data"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Checkbox Data"))
 	FSettingsCheckbox CheckboxDataInternal;
 
 	/*********************************************************************************************
@@ -279,15 +279,15 @@ protected:
 	TWeakPtr<SComboboxString> SlateComboboxInternal = nullptr;
 
 	/** The actual combobox widget of this setting. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UComboBoxString> ComboboxWidget = nullptr;
 
 	/** Is true if combobox is currently opened in Settings. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Is Combobox Opened"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Is Combobox Opened"))
 	bool bIsComboboxOpenedInternal = false;
 
 	/** The combobox setting data. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Combobox Data"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Combobox Data"))
 	FSettingsCombobox ComboboxDataInternal;
 
 	/*********************************************************************************************
@@ -350,11 +350,11 @@ protected:
 	TWeakPtr<class SSlider> SlateSliderInternal = nullptr;
 
 	/** The actual slider widget of this setting. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class USlider> SliderWidget = nullptr;
 
 	/** The slider setting data. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Slider Data"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Slider Data"))
 	FSettingsSlider SliderDataInternal;
 
 	/*********************************************************************************************
@@ -404,7 +404,7 @@ public:
 	 ********************************************************************************************* */
 protected:
 	/** The text line setting data. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Text Line Data"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Text Line Data"))
 	FSettingsTextLine TextLineDataInternal;
 
 	/*********************************************************************************************
@@ -459,11 +459,11 @@ protected:
 	TWeakPtr<class SEditableTextBox> SlateEditableTextBoxInternal = nullptr;
 
 	/** The actual Editable Text Box widget of this setting. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UEditableTextBox> EditableTextBox = nullptr;
 
 	/** The user input setting data. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "User Input Data"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "User Input Data"))
 	FSettingsUserInput UserInputDataInternal;
 
 	/*********************************************************************************************
@@ -509,7 +509,7 @@ public:
 	 ********************************************************************************************* */
 protected:
 	/** The custom widget setting data. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Custom Widget Data"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Custom Widget Data"))
 	FSettingsCustomWidget CustomWidgetDataInternal;
 
 	/*********************************************************************************************
@@ -552,11 +552,11 @@ protected:
 	TWeakPtr<class SScrollBox> SlateScrollBoxInternal = nullptr;
 
 	/** The actual ScrollBox widget of this setting. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UScrollBox> ScrollBoxWidget = nullptr;
 
 	/** The vertical box that holds all the settings in this column, is attached to the ScrollBox. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UVerticalBox> VerticalHolderBox = nullptr;
 
 	/*********************************************************************************************
