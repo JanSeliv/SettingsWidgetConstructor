@@ -225,7 +225,7 @@ protected:
 
 	/** Contains all Setting tags that failed to bind their Getter/Setter functions on initial construct, so it's stored to be rebound later.
 	 * @see USettingsWidget::TryRebindDeferredContexts */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "DeferredBindings"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "DeferredBindings"))
 	FGameplayTagContainer DeferredBindingsInternal;
 
 	/* ---------------------------------------------------
@@ -246,15 +246,15 @@ public:
 
 protected:
 	/** The section in the top margin of Settings, usually contains a title. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UVerticalBox> HeaderVerticalBox = nullptr;
 
 	/** The main section in the middle of Settings, contains all in-game settings. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UHorizontalBox> ContentHorizontalBox = nullptr;
 
 	/** The section in the bottom margin of Settings, usually contains the Back button*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UVerticalBox> FooterVerticalBox = nullptr;
 
 	/* ---------------------------------------------------
