@@ -1,14 +1,30 @@
-# ⚙️ Settings Widget Constructor
+<a href="https://github.com/JanSeliv/SettingsWidgetConstructor/blob/main/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)</a>
+<a href="https://www.unrealengine.com/">![Unreal Engine](https://img.shields.io/badge/Unreal-5.3-dea309?style=flat&logo=unrealengine)</a>
 
-Settings Widget Constructor is a handy plugin for Unreal Engine 5 that lets you automatically generate user interface (UI) for your game settings. All it takes is a few clicks and adding a new row to the table for each desired option.
+<br/>
+<p align="center">
+<a href="https://github.com/JanSeliv/SettingsWidgetConstructor">
+<img src="https://github.com/JanSeliv/SettingsWidgetConstructor/blob/main/Resources/Icon128.png?raw=true" alt="Logo" width="80" height="80">
+</a>
+<h3 align="center">⚙️ Settings Widget Constructor</h3>
+<p align="center">
+Automatically generate UI for game settings easily
+<br/>
+<br/>
+<a href="https://discord.gg/jbWgwDefnE"><strong>Join our Discord ››</strong></a>
+<br/>
+<a href="https://github.com/JanSeliv/SettingsWidgetConstructor/releases">Releases</a>
+·
+<a href="https://docs.google.com/document/d/1IXnOqrgaXTClP-0cIo28a9f6GHc9N1BCgTNnMk-X9VQ">Docs</a>
+</p>
+
+## 🌟 About
+
+Settings Widget Constructor is a handy plugin for Unreal Engine 5 that lets you automatically generate user interface (UI) for your game settings. All it takes is a few clicks and adding a new row to the Data Table for each desired option.
 
 ![Settings UI](https://user-images.githubusercontent.com/20540872/147825296-ce7d33da-dfda-4757-b070-bfd08f700134.jpg)
 
 <img width="948" alt="image" src="https://github.com/JanSeliv/SettingsWidgetConstructor/assets/20540872/ea703de0-fbd5-4d9b-87ab-2ded18d2dac1">
-
-## 📚 Documentation
-
-Detailed documentation about the Settings Widget Constructor can be found [here](https://docs.google.com/document/d/1IXnOqrgaXTClP-0cIo28a9f6GHc9N1BCgTNnMk-X9VQ).
 
 ## 🎓 Sample Projects
 
