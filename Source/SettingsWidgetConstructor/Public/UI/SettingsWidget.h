@@ -61,7 +61,7 @@ public:
 
 	/** Returns true when this widget is fully constructed and ready to be used. */
 	UFUNCTION(BlueprintPure, Category = "C++")
-	FORCEINLINE bool IsSettingsWidgetConstructed() const { return SettingsTableRowsInternal.Num() > 0; }
+	FORCEINLINE bool IsSettingsWidgetConstructed() const { return !SettingsTableRowsInternal.IsEmpty(); }
 
 	/** Is called to player sound effect on any setting click. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor")
@@ -91,10 +91,12 @@ public:
 	void ApplySettings();
 
 	/** Update settings on UI.
-	 * @param SettingsToUpdate Contains tags of settings that are needed to update. */
+	 * @param SettingsToUpdate Contains tags of settings that are needed to update.
+	 * @param bLoadFromConfig If true, then load settings from config file, otherwise just update UI. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (AutoCreateRefTerm = "SettingsToUpdate"))
 	void UpdateSettings(
-		UPARAM(meta = (Categories = "Settings")) const FGameplayTagContainer& SettingsToUpdate);
+		UPARAM(meta = (Categories = "Settings")) const FGameplayTagContainer& SettingsToUpdate,
+		bool bLoadFromConfig = false);
 
 	/** Returns the name of found tag by specified function. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor", meta = (AutoCreateRefTerm = "SettingFunction"))
@@ -213,7 +215,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Getters", meta = (AutoCreateRefTerm = "SettingTag"))
 	class USettingSubWidget* GetSettingSubWidget(const FSettingTag& SettingTag) const;
 
-protected:
 	/* ---------------------------------------------------
 	 *		Protected properties
 	 * --------------------------------------------------- */
@@ -222,37 +223,38 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Settings Table Rows"))
 	TMap<FName/*Tag*/, FSettingsPicker/*Row*/> SettingsTableRowsInternal;
 
-	/** The index of the current column. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Current Column Index"))
-	int32 CurrentColumnIndexInternal = 0;
-
-	/** Is set automatically on started by amount of rows that are marked to be started on next column. Settings have at least one column. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Overall Columns Num"))
-	int32 OverallColumnsNumInternal = 1;
-
-	/** Contains all setting scrollboxes added to columns. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Setting ScrollBoxes"))
-	TArray<TObjectPtr<class USettingScrollBox>> SettingScrollBoxesInternal;
-
 	/** Contains all Setting tags that failed to bind their Getter/Setter functions on initial construct, so it's stored to be rebound later.
 	 * @see USettingsWidget::TryRebindDeferredContexts */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "DeferredBindings"))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "DeferredBindings"))
 	FGameplayTagContainer DeferredBindingsInternal;
 
 	/* ---------------------------------------------------
 	 *		Bound widget properties
 	 * --------------------------------------------------- */
+public:
+	/** Returns the widget of the header section. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Widgets")
+	FORCEINLINE class UVerticalBox* GetHeaderVerticalBox() const { return HeaderVerticalBox; }
+
+	/** Returns the widget of the content section. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Widgets")
+	FORCEINLINE class UHorizontalBox* GetContentHorizontalBox() const { return ContentHorizontalBox; }
+
+	/** Returns the widget of the footer section. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Widgets")
+	FORCEINLINE class UVerticalBox* GetFooterVerticalBox() const { return FooterVerticalBox; }
+
 protected:
 	/** The section in the top margin of Settings, usually contains a title. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UVerticalBox> HeaderVerticalBox = nullptr;
 
 	/** The main section in the middle of Settings, contains all in-game settings. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UHorizontalBox> ContentHorizontalBox = nullptr;
 
 	/** The section in the bottom margin of Settings, usually contains the Back button*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "Settings Widget Constructor|Widgets", meta = (BlueprintProtected, BindWidget))
 	TObjectPtr<class UVerticalBox> FooterVerticalBox = nullptr;
 
 	/* ---------------------------------------------------
@@ -273,15 +275,15 @@ protected:
 
 	/** Internal function to cache setting rows from Settings Data Table. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
-	void UpdateSettingsTableRows();
+	void CacheTable();
+
+	/** Clears all added settings. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
+	void RemoveAllSettings();
 
 	/** Is called when In-Game menu became opened or closed. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
 	void OnToggleSettings(bool bIsVisible);
-
-	/** Starts adding settings on the next column. */
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
-	void StartNextColumn();
 
 	/** Automatically sets the height for all scrollboxes in the Settings. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
@@ -334,41 +336,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
 	void TryRebindDeferredContexts();
 
-	/* ---------------------------------------------------
-	 *		Add by setting types
-	 * --------------------------------------------------- */
-public:
 	/** Add setting on UI. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected))
 	void AddSetting(UPARAM(ref)FSettingsPicker& Setting);
-
-	/** Add button on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddButton(const FSettingsPrimary& Primary, const FSettingsButton& Data);
-
-	/** Add checkbox on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddCheckbox(const FSettingsPrimary& Primary, const FSettingsCheckbox& Data);
-
-	/** Add combobox on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddCombobox(const FSettingsPrimary& Primary, const FSettingsCombobox& Data);
-
-	/** Add slider on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddSlider(const FSettingsPrimary& Primary, const FSettingsSlider& Data);
-
-	/** Add simple text on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddTextLine(const FSettingsPrimary& Primary, const FSettingsTextLine& Data);
-
-	/** Add text input on UI. */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddUserInput(const FSettingsPrimary& Primary, const FSettingsUserInput& Data);
-
-	/** Add custom widget on UI.  */
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected, AutoCreateRefTerm = "Primary,Data"))
-	void AddCustomWidget(const FSettingsPrimary& Primary, const FSettingsCustomWidget& Data);
 
 	/* ---------------------------------------------------
 	 *		Blueprint implementable setters
@@ -395,4 +365,39 @@ protected:
 	/** Internal blueprint function to set new text for an input box. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "UserInputTag"))
 	void SetUserInput(const FSettingTag& UserInputTag, FName InValue);
+
+	/*********************************************************************************************
+	 * Columns builder
+	 ********************************************************************************************* */
+public:
+	/** Returns the index of column for a Setting by specified tag or -1 if not found. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns", meta = (AutoCreateRefTerm = "SettingTag"))
+	int32 GetColumnIndexBySetting(const FSettingTag& SettingTag) const;
+
+	/** Returns a column by specified index. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns")
+	class USettingColumn* GetColumnByIndex(int32 ColumnIndex) const { return ColumnsInternal.IsValidIndex(ColumnIndex) ? ColumnsInternal[ColumnIndex] : nullptr; }
+
+	/** Returns a column by specified setting tag. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Columns", meta = (AutoCreateRefTerm = "SettingTag"))
+	FORCEINLINE USettingColumn* GetColumnBySetting(const FSettingTag& SettingTag) const { return GetColumnByIndex(GetColumnIndexBySetting(SettingTag)); }
+
+protected:
+	/** Contains all setting columns. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Transient, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected, DisplayName = "Columns"))
+	TArray<TObjectPtr<class USettingColumn>> ColumnsInternal;
+
+protected:
+	/** Creates new column on specified index. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Columns", meta = (BlueprintProtected))
+	void AddColumn(int32 ColumnIndex);
+
+	/*********************************************************************************************
+	 * Multiple Data Tables support
+	 ********************************************************************************************* */
+protected:
+	/** Is called when the Settings Data Registry is changed. */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Settings Widget Constructor", meta = (BlueprintProtected))
+	void OnSettingsDataRegistryChanged(class UDataRegistry* SettingsDataRegistry);
+	void BindOnSettingsDataRegistryChanged();
 };

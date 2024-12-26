@@ -4,10 +4,17 @@
 //---
 #include "Data/SettingsDataAsset.h"
 #include "MyUtilsLibraries/SettingsUtilsLibrary.h"
+#include "MyUtilsLibraries/SWCWidgetUtilsLibrary.h"
 #include "UI/SettingSubWidget.h"
 //---
+#include "DataRegistry.h"
+#include "DataRegistryTypes.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/SizeBox.h"
+#include "Components/Viewport.h"
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
+#include "Engine/Texture.h"
 #include "GameFramework/GameUserSettings.h"
 //---
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsWidget)
@@ -81,7 +88,7 @@ void USettingsWidget::ApplySettings()
 }
 
 // Update settings on UI
-void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpdate)
+void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpdate, bool bLoadFromConfig/* = false*/)
 {
 	if (SettingsToUpdate.IsEmpty()
 		|| !SettingsToUpdate.IsValidIndex(0))
@@ -91,7 +98,7 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 
 	if (SettingsTableRowsInternal.IsEmpty())
 	{
-		UpdateSettingsTableRows();
+		CacheTable();
 	}
 
 	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
@@ -105,7 +112,8 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 		}
 
 		FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
-		if (!ChosenData)
+		if (!ChosenData
+			|| !ChosenData->CanUpdateSetting())
 		{
 			continue;
 		}
@@ -116,8 +124,11 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 			continue;
 		}
 
-		// Obtain the latest value from configs and set it
-		Owner->LoadConfig();
+		if (bLoadFromConfig)
+		{
+			// Obtain the latest value from configs and set it
+			Owner->LoadConfig();
+		}
 
 		FString Result;
 		ChosenData->GetSettingValue(*this, SettingTag, /*Out*/Result);
@@ -126,13 +137,13 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 }
 
 // Returns the name of found tag by specified function
-const FSettingTag& USettingsWidget::GetTagByFunction(const FSettingFunctionPicker& FunctionPicker) const
+const FSettingTag& USettingsWidget::GetTagByFunction(const FSettingFunctionPicker& SettingFunction) const
 {
 	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
 	{
 		const FSettingsPrimary& PrimaryData = RowIt.Value.PrimaryData;
-		if (PrimaryData.Getter == FunctionPicker
-			|| PrimaryData.Setter == FunctionPicker)
+		if (PrimaryData.Getter == SettingFunction
+			|| PrimaryData.Setter == SettingFunction)
 		{
 			return PrimaryData.Tag;
 		}
@@ -535,7 +546,7 @@ float USettingsWidget::GetScrollBoxHeight() const
 	float Paddings = 0.f;
 	const FMargin SettingsPadding = SettingsData.GetSettingsPadding();
 	Paddings += SettingsPadding.Top + SettingsPadding.Bottom;
-	const FMargin ScrollBoxPadding = SettingsData.GetScrollboxPadding();
+	const FMargin ScrollBoxPadding = SettingsData.GetColumnPadding();
 	Paddings += ScrollBoxPadding.Top + ScrollBoxPadding.Bottom;
 
 	const float ScrollBoxHeight = (SettingsSize - MarginsSize).Y - Paddings;
@@ -594,7 +605,7 @@ void USettingsWidget::NativeConstruct()
 		TryConstructSettings();
 	}
 
-	TryFocusOnUI();
+	BindOnSettingsDataRegistryChanged();
 }
 
 // Is called right after the game was started and windows size is set to construct settings
@@ -617,7 +628,7 @@ void USettingsWidget::ConstructSettings()
 		return;
 	}
 
-	UpdateSettingsTableRows();
+	CacheTable();
 
 	// BP implementation to cache some data before creating subwidgets
 	OnConstructSettings();
@@ -631,33 +642,52 @@ void USettingsWidget::ConstructSettings()
 		AddedSettings.AddTag(SettingRef.PrimaryData.Tag);
 	}
 
-	UpdateSettings(AddedSettings);
+	UpdateSettings(AddedSettings, /*bLoadFromConfig*/true);
 
 	UpdateScrollBoxesHeight();
 }
 
-void USettingsWidget::UpdateSettingsTableRows()
+// Internal function to cache setting rows from Settings Data Table
+void USettingsWidget::CacheTable()
 {
-	TMap<FName, FSettingsRow> SettingRows;
-	USettingsUtilsLibrary::GetAllSettingRows(/*Out*/SettingRows);
+	TMap<FName, FSettingsPicker> SettingRows;
+	USettingsUtilsLibrary::GenerateAllSettingRows(/*Out*/SettingRows);
 	if (!ensureMsgf(!SettingRows.IsEmpty(), TEXT("ASSERT: 'SettingRows' are empty")))
 	{
 		return;
 	}
 
 	// Reset values if currently are set
-	OverallColumnsNumInternal = 1;
+	SettingsTableRowsInternal.Empty();
+	SettingsTableRowsInternal.Reserve(SettingRows.Num());
+	for (const TTuple<FName, FSettingsPicker>& SettingRowIt : SettingRows)
+	{
+		const FSettingsPicker& SettingsPicker = SettingRowIt.Value;
+		SettingsTableRowsInternal.Emplace(SettingRowIt.Key, SettingsPicker);
+	}
+}
+
+// Clears all added settings
+void USettingsWidget::RemoveAllSettings()
+{
+	for (TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
+	{
+		USettingSubWidget* SubWidget = RowIt.Value.PrimaryData.SettingSubWidget.Get();
+		if (ensureMsgf(SubWidget, TEXT("ASSERT: [%i] %s:\n'SubWidget' is not valid!"), __LINE__, *FString(__FUNCTION__)))
+		{
+			FSWCWidgetUtilsLibrary::DestroyWidget(*SubWidget);
+		}
+	}
 	SettingsTableRowsInternal.Empty();
 
-	SettingsTableRowsInternal.Reserve(SettingRows.Num());
-	for (const TTuple<FName, FSettingsRow>& SettingRowIt : SettingRows)
+	for (USettingColumn* ColumnIt : ColumnsInternal)
 	{
-		const FSettingsPicker& SettingsPicker = SettingRowIt.Value.SettingsPicker;
-		SettingsTableRowsInternal.Emplace(SettingRowIt.Key, SettingsPicker);
-
-		// Set overall columns num by amount of rows that are marked to be started on next column
-		OverallColumnsNumInternal += static_cast<int32>(SettingsPicker.PrimaryData.bStartOnNextColumn);
+		if (ensureMsgf(ColumnIt, TEXT("ASSERT: [%i] %s:\n'ColumnIt' is not valid!"), __LINE__, *FString(__FUNCTION__)))
+		{
+			FSWCWidgetUtilsLibrary::DestroyWidget(*ColumnIt);
+		}
 	}
+	ColumnsInternal.Empty();
 }
 
 // Is called when In-Game menu became opened or closed
@@ -735,22 +765,15 @@ USettingSubWidget* USettingsWidget::CreateSettingSubWidget(FSettingsPrimary& InO
 	return SettingSubWidget;
 }
 
-// Starts adding settings on the next column
-void USettingsWidget::StartNextColumn_Implementation()
-{
-	// BP implementation
-	// ...
-}
-
 // Automatically sets the height for all scrollboxes in the Settings
 void USettingsWidget::UpdateScrollBoxesHeight()
 {
 	ForceLayoutPrepass(); // Call it to make GetSettingsHeight work since it is called during widget construction
 	const float ScrollBoxHeight = GetScrollBoxHeight();
 
-	for (const USettingScrollBox* ScrollBoxIt : SettingScrollBoxesInternal)
+	for (const USettingColumn* ColumnIt : ColumnsInternal)
 	{
-		USizeBox* SizeBoxWidget = ScrollBoxIt ? ScrollBoxIt->GetSizeBoxWidget() : nullptr;
+		USizeBox* SizeBoxWidget = ColumnIt ? ColumnIt->GetSizeBoxWidget() : nullptr;
 		if (SizeBoxWidget)
 		{
 			SizeBoxWidget->SetMaxDesiredHeight(ScrollBoxHeight);
@@ -897,22 +920,22 @@ bool USettingsWidget::BindSetting(FSettingsPicker& Setting)
  * @param SetterFunction		The setter function to bind
  * @param AdditionalFunctionCalls Any additional function calls needed for specific widgets
  */
-#define BIND_SETTING(Primary, Data, GetterFunction, SetterFunction)													\
-	do																												\
-	{																												\
-		if (UObject* OwnerObject = Primary.GetSettingOwner(this))													\
-		{																											\
-			const FName GetterFunctionName = Primary.Getter.FunctionName;											\
-			if (Primary.OwnerFunctionList.Contains(GetterFunctionName))												\
-			{																										\
-				Data.GetterFunction.BindUFunction(OwnerObject, GetterFunctionName);							\
-			}																										\
-			const FName SetterFunctionName = Primary.Setter.FunctionName;											\
-			if (Primary.OwnerFunctionList.Contains(SetterFunctionName))										\
-			{																										\
-				Data.SetterFunction.BindUFunction(OwnerObject, SetterFunctionName);							\
-			}																										\
-		}																											\
+#define BIND_SETTING(Primary, Data, GetterFunction, SetterFunction)					\
+	do																				\
+	{																				\
+		if (UObject* OwnerObject = Primary.GetSettingOwner(this))					\
+		{																			\
+			const FName GetterFunctionName = Primary.Getter.FunctionName;			\
+			if (Primary.OwnerFunctionList.Contains(GetterFunctionName))				\
+			{																		\
+				Data.GetterFunction.BindUFunction(OwnerObject, GetterFunctionName);	\
+			}																		\
+			const FName SetterFunctionName = Primary.Setter.FunctionName;			\
+			if (Primary.OwnerFunctionList.Contains(SetterFunctionName))				\
+			{																		\
+				Data.SetterFunction.BindUFunction(OwnerObject, SetterFunctionName);	\
+			}																		\
+		}																			\
 	} while (0)
 
 // Bind button to own Get/Set delegates
@@ -998,14 +1021,14 @@ void USettingsWidget::TryRebindDeferredContexts()
 	{
 		// Some settings were successfully rebound, remove them from the deferred list and update them
 		DeferredBindingsInternal.RemoveTags(ReboundSettings);
-		UpdateSettings(ReboundSettings);
+		UpdateSettings(ReboundSettings, /*bLoadFromConfig*/true);
 	}
 }
 
 // Add setting on UI.
 void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 {
-	FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
+	const FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
 	if (!ChosenData)
 	{
 		return;
@@ -1015,9 +1038,81 @@ void USettingsWidget::AddSetting(FSettingsPicker& Setting)
 
 	if (Setting.PrimaryData.bStartOnNextColumn)
 	{
-		StartNextColumn();
+		AddColumn(GetColumnIndexBySetting(PrimaryData.Tag));
 	}
 
-	CreateSettingSubWidget(PrimaryData, ChosenData->GetSubWidgetClass());
-	ChosenData->AddSetting(*this, PrimaryData);
+	USettingSubWidget* SettingSubWidget = CreateSettingSubWidget(PrimaryData, ChosenData->GetSubWidgetClass());
+	checkf(SettingSubWidget, TEXT("ERROR: [%i] %s:\n'SettingSubWidget' is null!"), __LINE__, *FString(__FUNCTION__));
+	SettingSubWidget->OnAddSetting(Setting);
+}
+
+/*********************************************************************************************
+ * Columns builder
+ ********************************************************************************************* */
+
+// Returns the index of column for a Setting by specified tag or -1 if not found
+int32 USettingsWidget::GetColumnIndexBySetting(const FSettingTag& SettingTag) const
+{
+	int32 ColumnIndex = 0;
+	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
+	{
+		const FSettingsPrimary& PrimaryData = RowIt.Value.PrimaryData;
+		if (PrimaryData.bStartOnNextColumn)
+		{
+			++ColumnIndex;
+		}
+
+		if (PrimaryData.Tag == SettingTag)
+		{
+			return ColumnIndex;
+		}
+	}
+
+	return INDEX_NONE;
+}
+
+// Creates new column on specified index
+void USettingsWidget::AddColumn(int32 ColumnIndex)
+{
+	USettingColumn* NewColumn = CreateWidget<USettingColumn>(this, USettingsDataAsset::Get().GetColumnClass());
+	NewColumn->SetSettingsWidget(this);
+	ColumnIndex = FMath::Clamp(ColumnIndex, 0, ColumnsInternal.Num());
+	ColumnsInternal.Insert(NewColumn, ColumnIndex);
+	NewColumn->OnAddSetting(FSettingsPicker());
+}
+
+/*********************************************************************************************
+ * Multiple Data Tables support
+ ********************************************************************************************* */
+
+// Is called when the Settings Data Registry is changed
+void USettingsWidget::OnSettingsDataRegistryChanged_Implementation(class UDataRegistry* SettingsDataRegistry)
+{
+	const UWorld* World = GetWorld();
+	const APlayerController* PC = GetOwningPlayer();
+	if (!World || World->bIsTearingDown
+		|| !PC
+		|| !IsInViewport()
+		|| !SettingsDataRegistry || SettingsDataRegistry->GetLowestAvailability() == EDataRegistryAvailability::DoesNotExist)
+	{
+		// The game was ended or no data registry is set
+		return;
+	}
+
+	// Perfectly, we should insert new settings here,
+	// But inserting anything in between to scrollbox is not supported by UE at all
+	// So, clear all settings first
+	RemoveAllSettings();
+	ConstructSettings();
+}
+
+void USettingsWidget::BindOnSettingsDataRegistryChanged()
+{
+	UDataRegistry* SettingsDataRegistry = USettingsDataAsset::Get().GetSettingsDataRegistry();
+	checkf(SettingsDataRegistry, TEXT("ERROR: [%i] %s:\n'SettingsDataRegistry' is not set in Project Settings!"), __LINE__, *FString(__FUNCTION__));
+	FDataRegistryCacheVersionCallback& SettingsDataRegistryDelegate = SettingsDataRegistry->OnCacheVersionInvalidated();
+	if (!SettingsDataRegistryDelegate.IsBoundToObject(this))
+	{
+		SettingsDataRegistryDelegate.AddUObject(this, &ThisClass::OnSettingsDataRegistryChanged);
+	}
 }

@@ -20,13 +20,13 @@ public:
 	static class USettingsWidget* GetSettingsWidget(const UObject* WorldContextObject);
 
 	/** Returns the Game User Settings object. */
-	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor", meta = (WorldContext = "OptionalWorldContext"))
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor", meta = (WorldContext = "OptionalWorldContext", CallableWithoutWorldContext))
 	static class UGameUserSettings* GetGameUserSettings(const UObject* OptionalWorldContext = nullptr);
 
 	/** Returns all Settings Rows from project's Settings Data Table and all other additional Data Tables from 'SettingsDataTable' Data Registry.
 	 * Note: Is expensive function, prefer to cache the result once! */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
-	static void GetAllSettingRows(TMap<FName, struct FSettingsRow>& OutSettingRows);
+	static void GenerateAllSettingRows(TMap<FName, struct FSettingsPicker>& OutSettingRows);
 
 	/*********************************************************************************************
 	 * Multiple Data Tables support

@@ -1,9 +1,8 @@
 ﻿// Copyright (c) Yevhenii Selivanov.
 
 #include "SettingsWidgetConstructorModule.h"
-
-#define LOCTEXT_NAMESPACE "FSettingsWidgetConstructorModule"
-
+//---
+#include "Modules/ModuleManager.h"
 // Called right after the module DLL has been loaded and the module object has been created
 void FSettingsWidgetConstructorModule::StartupModule()
 {
@@ -16,7 +15,5 @@ void FSettingsWidgetConstructorModule::ShutdownModule()
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
 }
-
-#undef LOCTEXT_NAMESPACE
 
 IMPLEMENT_MODULE(FSettingsWidgetConstructorModule, SettingsWidgetConstructor)
