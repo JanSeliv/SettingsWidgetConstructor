@@ -11,8 +11,6 @@
 #include "KismetCompiler.h"
 #include "Modules/ModuleManager.h"
 
-#define LOCTEXT_NAMESPACE "FSettingsWidgetConstructorEditorModule"
-
 // Called right after the module DLL has been loaded and the module object has been created
 void FSettingsWidgetConstructorEditorModule::StartupModule()
 {
@@ -78,10 +76,8 @@ void FSettingsWidgetConstructorEditorModule::RegisterSettingAssets()
 void FSettingsWidgetConstructorEditorModule::RegisterSettingAssetsCategory()
 {
 	static const FName CategoryKey = TEXT("SettingsWidgetConstructor");
-	static const FText CategoryDisplayName = LOCTEXT("SettingsWidgetConstructorCategory", "Settings Widget Constructor");
+	static const FText CategoryDisplayName = NSLOCTEXT("SettingsWidgetConstructorEditorModule", "SettingsWidgetConstructorCategory", "Settings Widget Constructor");
 	SettingsCategory = IAssetTools::Get().RegisterAdvancedAssetCategory(CategoryKey, CategoryDisplayName);
 }
-
-#undef LOCTEXT_NAMESPACE
 
 IMPLEMENT_MODULE(FSettingsWidgetConstructorEditorModule, SettingsWidgetConstructorEditor)

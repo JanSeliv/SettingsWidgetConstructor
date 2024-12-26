@@ -31,12 +31,6 @@ void FSettingsButton::BindSetting(USettingsWidget& SettingsWidget, const FSettin
 	SettingsWidget.BindButton(PrimaryData, *this);
 }
 
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsButton::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& PrimaryData)
-{
-	SettingsWidget.AddButton(PrimaryData, *this);
-}
-
 /*********************************************************************************************
  * FSettingsCheckbox
  ********************************************************************************************* */
@@ -65,12 +59,6 @@ void FSettingsCheckbox::SetSettingValue(USettingsWidget& SettingsWidget, const F
 void FSettingsCheckbox::BindSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& PrimaryData)
 {
 	SettingsWidget.BindCheckbox(PrimaryData, *this);
-}
-
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsCheckbox::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	SettingsWidget.AddCheckbox(InOutPrimaryData, *this);
 }
 
 /*********************************************************************************************
@@ -120,12 +108,6 @@ void FSettingsCombobox::BindSetting(USettingsWidget& SettingsWidget, const FSett
 	SettingsWidget.BindCombobox(PrimaryData, *this);
 }
 
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsCombobox::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	SettingsWidget.AddCombobox(InOutPrimaryData, *this);
-}
-
 /*********************************************************************************************
  * FSettingsSlider
  ********************************************************************************************* */
@@ -154,12 +136,6 @@ void FSettingsSlider::SetSettingValue(USettingsWidget& SettingsWidget, const FSe
 void FSettingsSlider::BindSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& PrimaryData)
 {
 	SettingsWidget.BindSlider(PrimaryData, *this);
-}
-
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsSlider::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	SettingsWidget.AddSlider(InOutPrimaryData, *this);
 }
 
 /*********************************************************************************************
@@ -193,12 +169,6 @@ void FSettingsTextLine::BindSetting(USettingsWidget& SettingsWidget, const FSett
 	SettingsWidget.BindTextLine(PrimaryData, *this);
 }
 
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsTextLine::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	SettingsWidget.AddTextLine(InOutPrimaryData, *this);
-}
-
 /*********************************************************************************************
  * FSettingsUserInput
  ********************************************************************************************* */
@@ -229,12 +199,6 @@ void FSettingsUserInput::BindSetting(USettingsWidget& SettingsWidget, const FSet
 	SettingsWidget.BindUserInput(PrimaryData, *this);
 }
 
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsUserInput::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	SettingsWidget.AddUserInput(InOutPrimaryData, *this);
-}
-
 /*********************************************************************************************
  * FSettingsCustomWidget
  ********************************************************************************************* */
@@ -256,10 +220,4 @@ void FSettingsCustomWidget::GetSettingValue(const USettingsWidget& SettingsWidge
 void FSettingsCustomWidget::BindSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& PrimaryData)
 {
 	SettingsWidget.BindCustomWidget(PrimaryData, *this);
-}
-
-// Calls the Add function of the Settings Widget of this setting type
-void FSettingsCustomWidget::AddSetting(USettingsWidget& SettingsWidget, const FSettingsPrimary& InOutPrimaryData)
-{
-	SettingsWidget.AddCustomWidget(InOutPrimaryData, *this);
 }
