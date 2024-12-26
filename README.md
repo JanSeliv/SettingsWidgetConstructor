@@ -1,5 +1,5 @@
 <a href="https://github.com/JanSeliv/SettingsWidgetConstructor/blob/main/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)</a>
-<a href="https://www.unrealengine.com/">![Unreal Engine](https://img.shields.io/badge/Unreal-5.3-dea309?style=flat&logo=unrealengine)</a>
+<a href="https://www.unrealengine.com/">![Unreal Engine](https://img.shields.io/badge/Unreal-5.4-dea309?style=flat&logo=unrealengine)</a>
 
 <br/>
 <p align="center">
@@ -37,7 +37,7 @@ Also, explore this [game project repository](https://github.com/JanSeliv/Bomber)
 - Updated to **Unreal Engine 5.4**.
 - Moved a significant chunk of the logic from blueprints to code and simplified amount of widgets used.
 #### 2023-10-12
-- Updated to **Unreal Engine 5.3**
+- Updated to **Unreal Engine 5.4**
 - Added **multiple Settings Data Tables** support ([see doc](https://docs.google.com/document/d/1IXnOqrgaXTClP-0cIo28a9f6GHc9N1BCgTNnMk-X9VQ/edit#heading=h.cix3vjszb2vm)).
 - Implemented **Deferred Bindings**: now Getters and Setters are automatically rebound for failed settings.
 - Added **Blueprint Function Library** support to allow any its blueprint function to be used as an _Owner_ in a setting row.
