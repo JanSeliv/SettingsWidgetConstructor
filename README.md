@@ -33,7 +33,7 @@ Check out our [Release](https://github.com/JanSeliv/SettingsWidgetConstructor/re
 Also, explore this [game project repository](https://github.com/JanSeliv/Bomber) to view the Settings Widget Constructor in action.
 
 ## 📅 Changelog
-#### 
+#### 2024-12-26
 - Updated to **Unreal Engine 5.4**.
 - Moved a significant chunk of the logic from blueprints to code and simplified amount of widgets used.
 #### 2023-10-12
