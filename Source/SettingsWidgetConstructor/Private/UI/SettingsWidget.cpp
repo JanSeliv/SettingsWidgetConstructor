@@ -5,6 +5,7 @@
 #include "Data/SettingsDataAsset.h"
 #include "MyUtilsLibraries/SettingsUtilsLibrary.h"
 #include "MyUtilsLibraries/SWCWidgetUtilsLibrary.h"
+#include "UI/SettingCombobox.h"
 #include "UI/SettingSubWidget.h"
 //---
 #include "DataRegistry.h"
@@ -231,8 +232,11 @@ void USettingsWidget::SetSettingCheckbox(const FSettingTag& CheckboxTag, bool In
 {
 	SET_SETTING_VALUE(CheckboxTag, Checkbox, bIsSet, InValue, OnSetterBool);
 
-	// BP implementation
-	SetCheckbox(CheckboxTag, InValue);
+	if (USettingCheckbox* SettingCheckbox = GetSettingSubWidget<USettingCheckbox>(CheckboxTag))
+	{
+		SettingCheckbox->SetCheckboxValue(InValue);
+	}
+
 	PlayUIClickSFX();
 }
 
@@ -246,29 +250,10 @@ void USettingsWidget::SetSettingComboboxIndex(const FSettingTag& ComboboxTag, in
 
 	SET_SETTING_VALUE(ComboboxTag, Combobox, ChosenMemberIndex, InValue, OnSetterInt);
 
-	// BP implementation
-	SetComboboxIndex(ComboboxTag, InValue);
-}
-
-// Set new members for a combobox
-void USettingsWidget::SetSettingComboboxMembers(const FSettingTag& ComboboxTag, const TArray<FText>& InValue)
-{
-	if (!ComboboxTag.IsValid())
+	if (USettingCombobox* SettingCombobox = GetSettingSubWidget<USettingCombobox>(ComboboxTag))
 	{
-		return;
+		SettingCombobox->SetComboboxIndex(InValue);
 	}
-
-	FSettingsPicker* SettingsRowPtr = SettingsTableRowsInternal.Find(ComboboxTag.GetTagName());
-	if (!SettingsRowPtr)
-	{
-		return;
-	}
-
-	SettingsRowPtr->Combobox.Members = InValue;
-	SettingsRowPtr->Combobox.OnSetMembers.ExecuteIfBound(InValue);
-
-	// BP implementation
-	SetComboboxMembers(ComboboxTag, InValue);
 }
 
 // Set current value for a slider
@@ -279,8 +264,10 @@ void USettingsWidget::SetSettingSlider(const FSettingTag& SliderTag, double InVa
 	const double NewValue = FMath::Clamp(InValue, MinValue, MaxValue);
 	SET_SETTING_VALUE(SliderTag, Slider, ChosenValue, NewValue, OnSetterFloat);
 
-	// BP implementation
-	SetSlider(SliderTag, InValue);
+	if (USettingSlider* SettingSlider = GetSettingSubWidget<USettingSlider>(SliderTag))
+	{
+		SettingSlider->SetSliderValue(NewValue);
+	}
 }
 
 // Set new text
@@ -342,9 +329,9 @@ void USettingsWidget::SetSettingUserInput(const FSettingTag& UserInputTag, FName
 		const FString NewValueStr = InValue.ToString().Left(UserInputRef.MaxCharactersNumber);
 		InValue = *NewValueStr;
 
-		if (USettingUserInput* SettingUserInput = Cast<USettingUserInput>(SettingsRowPtr->PrimaryData.SettingSubWidget.Get()))
+		if (USettingUserInput* SettingUserInput = GetSettingSubWidget<USettingUserInput>(UserInputTag))
 		{
-			SettingUserInput->SetEditableText(FText::FromString(NewValueStr));
+			SettingUserInput->SetUserInputValue(InValue);
 		}
 	}
 
@@ -352,8 +339,6 @@ void USettingsWidget::SetSettingUserInput(const FSettingTag& UserInputTag, FName
 	UserInputRef.OnSetterName.ExecuteIfBound(InValue);
 	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
 
-	// BP implementation
-	SetUserInput(UserInputTag, InValue);
 	PlayUIClickSFX();
 }
 

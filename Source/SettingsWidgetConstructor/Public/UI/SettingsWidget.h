@@ -149,10 +149,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Setters", meta = (AutoCreateRefTerm = "ComboboxTag"))
 	void SetSettingComboboxIndex(const FSettingTag& ComboboxTag, int32 InValue);
 
-	/** Set new members for a combobox. */
-	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Setters", meta = (AutoCreateRefTerm = "ComboboxTag,InValue"))
-	void SetSettingComboboxMembers(const FSettingTag& ComboboxTag, const TArray<FText>& InValue);
-
 	/** Set current value for a slider [0...1]. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Setters", meta = (AutoCreateRefTerm = "SliderTag"))
 	void SetSettingSlider(const FSettingTag& SliderTag, double InValue);
@@ -214,6 +210,9 @@ public:
 	/** Get setting widget object by specified tag. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Getters", meta = (AutoCreateRefTerm = "SettingTag"))
 	class USettingSubWidget* GetSettingSubWidget(const FSettingTag& SettingTag) const;
+
+	template <typename T = USettingSubWidget>
+	FORCEINLINE T* GetSettingSubWidget(const FSettingTag& SettingTag) const { return Cast<T>(GetSettingSubWidget(SettingTag)); }
 
 	/* ---------------------------------------------------
 	 *		Protected properties
@@ -339,32 +338,6 @@ protected:
 	/** Add setting on UI. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected))
 	void AddSetting(UPARAM(ref)FSettingsPicker& Setting);
-
-	/* ---------------------------------------------------
-	 *		Blueprint implementable setters
-	 *
-	 *		Don't call these functions directly, use 'Set Setting X' functions instead.
-	 * --------------------------------------------------- */
-protected:
-	/** Internal blueprint function to toggle checkbox. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "CheckboxTag"))
-	void SetCheckbox(const FSettingTag& CheckboxTag, bool InValue);
-
-	/** Internal blueprint function to set chosen member index for a combobox. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "ComboboxTag"))
-	void SetComboboxIndex(const FSettingTag& ComboboxTag, int32 InValue);
-
-	/** Internal blueprint function to set new members for a combobox. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "ComboboxTag,InValue"))
-	void SetComboboxMembers(const FSettingTag& ComboboxTag, const TArray<FText>& InValue);
-
-	/** Internal blueprint function to set current value for a slider [0...1]. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "SliderTag"))
-	void SetSlider(const FSettingTag& SliderTag, float InValue);
-
-	/** Internal blueprint function to set new text for an input box. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "UserInputTag"))
-	void SetUserInput(const FSettingTag& UserInputTag, FName InValue);
 
 	/*********************************************************************************************
 	 * Columns builder

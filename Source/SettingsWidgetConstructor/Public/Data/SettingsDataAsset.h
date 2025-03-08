@@ -55,6 +55,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	FORCEINLINE TSubclassOf<class USettingCombobox> GetComboboxClass() const { return ComboboxClassInternal; }
 
+	/** Returns the widget class that represents each option in the Setting Combobox. */
+	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
+	FORCEINLINE TSubclassOf<class USettingComboitem> GetComboitemClass() const { return ComboitemClassInternal; }
+
 	/** Returns the sub-widget of Slider settings. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor")
 	FORCEINLINE TSubclassOf<class USettingSlider> GetSliderClass() const { return SliderClassInternal; }
@@ -147,6 +151,10 @@ protected:
 	/** The sub-widget class of Combobox settings, is config property. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Combobox Class", ShowOnlyInnerProperties))
 	TSubclassOf<class USettingCombobox> ComboboxClassInternal;
+
+	/** The widget class that represents each option in the Setting Combobox. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Comboitem Class", ShowOnlyInnerProperties))
+	TSubclassOf<class USettingComboitem> ComboitemClassInternal;
 
 	/** The sub-widget class of Slider settings, is config property. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Config, Category = "Settings Widget Constructor", meta = (BlueprintProtected, DisplayName = "Slider Class", ShowOnlyInnerProperties))
