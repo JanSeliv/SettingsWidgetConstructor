@@ -73,6 +73,10 @@ struct SETTINGSWIDGETCONSTRUCTOR_API FSettingsPrimary
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bStartOnNextColumn = false;
 
+	/** If true, the Game User Settings will be immediately applied after change of this setting, without waiting for the save button. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bApplyImmediately = false;
+
 	/** Contains tags of settings which are needed to update after change of this setting. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Categories = "Settings"))
 	FGameplayTagContainer SettingsToUpdate = FGameplayTagContainer::EmptyContainer;
