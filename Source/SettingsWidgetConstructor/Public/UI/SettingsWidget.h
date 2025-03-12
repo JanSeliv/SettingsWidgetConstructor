@@ -165,6 +165,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Setters", meta = (AutoCreateRefTerm = "CustomWidgetTag"))
 	void SetSettingCustomWidget(const FSettingTag& CustomWidgetTag, class USettingCustomWidget* InCustomWidget);
 
+	/** Is called after any setting is changed. */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "C++", meta = (AutoCreateRefTerm = "SettingPrimaryRow"))
+	void OnAnySettingSet(const FSettingsPrimary& SettingPrimaryRow);
+
 	/** Creates setting sub-widget (like button, checkbox etc.) based on specified setting class and sets it to specified primary data.
 	 * @param InOutPrimary The Data that should contain created setting class.
 	 * @param SettingSubWidgetClass The setting widget class to create. */

@@ -224,6 +224,8 @@ void USettingsWidget::SetSettingButtonPressed(const FSettingTag& ButtonTag)
 
 	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
 
+	OnAnySettingSet(SettingsRowPtr->PrimaryData);
+
 	PlayUIClickSFX();
 }
 
@@ -235,6 +237,7 @@ void USettingsWidget::SetSettingCheckbox(const FSettingTag& CheckboxTag, bool In
 	if (USettingCheckbox* SettingCheckbox = GetSettingSubWidget<USettingCheckbox>(CheckboxTag))
 	{
 		SettingCheckbox->SetCheckboxValue(InValue);
+		OnAnySettingSet(SettingCheckbox->GetSettingPrimaryRow());
 	}
 
 	PlayUIClickSFX();
@@ -253,6 +256,7 @@ void USettingsWidget::SetSettingComboboxIndex(const FSettingTag& ComboboxTag, in
 	if (USettingCombobox* SettingCombobox = GetSettingSubWidget<USettingCombobox>(ComboboxTag))
 	{
 		SettingCombobox->SetComboboxIndex(InValue);
+		OnAnySettingSet(SettingCombobox->GetSettingPrimaryRow());
 	}
 }
 
@@ -267,6 +271,7 @@ void USettingsWidget::SetSettingSlider(const FSettingTag& SliderTag, double InVa
 	if (USettingSlider* SettingSlider = GetSettingSubWidget<USettingSlider>(SliderTag))
 	{
 		SettingSlider->SetSliderValue(NewValue);
+		OnAnySettingSet(SettingSlider->GetSettingPrimaryRow());
 	}
 }
 
@@ -332,6 +337,7 @@ void USettingsWidget::SetSettingUserInput(const FSettingTag& UserInputTag, FName
 		if (USettingUserInput* SettingUserInput = GetSettingSubWidget<USettingUserInput>(UserInputTag))
 		{
 			SettingUserInput->SetUserInputValue(InValue);
+			OnAnySettingSet(SettingUserInput->GetSettingPrimaryRow());
 		}
 	}
 
@@ -366,6 +372,17 @@ void USettingsWidget::SetSettingCustomWidget(const FSettingTag& CustomWidgetTag,
 	CustomWidgetRef = InCustomWidget;
 	SettingsRowPtr->CustomWidget.OnSetterWidget.ExecuteIfBound(InCustomWidget);
 	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+
+	OnAnySettingSet(SettingsRowPtr->PrimaryData);
+}
+
+// Is called after any setting is changed
+void USettingsWidget::OnAnySettingSet_Implementation(const FSettingsPrimary& SettingPrimaryRow)
+{
+	if (SettingPrimaryRow.bApplyImmediately)
+	{
+		ApplySettings();
+	}
 }
 
 /* ---------------------------------------------------
@@ -630,6 +647,8 @@ void USettingsWidget::ConstructSettings()
 	UpdateSettings(AddedSettings, /*bLoadFromConfig*/true);
 
 	UpdateScrollBoxesHeight();
+
+	ApplySettings();
 }
 
 // Internal function to cache setting rows from Settings Data Table
