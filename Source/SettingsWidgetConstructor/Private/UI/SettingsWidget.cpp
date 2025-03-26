@@ -89,7 +89,7 @@ void USettingsWidget::ApplySettings()
 }
 
 // Update settings on UI
-void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpdate, bool bLoadFromConfig/* = false*/)
+void USettingsWidget::UpdateSettingsByTags(const FGameplayTagContainer& SettingsToUpdate, bool bLoadFromConfig/* = false*/)
 {
 	if (SettingsToUpdate.IsEmpty()
 		|| !SettingsToUpdate.IsValidIndex(0))
@@ -135,6 +135,17 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 		ChosenData->GetSettingValue(*this, SettingTag, /*Out*/Result);
 		ChosenData->SetSettingValue(*this, SettingTag, Result);
 	}
+}
+
+// Update all existing settings on UI
+void USettingsWidget::UpdateAllSettings(bool bLoadFromConfig)
+{
+	FGameplayTagContainer AllSettingTags;
+	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
+	{
+		AllSettingTags.AddTagFast(RowIt.Value.PrimaryData.Tag);
+	}
+	UpdateSettingsByTags(AllSettingTags, bLoadFromConfig);
 }
 
 // Returns the name of found tag by specified function
@@ -203,7 +214,7 @@ void USettingsWidget::SetSettingValue(FName TagName, const FString& Value)
 		}																			\
 		Data.MemberValue = Value;													\
 		Data.SetterExpression.ExecuteIfBound(Value);								\
-		UpdateSettings(FoundRowPtr->PrimaryData.SettingsToUpdate);					\
+		UpdateSettingsByTags(FoundRowPtr->PrimaryData.SettingsToUpdate);			\
 	} while (0)
 
 // Press button
@@ -222,7 +233,7 @@ void USettingsWidget::SetSettingButtonPressed(const FSettingTag& ButtonTag)
 
 	SettingsRowPtr->Button.OnButtonPressed.ExecuteIfBound();
 
-	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+	UpdateSettingsByTags(SettingsRowPtr->PrimaryData.SettingsToUpdate);
 
 	OnAnySettingSet(SettingsRowPtr->PrimaryData);
 
@@ -298,7 +309,7 @@ void USettingsWidget::SetSettingTextLine(const FSettingTag& TextLineTag, const F
 
 	CaptionRef = InValue;
 	SettingsRowPtr->TextLine.OnSetterText.ExecuteIfBound(InValue);
-	UpdateSettings(PrimaryRef.SettingsToUpdate);
+	UpdateSettingsByTags(PrimaryRef.SettingsToUpdate);
 
 	if (USettingTextLine* SettingTextLine = Cast<USettingTextLine>(PrimaryRef.SettingSubWidget))
 	{
@@ -343,7 +354,7 @@ void USettingsWidget::SetSettingUserInput(const FSettingTag& UserInputTag, FName
 
 	UserInputRef.UserInput = InValue;
 	UserInputRef.OnSetterName.ExecuteIfBound(InValue);
-	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+	UpdateSettingsByTags(SettingsRowPtr->PrimaryData.SettingsToUpdate);
 
 	PlayUIClickSFX();
 }
@@ -371,7 +382,7 @@ void USettingsWidget::SetSettingCustomWidget(const FSettingTag& CustomWidgetTag,
 	CustomWidgetRef.Reset();
 	CustomWidgetRef = InCustomWidget;
 	SettingsRowPtr->CustomWidget.OnSetterWidget.ExecuteIfBound(InCustomWidget);
-	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+	UpdateSettingsByTags(SettingsRowPtr->PrimaryData.SettingsToUpdate);
 
 	OnAnySettingSet(SettingsRowPtr->PrimaryData);
 }
@@ -644,7 +655,7 @@ void USettingsWidget::ConstructSettings()
 		AddedSettings.AddTag(SettingRef.PrimaryData.Tag);
 	}
 
-	UpdateSettings(AddedSettings, /*bLoadFromConfig*/true);
+	UpdateSettingsByTags(AddedSettings, /*bLoadFromConfig*/true);
 
 	UpdateScrollBoxesHeight();
 
@@ -831,6 +842,8 @@ void USettingsWidget::OpenSettings()
 	TryConstructSettings();
 
 	TryRebindDeferredContexts();
+
+	UpdateAllSettings();
 
 	SetVisibility(ESlateVisibility::Visible);
 
@@ -1025,7 +1038,7 @@ void USettingsWidget::TryRebindDeferredContexts()
 	{
 		// Some settings were successfully rebound, remove them from the deferred list and update them
 		DeferredBindingsInternal.RemoveTags(ReboundSettings);
-		UpdateSettings(ReboundSettings, /*bLoadFromConfig*/true);
+		UpdateSettingsByTags(ReboundSettings, /*bLoadFromConfig*/true);
 	}
 }
 
