@@ -90,13 +90,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
 	void ApplySettings();
 
-	/** Update settings on UI.
+	/** Update specific settings on UI by tags.
+	 * Alternative, in code `UPDATE_SETTING_BY_FUNCTION(SettingsWidget, ThisClass, SetFullscreenMode)` can be used.
 	 * @param SettingsToUpdate Contains tags of settings that are needed to update.
 	 * @param bLoadFromConfig If true, then load settings from config file, otherwise just update UI. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (AutoCreateRefTerm = "SettingsToUpdate"))
-	void UpdateSettings(
+	void UpdateSettingsByTags(
 		UPARAM(meta = (Categories = "Settings")) const FGameplayTagContainer& SettingsToUpdate,
 		bool bLoadFromConfig = false);
+
+	/** Update all existing settings on UI.
+	 * @param bLoadFromConfig If true, then load settings from config file, otherwise just update UI. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
+	void UpdateAllSettings(bool bLoadFromConfig = false);
 
 	/** Returns the name of found tag by specified function. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor", meta = (AutoCreateRefTerm = "SettingFunction"))
@@ -378,3 +384,25 @@ protected:
 	void OnSettingsDataRegistryChanged(class UDataRegistry* SettingsDataRegistry);
 	void BindOnSettingsDataRegistryChanged();
 };
+
+/** Helper to update setting by specified function.
+ * E.g: UPDATE_SETTING(SettingsWidget, ThisClass, SetFullscreenMode);
+ * @param SettingsWidget The widget responsible for managing settings.
+ * @param InClass The class that declares the function.
+ * @param InFunctionName The name of the function used to identify the setting tag. */
+#define UPDATE_SETTING_BY_FUNCTION(SettingsWidget, InClass, InFunctionName)						\
+	do {																			\
+		if (!SettingsWidget)														\
+		{																			\
+			break;																	\
+		}																			\
+		static FGameplayTagContainer InFunctionName##SettingTag = FGameplayTagContainer::EmptyContainer; \
+		if (InFunctionName##SettingTag.IsEmpty())										\
+		{																			\
+			static const FSettingFunctionPicker FunctionPicker(						\
+				GetClass(),															\
+				GET_FUNCTION_NAME_CHECKED(InClass, InFunctionName));				\
+			InFunctionName##SettingTag.AddTag(SettingsWidget->GetTagByFunction(FunctionPicker)); \
+		}																			\
+		SettingsWidget->UpdateSettingsByTags(InFunctionName##SettingTag);				\
+	} while (0)
