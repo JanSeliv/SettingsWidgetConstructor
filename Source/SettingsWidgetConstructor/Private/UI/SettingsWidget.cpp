@@ -621,6 +621,14 @@ void USettingsWidget::NativeConstruct()
 	BindOnSettingsDataRegistryChanged();
 }
 
+// Called when the widget is removed from the viewport
+void USettingsWidget::NativeDestruct()
+{
+	Super::NativeDestruct();
+
+	RemoveAllSettings();
+}
+
 // Is called right after the game was started and windows size is set to construct settings
 void USettingsWidget::OnViewportResizedWhenInit(FViewport* Viewport, uint32 Index)
 {

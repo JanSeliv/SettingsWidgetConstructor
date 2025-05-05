@@ -274,6 +274,9 @@ protected:
 	* May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
 
+	/** Called when the widget is removed from the viewport. */
+	virtual void NativeDestruct() override;
+
 	/** Is called right after the game was started and windows size is set to construct settings. */
 	void OnViewportResizedWhenInit(class FViewport* Viewport, uint32 Index);
 
