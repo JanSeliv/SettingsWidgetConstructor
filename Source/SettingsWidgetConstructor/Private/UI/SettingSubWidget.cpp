@@ -8,7 +8,6 @@
 //---
 #include "Components/Button.h"
 #include "Components/CheckBox.h"
-#include "Components/ComboBoxString.h"
 #include "Components/EditableTextBox.h"
 #include "Components/HorizontalBox.h"
 #include "Components/ScrollBox.h"
@@ -18,7 +17,6 @@
 #include "Components/VerticalBox.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SCheckBox.h"
-#include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Widgets/Input/SSlider.h"
 //---
@@ -208,6 +206,17 @@ void USettingCheckbox::SetCheckboxData(const FSettingsCheckbox& InCheckboxData)
 	CheckboxDataInternal = InCheckboxData;
 }
 
+// Internal function to change the value of this subwidget
+void USettingCheckbox::SetCheckboxValue(bool InValue)
+{
+	if (ensureMsgf(CheckboxWidget, TEXT("ASSERT: [%i] %hs:\n'CheckboxWidget' condition is FALSE"), __LINE__, __FUNCTION__))
+	{
+		CheckboxWidget->SetCheckedState(InValue ? ECheckBoxState::Checked : ECheckBoxState::Unchecked);
+	}
+
+	K2_OnSetCheckboxValue(InValue);
+}
+
 // Called after the underlying slate widget is constructed
 void USettingCheckbox::NativeConstruct()
 {
@@ -223,7 +232,7 @@ void USettingCheckbox::NativeConstruct()
 }
 
 // Called when the checked state has changed
-void USettingCheckbox::OnCheckStateChanged(bool bIsChecked)
+void USettingCheckbox::OnCheckStateChanged_Implementation(bool bIsChecked)
 {
 	if (!SettingsWidgetInternal)
 	{
@@ -241,80 +250,21 @@ void USettingCheckbox::OnAddSetting(const FSettingsPicker& Setting)
 	Super::OnAddSetting(Setting);
 }
 
-// Set the new combobox setting data for this widget
-void USettingCombobox::SetComboboxData(const FSettingsCombobox& InComboboxData)
-{
-	ComboboxDataInternal = InComboboxData;
-}
-
-// Called after the underlying slate widget is constructed
-void USettingCombobox::NativeConstruct()
-{
-	Super::NativeConstruct();
-
-	if (ComboboxWidget)
-	{
-		ComboboxWidget->OnSelectionChanged.AddUniqueDynamic(this, &ThisClass::OnSelectionChanged);
-
-		SlateComboboxInternal = FSWCWidgetUtilsLibrary::GetSlateWidget<SComboboxString>(ComboboxWidget);
-		check(SlateComboboxInternal.IsValid());
-	}
-}
-
-// Is executed every tick when widget is enabled
-void USettingCombobox::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
-{
-	Super::NativeTick(MyGeometry, InDeltaTime);
-
-	if (!ComboboxWidget)
-	{
-		return;
-	}
-
-	const bool bIsComboboxOpenedLast = bIsComboboxOpenedInternal;
-	bIsComboboxOpenedInternal = ComboboxWidget->IsOpen();
-
-	if (bIsComboboxOpenedLast != bIsComboboxOpenedInternal)
-	{
-		OnMenuOpenChanged();
-	}
-}
-
-// Called when the combobox is opened or closed/
-void USettingCombobox::OnMenuOpenChanged()
-{
-	// Play the sound
-	if (SettingsWidgetInternal)
-	{
-		SettingsWidgetInternal->PlayUIClickSFX();
-	}
-}
-
-// Is overridden to construct the combobox
-void USettingCombobox::OnAddSetting(const FSettingsPicker& Setting)
-{
-	ComboboxDataInternal = Setting.Combobox;
-
-	Super::OnAddSetting(Setting);
-}
-
 // Set the new slider setting data for this widget
 void USettingSlider::SetSliderData(const FSettingsSlider& InSliderData)
 {
 	SliderDataInternal = InSliderData;
 }
 
-// Called when a new item is selected in the combobox
-void USettingCombobox::OnSelectionChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
+// Internal function to change the value of this subwidget
+void USettingSlider::SetSliderValue(double InValue)
 {
-	if (!SettingsWidgetInternal
-		|| !ComboboxWidget)
+	if (ensureMsgf(SliderWidget, TEXT("ERROR: [%i] %hs:\n'SliderWidget' is null!"), __LINE__, __FUNCTION__))
 	{
-		return;
+		SliderWidget->SetValue(InValue);
 	}
 
-	const int32 SelectedIndex = ComboboxWidget->GetSelectedIndex();
-	SettingsWidgetInternal->SetSettingComboboxIndex(GetSettingTag(), SelectedIndex);
+	K2_OnSetSliderValue(InValue);
 }
 
 // Called after the underlying slate widget is constructed
@@ -384,22 +334,24 @@ void USettingUserInput::GetEditableText(FText& OutText) const
 	}
 }
 
-// Set new text programmatically instead of by the user
-void USettingUserInput::SetEditableText(const FText& InText)
-{
-	if (!EditableTextBox
-		|| InText.EqualTo(EditableTextBox->GetText()))
-	{
-		return;
-	}
-
-	EditableTextBox->SetText(InText);
-}
-
 // Set the new user input setting data for this widget
 void USettingUserInput::SetUserInputData(const FSettingsUserInput& InUserInputData)
 {
 	UserInputDataInternal = InUserInputData;
+}
+
+// Internal function to change the value of this subwidget
+void USettingUserInput::SetUserInputValue(FName InValue)
+{
+	if (!ensureMsgf(EditableTextBox, TEXT("ERROR: [%i] %hs:\n'EditableTextBox' is null!"), __LINE__, __FUNCTION__)
+		|| FText::FromName(InValue).EqualTo(EditableTextBox->GetText()))
+	{
+		return;
+	}
+
+	EditableTextBox->SetText(FText::FromName(InValue));
+
+	K2_OnSetUserInputValue(InValue);
 }
 
 // Called after the underlying slate widget is constructed
@@ -458,7 +410,7 @@ UPanelSlot* USettingColumn::Attach()
 		// is already attached
 		return ParentSlotInternal;
 	}
-	
+
 	UHorizontalBox* ContentHorizontalBox = GetSettingsWidgetChecked().GetContentHorizontalBox();
 	checkf(ContentHorizontalBox, TEXT("ERROR: [%i] %s:\n'ContentHorizontalBox' is null!"), __LINE__, *FString(__FUNCTION__));
 	ParentSlotInternal = ContentHorizontalBox->AddChild(this);

@@ -90,13 +90,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
 	void ApplySettings();
 
-	/** Update settings on UI.
+	/** Update specific settings on UI by tags.
+	 * Alternative, in code `UPDATE_SETTING_BY_FUNCTION(SettingsWidget, ThisClass, SetFullscreenMode)` can be used.
 	 * @param SettingsToUpdate Contains tags of settings that are needed to update.
 	 * @param bLoadFromConfig If true, then load settings from config file, otherwise just update UI. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor", meta = (AutoCreateRefTerm = "SettingsToUpdate"))
-	void UpdateSettings(
+	void UpdateSettingsByTags(
 		UPARAM(meta = (Categories = "Settings")) const FGameplayTagContainer& SettingsToUpdate,
 		bool bLoadFromConfig = false);
+
+	/** Update all existing settings on UI.
+	 * @param bLoadFromConfig If true, then load settings from config file, otherwise just update UI. */
+	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor")
+	void UpdateAllSettings(bool bLoadFromConfig = false);
 
 	/** Returns the name of found tag by specified function. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor", meta = (AutoCreateRefTerm = "SettingFunction"))
@@ -149,10 +155,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Setters", meta = (AutoCreateRefTerm = "ComboboxTag"))
 	void SetSettingComboboxIndex(const FSettingTag& ComboboxTag, int32 InValue);
 
-	/** Set new members for a combobox. */
-	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Setters", meta = (AutoCreateRefTerm = "ComboboxTag,InValue"))
-	void SetSettingComboboxMembers(const FSettingTag& ComboboxTag, const TArray<FText>& InValue);
-
 	/** Set current value for a slider [0...1]. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Setters", meta = (AutoCreateRefTerm = "SliderTag"))
 	void SetSettingSlider(const FSettingTag& SliderTag, double InValue);
@@ -168,6 +170,10 @@ public:
 	/** Set new custom widget for setting by specified tag. */
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Setters", meta = (AutoCreateRefTerm = "CustomWidgetTag"))
 	void SetSettingCustomWidget(const FSettingTag& CustomWidgetTag, class USettingCustomWidget* InCustomWidget);
+
+	/** Is called after any setting is changed. */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "C++", meta = (AutoCreateRefTerm = "SettingPrimaryRow"))
+	void OnAnySettingSet(const FSettingsPrimary& SettingPrimaryRow);
 
 	/** Creates setting sub-widget (like button, checkbox etc.) based on specified setting class and sets it to specified primary data.
 	 * @param InOutPrimary The Data that should contain created setting class.
@@ -214,6 +220,9 @@ public:
 	/** Get setting widget object by specified tag. */
 	UFUNCTION(BlueprintPure, Category = "Settings Widget Constructor|Getters", meta = (AutoCreateRefTerm = "SettingTag"))
 	class USettingSubWidget* GetSettingSubWidget(const FSettingTag& SettingTag) const;
+
+	template <typename T = USettingSubWidget>
+	FORCEINLINE T* GetSettingSubWidget(const FSettingTag& SettingTag) const { return Cast<T>(GetSettingSubWidget(SettingTag)); }
 
 	/* ---------------------------------------------------
 	 *		Protected properties
@@ -264,6 +273,9 @@ protected:
 	/** Called after the underlying slate widget is constructed.
 	* May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
+
+	/** Called when the widget is removed from the viewport. */
+	virtual void NativeDestruct() override;
 
 	/** Is called right after the game was started and windows size is set to construct settings. */
 	void OnViewportResizedWhenInit(class FViewport* Viewport, uint32 Index);
@@ -340,32 +352,6 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Settings Widget Constructor|Adders", meta = (BlueprintProtected))
 	void AddSetting(UPARAM(ref)FSettingsPicker& Setting);
 
-	/* ---------------------------------------------------
-	 *		Blueprint implementable setters
-	 *
-	 *		Don't call these functions directly, use 'Set Setting X' functions instead.
-	 * --------------------------------------------------- */
-protected:
-	/** Internal blueprint function to toggle checkbox. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "CheckboxTag"))
-	void SetCheckbox(const FSettingTag& CheckboxTag, bool InValue);
-
-	/** Internal blueprint function to set chosen member index for a combobox. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "ComboboxTag"))
-	void SetComboboxIndex(const FSettingTag& ComboboxTag, int32 InValue);
-
-	/** Internal blueprint function to set new members for a combobox. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "ComboboxTag,InValue"))
-	void SetComboboxMembers(const FSettingTag& ComboboxTag, const TArray<FText>& InValue);
-
-	/** Internal blueprint function to set current value for a slider [0...1]. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "SliderTag"))
-	void SetSlider(const FSettingTag& SliderTag, float InValue);
-
-	/** Internal blueprint function to set new text for an input box. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Widget Constructor|Setters", meta = (BlueprintProtected, AutoCreateRefTerm = "UserInputTag"))
-	void SetUserInput(const FSettingTag& UserInputTag, FName InValue);
-
 	/*********************************************************************************************
 	 * Columns builder
 	 ********************************************************************************************* */
@@ -401,3 +387,25 @@ protected:
 	void OnSettingsDataRegistryChanged(class UDataRegistry* SettingsDataRegistry);
 	void BindOnSettingsDataRegistryChanged();
 };
+
+/** Helper to update setting by specified function.
+ * E.g: UPDATE_SETTING(SettingsWidget, ThisClass, SetFullscreenMode);
+ * @param SettingsWidget The widget responsible for managing settings.
+ * @param InClass The class that declares the function.
+ * @param InFunctionName The name of the function used to identify the setting tag. */
+#define UPDATE_SETTING_BY_FUNCTION(SettingsWidget, InClass, InFunctionName)						\
+	do {																			\
+		if (!SettingsWidget)														\
+		{																			\
+			break;																	\
+		}																			\
+		static FGameplayTagContainer InFunctionName##SettingTag = FGameplayTagContainer::EmptyContainer; \
+		if (InFunctionName##SettingTag.IsEmpty())										\
+		{																			\
+			static const FSettingFunctionPicker FunctionPicker(						\
+				GetClass(),															\
+				GET_FUNCTION_NAME_CHECKED(InClass, InFunctionName));				\
+			InFunctionName##SettingTag.AddTag(SettingsWidget->GetTagByFunction(FunctionPicker)); \
+		}																			\
+		SettingsWidget->UpdateSettingsByTags(InFunctionName##SettingTag);				\
+	} while (0)

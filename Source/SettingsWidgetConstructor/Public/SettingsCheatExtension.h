@@ -26,7 +26,6 @@ public:
 	 * Button:			CheatSetting Close
 	 * Checkbox:		CheatSetting VSync?1
 	 * Combobox index:	CheatSetting Shadows?2
-	 * Combobox list:	CheatSetting Shadows?Low,Medium,High
 	 * Slider:			CheatSetting Audio?0.5
 	 * Text Line:		CheatSetting Title?Settings
 	 * User Input:		CheatSetting Player?JanSeliv
