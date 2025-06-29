@@ -202,6 +202,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InCheckboxData"))
 	void SetCheckboxData(const FSettingsCheckbox& InCheckboxData);
 
+	/** Internal function to change the value of this subwidget.
+	 * @warning is not blueprintable, don't call it directly, but use Setter function from the Settings Widget. */
+	void SetCheckboxValue(bool InValue);
+
+protected:
+	/** Blueprint event called when the the subwidget value is changed. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "On Set Checkbox Value"))
+	void K2_OnSetCheckboxValue(bool InValue);
+
 	/*********************************************************************************************
 	 * Data
 	 ********************************************************************************************* */
@@ -231,90 +240,10 @@ protected:
 
 	/** Called when the checked state has changed.
 	 * @see USettingCheckbox::CheckboxWidgetInternal */
-	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (BlueprintProtected))
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SettingSubWidget", meta = (BlueprintProtected))
 	void OnCheckStateChanged(bool bIsChecked);
 
 	/** Is overridden to construct the checkbox. */
-	virtual void OnAddSetting(const FSettingsPicker& Setting) override;
-};
-
-template <typename T>
-class SComboBox;
-
-/**
- * The sub-widget of Combobox settings.
- */
-UCLASS()
-class SETTINGSWIDGETCONSTRUCTOR_API USettingCombobox : public USettingSubWidget
-{
-	GENERATED_BODY()
-
-public:
-	/** Returns the actual combobox widget of this setting. */
-	UFUNCTION(BlueprintPure, Category = "SettingSubWidget")
-	FORCEINLINE class UComboBoxString* GetComboboxWidget() const { return ComboboxWidget; }
-
-	typedef SComboBox<TSharedPtr<FString>> SComboboxString;
-
-	/** Returns the slate combobox. */
-	FORCEINLINE TSharedPtr<SComboboxString> GetSlateCombobox() const { return SlateComboboxInternal.Pin(); }
-
-	/** Returns true if combobox is opened. */
-	UFUNCTION(BlueprintPure, Category = "SettingSubWidget")
-	FORCEINLINE bool IsComboboxOpened() const { return bIsComboboxOpenedInternal; }
-
-	/** Returns the combobox setting data. */
-	UFUNCTION(BlueprintPure, Category = "SettingSubWidget")
-	const FORCEINLINE FSettingsCombobox& GetComboboxData() const { return ComboboxDataInternal; }
-
-	/** Set the new combobox setting data for this widget. */
-	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InComboboxData"))
-	void SetComboboxData(const FSettingsCombobox& InComboboxData);
-
-	/*********************************************************************************************
-	 * Data
-	 ********************************************************************************************* */
-protected:
-	/** The slate combobox.*/
-	TWeakPtr<SComboboxString> SlateComboboxInternal = nullptr;
-
-	/** The actual combobox widget of this setting. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, BindWidget))
-	TObjectPtr<class UComboBoxString> ComboboxWidget = nullptr;
-
-	/** Is true if combobox is currently opened in Settings. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Is Combobox Opened"))
-	bool bIsComboboxOpenedInternal = false;
-
-	/** The combobox setting data. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Transient, AdvancedDisplay, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "Combobox Data"))
-	FSettingsCombobox ComboboxDataInternal;
-
-	/*********************************************************************************************
-	 * Events and overrides
-	 ********************************************************************************************* */
-public:
-	/** Is overridden to return the combobox data of this widget. */
-	virtual const FSettingsDataBase* GetSettingData() const override { return &ComboboxDataInternal; }
-
-protected:
-	/** Called after the underlying slate widget is constructed.
-	 * May be called multiple times due to adding and removing from the hierarchy. */
-	virtual void NativeConstruct() override;
-
-	/** Is executed every tick when widget is enabled. */
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-
-	/** Called when a new item is selected in the combobox
-	 * @see USettingCheckbox::ComboboxWidgetInternal */
-	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (BlueprintProtected))
-	void OnSelectionChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
-
-	/** Called when the combobox is opened or closed. */
-	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (BlueprintProtected))
-	void OnMenuOpenChanged();
-
-	/** Is overridden to construct the combobox. */
 	virtual void OnAddSetting(const FSettingsPicker& Setting) override;
 };
 
@@ -341,6 +270,15 @@ public:
 	/** Set the new slider setting data for this widget. */
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InSliderData"))
 	void SetSliderData(const FSettingsSlider& InSliderData);
+
+	/** Internal function to change the value of this subwidget.
+	 * @warning is not blueprintable, don't call it directly, but use Setter function from the Settings Widget. */
+	void SetSliderValue(double InValue);
+
+protected:
+	/** Blueprint event called when the the subwidget value is changed. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "On Set Slider Value"))
+	void K2_OnSetSliderValue(double InValue);
 
 	/*********************************************************************************************
 	 * Data
@@ -436,10 +374,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "SettingSubWidget")
 	void GetEditableText(FText& OutText) const;
 
-	/** Set new text programmatically instead of by the user. */
-	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InText"))
-	void SetEditableText(const FText& InText);
-
 	/** Returns the slate editable text box. */
 	FORCEINLINE TSharedPtr<class SEditableTextBox> GetSlateEditableTextBox() const { return SlateEditableTextBoxInternal.Pin(); }
 
@@ -450,6 +384,15 @@ public:
 	/** Set the new user input setting data for this widget. */
 	UFUNCTION(BlueprintCallable, Category = "SettingSubWidget", meta = (AutoCreateRefTerm = "InUserInputData"))
 	void SetUserInputData(const FSettingsUserInput& InUserInputData);
+
+	/** Internal function to change the value of this subwidget.
+	 * @warning is not blueprintable, don't call it directly, but use Setter function from the Settings Widget. */
+	void SetUserInputValue(FName InValue);
+
+protected:
+	/** Blueprint event called when the the subwidget value is changed. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "SettingSubWidget", meta = (BlueprintProtected, DisplayName = "On User Input Value"))
+	void K2_OnSetUserInputValue(FName InValue);
 
 	/*********************************************************************************************
 	 * Data

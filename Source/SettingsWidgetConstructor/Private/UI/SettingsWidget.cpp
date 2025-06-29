@@ -5,6 +5,7 @@
 #include "Data/SettingsDataAsset.h"
 #include "MyUtilsLibraries/SettingsUtilsLibrary.h"
 #include "MyUtilsLibraries/SWCWidgetUtilsLibrary.h"
+#include "UI/SettingCombobox.h"
 #include "UI/SettingSubWidget.h"
 //---
 #include "DataRegistry.h"
@@ -88,7 +89,7 @@ void USettingsWidget::ApplySettings()
 }
 
 // Update settings on UI
-void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpdate, bool bLoadFromConfig/* = false*/)
+void USettingsWidget::UpdateSettingsByTags(const FGameplayTagContainer& SettingsToUpdate, bool bLoadFromConfig/* = false*/)
 {
 	if (SettingsToUpdate.IsEmpty()
 		|| !SettingsToUpdate.IsValidIndex(0))
@@ -134,6 +135,17 @@ void USettingsWidget::UpdateSettings(const FGameplayTagContainer& SettingsToUpda
 		ChosenData->GetSettingValue(*this, SettingTag, /*Out*/Result);
 		ChosenData->SetSettingValue(*this, SettingTag, Result);
 	}
+}
+
+// Update all existing settings on UI
+void USettingsWidget::UpdateAllSettings(bool bLoadFromConfig)
+{
+	FGameplayTagContainer AllSettingTags;
+	for (const TTuple<FName, FSettingsPicker>& RowIt : SettingsTableRowsInternal)
+	{
+		AllSettingTags.AddTagFast(RowIt.Value.PrimaryData.Tag);
+	}
+	UpdateSettingsByTags(AllSettingTags, bLoadFromConfig);
 }
 
 // Returns the name of found tag by specified function
@@ -202,7 +214,7 @@ void USettingsWidget::SetSettingValue(FName TagName, const FString& Value)
 		}																			\
 		Data.MemberValue = Value;													\
 		Data.SetterExpression.ExecuteIfBound(Value);								\
-		UpdateSettings(FoundRowPtr->PrimaryData.SettingsToUpdate);					\
+		UpdateSettingsByTags(FoundRowPtr->PrimaryData.SettingsToUpdate);			\
 	} while (0)
 
 // Press button
@@ -221,7 +233,9 @@ void USettingsWidget::SetSettingButtonPressed(const FSettingTag& ButtonTag)
 
 	SettingsRowPtr->Button.OnButtonPressed.ExecuteIfBound();
 
-	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+	UpdateSettingsByTags(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+
+	OnAnySettingSet(SettingsRowPtr->PrimaryData);
 
 	PlayUIClickSFX();
 }
@@ -231,8 +245,12 @@ void USettingsWidget::SetSettingCheckbox(const FSettingTag& CheckboxTag, bool In
 {
 	SET_SETTING_VALUE(CheckboxTag, Checkbox, bIsSet, InValue, OnSetterBool);
 
-	// BP implementation
-	SetCheckbox(CheckboxTag, InValue);
+	if (USettingCheckbox* SettingCheckbox = GetSettingSubWidget<USettingCheckbox>(CheckboxTag))
+	{
+		SettingCheckbox->SetCheckboxValue(InValue);
+		OnAnySettingSet(SettingCheckbox->GetSettingPrimaryRow());
+	}
+
 	PlayUIClickSFX();
 }
 
@@ -246,29 +264,11 @@ void USettingsWidget::SetSettingComboboxIndex(const FSettingTag& ComboboxTag, in
 
 	SET_SETTING_VALUE(ComboboxTag, Combobox, ChosenMemberIndex, InValue, OnSetterInt);
 
-	// BP implementation
-	SetComboboxIndex(ComboboxTag, InValue);
-}
-
-// Set new members for a combobox
-void USettingsWidget::SetSettingComboboxMembers(const FSettingTag& ComboboxTag, const TArray<FText>& InValue)
-{
-	if (!ComboboxTag.IsValid())
+	if (USettingCombobox* SettingCombobox = GetSettingSubWidget<USettingCombobox>(ComboboxTag))
 	{
-		return;
+		SettingCombobox->SetComboboxIndex(InValue);
+		OnAnySettingSet(SettingCombobox->GetSettingPrimaryRow());
 	}
-
-	FSettingsPicker* SettingsRowPtr = SettingsTableRowsInternal.Find(ComboboxTag.GetTagName());
-	if (!SettingsRowPtr)
-	{
-		return;
-	}
-
-	SettingsRowPtr->Combobox.Members = InValue;
-	SettingsRowPtr->Combobox.OnSetMembers.ExecuteIfBound(InValue);
-
-	// BP implementation
-	SetComboboxMembers(ComboboxTag, InValue);
 }
 
 // Set current value for a slider
@@ -279,8 +279,11 @@ void USettingsWidget::SetSettingSlider(const FSettingTag& SliderTag, double InVa
 	const double NewValue = FMath::Clamp(InValue, MinValue, MaxValue);
 	SET_SETTING_VALUE(SliderTag, Slider, ChosenValue, NewValue, OnSetterFloat);
 
-	// BP implementation
-	SetSlider(SliderTag, InValue);
+	if (USettingSlider* SettingSlider = GetSettingSubWidget<USettingSlider>(SliderTag))
+	{
+		SettingSlider->SetSliderValue(NewValue);
+		OnAnySettingSet(SettingSlider->GetSettingPrimaryRow());
+	}
 }
 
 // Set new text
@@ -306,7 +309,7 @@ void USettingsWidget::SetSettingTextLine(const FSettingTag& TextLineTag, const F
 
 	CaptionRef = InValue;
 	SettingsRowPtr->TextLine.OnSetterText.ExecuteIfBound(InValue);
-	UpdateSettings(PrimaryRef.SettingsToUpdate);
+	UpdateSettingsByTags(PrimaryRef.SettingsToUpdate);
 
 	if (USettingTextLine* SettingTextLine = Cast<USettingTextLine>(PrimaryRef.SettingSubWidget))
 	{
@@ -342,18 +345,17 @@ void USettingsWidget::SetSettingUserInput(const FSettingTag& UserInputTag, FName
 		const FString NewValueStr = InValue.ToString().Left(UserInputRef.MaxCharactersNumber);
 		InValue = *NewValueStr;
 
-		if (USettingUserInput* SettingUserInput = Cast<USettingUserInput>(SettingsRowPtr->PrimaryData.SettingSubWidget.Get()))
+		if (USettingUserInput* SettingUserInput = GetSettingSubWidget<USettingUserInput>(UserInputTag))
 		{
-			SettingUserInput->SetEditableText(FText::FromString(NewValueStr));
+			SettingUserInput->SetUserInputValue(InValue);
+			OnAnySettingSet(SettingUserInput->GetSettingPrimaryRow());
 		}
 	}
 
 	UserInputRef.UserInput = InValue;
 	UserInputRef.OnSetterName.ExecuteIfBound(InValue);
-	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+	UpdateSettingsByTags(SettingsRowPtr->PrimaryData.SettingsToUpdate);
 
-	// BP implementation
-	SetUserInput(UserInputTag, InValue);
 	PlayUIClickSFX();
 }
 
@@ -380,7 +382,18 @@ void USettingsWidget::SetSettingCustomWidget(const FSettingTag& CustomWidgetTag,
 	CustomWidgetRef.Reset();
 	CustomWidgetRef = InCustomWidget;
 	SettingsRowPtr->CustomWidget.OnSetterWidget.ExecuteIfBound(InCustomWidget);
-	UpdateSettings(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+	UpdateSettingsByTags(SettingsRowPtr->PrimaryData.SettingsToUpdate);
+
+	OnAnySettingSet(SettingsRowPtr->PrimaryData);
+}
+
+// Is called after any setting is changed
+void USettingsWidget::OnAnySettingSet_Implementation(const FSettingsPrimary& SettingPrimaryRow)
+{
+	if (SettingPrimaryRow.bApplyImmediately)
+	{
+		ApplySettings();
+	}
 }
 
 /* ---------------------------------------------------
@@ -608,6 +621,14 @@ void USettingsWidget::NativeConstruct()
 	BindOnSettingsDataRegistryChanged();
 }
 
+// Called when the widget is removed from the viewport
+void USettingsWidget::NativeDestruct()
+{
+	Super::NativeDestruct();
+
+	RemoveAllSettings();
+}
+
 // Is called right after the game was started and windows size is set to construct settings
 void USettingsWidget::OnViewportResizedWhenInit(FViewport* Viewport, uint32 Index)
 {
@@ -642,9 +663,11 @@ void USettingsWidget::ConstructSettings()
 		AddedSettings.AddTag(SettingRef.PrimaryData.Tag);
 	}
 
-	UpdateSettings(AddedSettings, /*bLoadFromConfig*/true);
+	UpdateSettingsByTags(AddedSettings, /*bLoadFromConfig*/true);
 
 	UpdateScrollBoxesHeight();
+
+	ApplySettings();
 }
 
 // Internal function to cache setting rows from Settings Data Table
@@ -827,6 +850,8 @@ void USettingsWidget::OpenSettings()
 	TryConstructSettings();
 
 	TryRebindDeferredContexts();
+
+	UpdateAllSettings();
 
 	SetVisibility(ESlateVisibility::Visible);
 
@@ -1021,7 +1046,7 @@ void USettingsWidget::TryRebindDeferredContexts()
 	{
 		// Some settings were successfully rebound, remove them from the deferred list and update them
 		DeferredBindingsInternal.RemoveTags(ReboundSettings);
-		UpdateSettings(ReboundSettings, /*bLoadFromConfig*/true);
+		UpdateSettingsByTags(ReboundSettings, /*bLoadFromConfig*/true);
 	}
 }
 
