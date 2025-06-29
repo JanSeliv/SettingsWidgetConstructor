@@ -33,7 +33,7 @@ Check out our [Release](https://github.com/JanSeliv/SettingsWidgetConstructor/re
 Also, explore this [game project repository](https://github.com/JanSeliv/Bomber) to view the Settings Widget Constructor in action.
 
 ## 📅 Changelog
-#### 2025-XX-XX
+#### 2025-06-29
 - Updated to **Unreal Engine 5.5**.
 - Added full localization support, allowing settings to display in 800+ languages, including **Arabic, Chinese, Korean, and Thai** _(users must add translations via the Localization Dashboard)_
 #### 2024-12-26
