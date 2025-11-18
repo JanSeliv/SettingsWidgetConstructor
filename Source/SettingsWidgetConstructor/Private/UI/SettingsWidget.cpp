@@ -1,23 +1,28 @@
 ﻿// Copyright (c) Yevhenii Selivanov
 
 #include "UI/SettingsWidget.h"
-//---
+
+// SWC
 #include "Data/SettingsDataAsset.h"
-#include "MyUtilsLibraries/SettingsUtilsLibrary.h"
 #include "MyUtilsLibraries/SWCWidgetUtilsLibrary.h"
+#include "MyUtilsLibraries/SettingsUtilsLibrary.h"
 #include "UI/SettingCombobox.h"
 #include "UI/SettingSubWidget.h"
-//---
-#include "DataRegistry.h"
-#include "DataRegistryTypes.h"
+
+// UE
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/SizeBox.h"
 #include "Components/Viewport.h"
+#include "DataRegistry.h"
+#include "DataRegistryTypes.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/Texture.h"
 #include "GameFramework/GameUserSettings.h"
-//---
+
+#if WITH_EDITOR
+#include "Editor.h"
+#endif
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SettingsWidget)
 
 /* ---------------------------------------------------
@@ -89,10 +94,10 @@ void USettingsWidget::ApplySettings()
 }
 
 // Update settings on UI
-void USettingsWidget::UpdateSettingsByTags(const FGameplayTagContainer& SettingsToUpdate, bool bLoadFromConfig/* = false*/)
+void USettingsWidget::UpdateSettingsByTags(const FGameplayTagContainer& SettingsToUpdate, bool bLoadFromConfig /* = false*/)
 {
 	if (SettingsToUpdate.IsEmpty()
-		|| !SettingsToUpdate.IsValidIndex(0))
+	    || !SettingsToUpdate.IsValidIndex(0))
 	{
 		return;
 	}
@@ -107,14 +112,14 @@ void USettingsWidget::UpdateSettingsByTags(const FGameplayTagContainer& Settings
 		const FSettingsPicker& Setting = RowIt.Value;
 		const FSettingTag& SettingTag = Setting.PrimaryData.Tag;
 		if (!SettingTag.IsValid()
-			|| !SettingTag.MatchesAny(SettingsToUpdate))
+		    || !SettingTag.MatchesAny(SettingsToUpdate))
 		{
 			continue;
 		}
 
 		FSettingsDataBase* ChosenData = Setting.GetChosenSettingsData();
 		if (!ChosenData
-			|| !ChosenData->CanUpdateSetting())
+		    || !ChosenData->CanUpdateSetting())
 		{
 			continue;
 		}
@@ -132,7 +137,7 @@ void USettingsWidget::UpdateSettingsByTags(const FGameplayTagContainer& Settings
 		}
 
 		FString Result;
-		ChosenData->GetSettingValue(*this, SettingTag, /*Out*/Result);
+		ChosenData->GetSettingValue(*this, SettingTag, /*Out*/ Result);
 		ChosenData->SetSettingValue(*this, SettingTag, Result);
 	}
 }
@@ -155,7 +160,7 @@ const FSettingTag& USettingsWidget::GetTagByFunction(const FSettingFunctionPicke
 	{
 		const FSettingsPrimary& PrimaryData = RowIt.Value.PrimaryData;
 		if (PrimaryData.Getter == SettingFunction
-			|| PrimaryData.Setter == SettingFunction)
+		    || PrimaryData.Setter == SettingFunction)
 		{
 			return PrimaryData.Tag;
 		}
@@ -196,25 +201,26 @@ void USettingsWidget::SetSettingValue(FName TagName, const FString& Value)
  * @param MemberValue The specific member to set the value to.
  * @param Value The new value to set.
  * @param SetterExpression The expression to update the setter delegate. */
-#define SET_SETTING_VALUE(Tag, DataMember, MemberValue, Value, SetterExpression)	\
-	do {																			\
-		if (!Tag.IsValid())															\
-		{																			\
-			return;																	\
-		}																			\
-		FSettingsPicker* FoundRowPtr = SettingsTableRowsInternal.Find(Tag.GetTagName());\
-		if (!FoundRowPtr)															\
-		{																			\
-			return;																	\
-		}																			\
-		auto& Data = FoundRowPtr->DataMember;										\
-		if (Data.MemberValue == Value)												\
-		{																			\
-			return;																	\
-		}																			\
-		Data.MemberValue = Value;													\
-		Data.SetterExpression.ExecuteIfBound(Value);								\
-		UpdateSettingsByTags(FoundRowPtr->PrimaryData.SettingsToUpdate);			\
+#define SET_SETTING_VALUE(Tag, DataMember, MemberValue, Value, SetterExpression)         \
+	do                                                                                   \
+	{                                                                                    \
+		if (!Tag.IsValid())                                                              \
+		{                                                                                \
+			return;                                                                      \
+		}                                                                                \
+		FSettingsPicker* FoundRowPtr = SettingsTableRowsInternal.Find(Tag.GetTagName()); \
+		if (!FoundRowPtr)                                                                \
+		{                                                                                \
+			return;                                                                      \
+		}                                                                                \
+		auto& Data = FoundRowPtr->DataMember;                                            \
+		if (Data.MemberValue == Value)                                                   \
+		{                                                                                \
+			return;                                                                      \
+		}                                                                                \
+		Data.MemberValue = Value;                                                        \
+		Data.SetterExpression.ExecuteIfBound(Value);                                     \
+		UpdateSettingsByTags(FoundRowPtr->PrimaryData.SettingsToUpdate);                 \
 	} while (0)
 
 // Press button
@@ -333,7 +339,7 @@ void USettingsWidget::SetSettingUserInput(const FSettingTag& UserInputTag, FName
 
 	FSettingsUserInput& UserInputRef = SettingsRowPtr->UserInput;
 	if (UserInputRef.UserInput.IsEqual(InValue)
-		|| InValue.IsNone())
+	    || InValue.IsNone())
 	{
 		// Is not needed to update
 		return;
@@ -403,9 +409,12 @@ void USettingsWidget::OnAnySettingSet_Implementation(const FSettingsPrimary& Set
 /** Retrieve a specific setting row using a given tag.
  * @param Tag The tag used to find the setting row.
  * @param DataMember The member that holds the desired value. */
-#define GET_SETTING_ROW(Tag, DataMember)					\
-	const FSettingsPicker& FoundRow = GetSettingRow(Tag);	\
-	if (!FoundRow.IsValid()) { return; }					\
+#define GET_SETTING_ROW(Tag, DataMember)                  \
+	const FSettingsPicker& FoundRow = GetSettingRow(Tag); \
+	if (!FoundRow.IsValid())                              \
+	{                                                     \
+		return;                                           \
+	}                                                     \
 	const auto& Data = FoundRow.DataMember;
 
 /** Executes the common pattern of getting a value from a data structure.
@@ -416,20 +425,20 @@ void USettingsWidget::OnAnySettingSet_Implementation(const FSettingsPrimary& Set
  * @param GetterExpression The expression to retrieve the getter delegate.
  * @param DefaultValue The default value to return if no value is found. */
 #define GET_SETTING_VALUE(Tag, DataMember, ValueType, ValueExpression, GetterExpression, DefaultValue) \
-	{															\
-		const FSettingsPicker& FoundRow = GetSettingRow(Tag);	\
-		ValueType Value = DefaultValue;							\
-		if (FoundRow.IsValid())									\
-		{														\
-			const auto& Data = FoundRow.DataMember;				\
-			Value = ValueExpression;							\
-			const auto& Getter = GetterExpression;				\
-			if (Getter.IsBound())								\
-			{													\
-				Value = Getter.Execute();						\
-			}													\
-		}														\
-		return Value; \
+	{                                                                                                  \
+		const FSettingsPicker& FoundRow = GetSettingRow(Tag);                                          \
+		ValueType Value = DefaultValue;                                                                \
+		if (FoundRow.IsValid())                                                                        \
+		{                                                                                              \
+			const auto& Data = FoundRow.DataMember;                                                    \
+			Value = ValueExpression;                                                                   \
+			const auto& Getter = GetterExpression;                                                     \
+			if (Getter.IsBound())                                                                      \
+			{                                                                                          \
+				Value = Getter.Execute();                                                              \
+			}                                                                                          \
+		}                                                                                              \
+		return Value;                                                                                  \
 	}
 
 // Returns is a checkbox toggled
@@ -581,17 +590,17 @@ FSlateBrush USettingsWidget::GetButtonBrush(ESettingsButtonState State)
 	FSlateColor SlateColor;
 	switch (State)
 	{
-	case ESettingsButtonState::Normal:
-		SlateColor = MiscThemeData.ThemeColorNormal;
-		break;
-	case ESettingsButtonState::Hovered:
-		SlateColor = MiscThemeData.ThemeColorHover;
-		break;
-	case ESettingsButtonState::Pressed:
-		SlateColor = MiscThemeData.ThemeColorExtra;
-		break;
-	default:
-		SlateColor = FLinearColor::White;
+		case ESettingsButtonState::Normal:
+			SlateColor = MiscThemeData.ThemeColorNormal;
+			break;
+		case ESettingsButtonState::Hovered:
+			SlateColor = MiscThemeData.ThemeColorHover;
+			break;
+		case ESettingsButtonState::Pressed:
+			SlateColor = MiscThemeData.ThemeColorExtra;
+			break;
+		default:
+			SlateColor = FLinearColor::White;
 	}
 
 	FSlateBrush SlateBrush;
@@ -663,7 +672,7 @@ void USettingsWidget::ConstructSettings()
 		AddedSettings.AddTag(SettingRef.PrimaryData.Tag);
 	}
 
-	UpdateSettingsByTags(AddedSettings, /*bLoadFromConfig*/true);
+	UpdateSettingsByTags(AddedSettings, /*bLoadFromConfig*/ true);
 
 	UpdateScrollBoxesHeight();
 
@@ -674,7 +683,7 @@ void USettingsWidget::ConstructSettings()
 void USettingsWidget::CacheTable()
 {
 	TMap<FName, FSettingsPicker> SettingRows;
-	USettingsUtilsLibrary::GenerateAllSettingRows(/*Out*/SettingRows);
+	USettingsUtilsLibrary::GenerateAllSettingRows(/*Out*/ SettingRows);
 	if (!ensureMsgf(!SettingRows.IsEmpty(), TEXT("ASSERT: 'SettingRows' are empty")))
 	{
 		return;
@@ -807,7 +816,7 @@ void USettingsWidget::UpdateScrollBoxesHeight()
 // Constructs settings if viewport is ready otherwise Wait until viewport become initialized
 void USettingsWidget::TryConstructSettings()
 {
-	auto IsViewportInitialized = []()-> bool
+	auto IsViewportInitialized = []() -> bool
 	{
 		UGameViewportClient* GameViewport = GEngine ? GEngine->GameViewport : nullptr;
 		FViewport* Viewport = GameViewport ? GameViewport->Viewport : nullptr;
@@ -816,7 +825,10 @@ void USettingsWidget::TryConstructSettings()
 			return false;
 		}
 
-		auto IsZeroViewportSize = [Viewport] { return Viewport->GetSizeXY() == FIntPoint::ZeroValue; };
+		auto IsZeroViewportSize = [Viewport]
+		{
+			return Viewport->GetSizeXY() == FIntPoint::ZeroValue;
+		};
 
 		if (IsZeroViewportSize())
 		{
@@ -866,7 +878,7 @@ void USettingsWidget::OpenSettings()
 void USettingsWidget::CloseSettings()
 {
 	if (!IsVisible()
-		&& !IsHovered())
+	    && !IsHovered())
 	{
 		// Widget is already closed
 		return;
@@ -945,22 +957,22 @@ bool USettingsWidget::BindSetting(FSettingsPicker& Setting)
  * @param SetterFunction		The setter function to bind
  * @param AdditionalFunctionCalls Any additional function calls needed for specific widgets
  */
-#define BIND_SETTING(Primary, Data, GetterFunction, SetterFunction)					\
-	do																				\
-	{																				\
-		if (UObject* OwnerObject = Primary.GetSettingOwner(this))					\
-		{																			\
-			const FName GetterFunctionName = Primary.Getter.FunctionName;			\
-			if (Primary.OwnerFunctionList.Contains(GetterFunctionName))				\
-			{																		\
-				Data.GetterFunction.BindUFunction(OwnerObject, GetterFunctionName);	\
-			}																		\
-			const FName SetterFunctionName = Primary.Setter.FunctionName;			\
-			if (Primary.OwnerFunctionList.Contains(SetterFunctionName))				\
-			{																		\
-				Data.SetterFunction.BindUFunction(OwnerObject, SetterFunctionName);	\
-			}																		\
-		}																			\
+#define BIND_SETTING(Primary, Data, GetterFunction, SetterFunction)                 \
+	do                                                                              \
+	{                                                                               \
+		if (UObject* OwnerObject = Primary.GetSettingOwner(this))                   \
+		{                                                                           \
+			const FName GetterFunctionName = Primary.Getter.FunctionName;           \
+			if (Primary.OwnerFunctionList.Contains(GetterFunctionName))             \
+			{                                                                       \
+				Data.GetterFunction.BindUFunction(OwnerObject, GetterFunctionName); \
+			}                                                                       \
+			const FName SetterFunctionName = Primary.Setter.FunctionName;           \
+			if (Primary.OwnerFunctionList.Contains(SetterFunctionName))             \
+			{                                                                       \
+				Data.SetterFunction.BindUFunction(OwnerObject, SetterFunctionName); \
+			}                                                                       \
+		}                                                                           \
 	} while (0)
 
 // Bind button to own Get/Set delegates
@@ -1036,7 +1048,7 @@ void USettingsWidget::TryRebindDeferredContexts()
 	{
 		FSettingsPicker* FoundRowPtr = TagIt.IsValid() ? SettingsTableRowsInternal.Find(TagIt.GetTagName()) : nullptr;
 		if (FoundRowPtr
-			&& BindSetting(*FoundRowPtr))
+		    && BindSetting(*FoundRowPtr))
 		{
 			ReboundSettings.AddTagFast(TagIt);
 		}
@@ -1046,7 +1058,7 @@ void USettingsWidget::TryRebindDeferredContexts()
 	{
 		// Some settings were successfully rebound, remove them from the deferred list and update them
 		DeferredBindingsInternal.RemoveTags(ReboundSettings);
-		UpdateSettingsByTags(ReboundSettings, /*bLoadFromConfig*/true);
+		UpdateSettingsByTags(ReboundSettings, /*bLoadFromConfig*/ true);
 	}
 }
 
@@ -1116,13 +1128,20 @@ void USettingsWidget::OnSettingsDataRegistryChanged_Implementation(class UDataRe
 	const UWorld* World = GetWorld();
 	const APlayerController* PC = GetOwningPlayer();
 	if (!World || World->bIsTearingDown
-		|| !PC
-		|| !IsInViewport()
-		|| !SettingsDataRegistry || SettingsDataRegistry->GetLowestAvailability() == EDataRegistryAvailability::DoesNotExist)
+	    || !PC
+	    || !IsInViewport()
+	    || !SettingsDataRegistry || SettingsDataRegistry->GetLowestAvailability() == EDataRegistryAvailability::DoesNotExist)
 	{
 		// The game was ended or no data registry is set
 		return;
 	}
+
+#if WITH_EDITOR
+	if (GEditor && GEditor->ShouldEndPlayMap())
+	{
+		return;
+	}
+#endif
 
 	// Perfectly, we should insert new settings here,
 	// But inserting anything in between to scrollbox is not supported by UE at all
