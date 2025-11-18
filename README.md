@@ -1,5 +1,5 @@
 <a href="https://github.com/JanSeliv/SettingsWidgetConstructor/blob/main/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)</a>
-<a href="https://www.unrealengine.com/">![Unreal Engine](https://img.shields.io/badge/Unreal-5.5-dea309?style=flat&logo=unrealengine)</a>
+<a href="https://www.unrealengine.com/">![Unreal Engine](https://img.shields.io/badge/Unreal-5.6-dea309?style=flat&logo=unrealengine)</a>
 
 <br/>
 <p align="center">
@@ -33,6 +33,8 @@ Check out our [Release](https://github.com/JanSeliv/SettingsWidgetConstructor/re
 Also, explore this [game project repository](https://github.com/JanSeliv/Bomber) to view the Settings Widget Constructor in action.
 
 ## 📅 Changelog
+#### 2025-11-17
+- Updated to **Unreal Engine 5.6**.
 #### 2025-06-29
 - Updated to **Unreal Engine 5.5**.
 - Added full localization support, allowing settings to display in 800+ languages, including **Arabic, Chinese, Korean, and Thai** _(users must add translations via the Localization Dashboard)_
