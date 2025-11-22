@@ -90,8 +90,9 @@ protected:
 	virtual UPanelSlot* Attach();
 
 	/** Applies 'Style', paddings, colors, etc. */
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "SettingSubWidget|Theme")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SettingSubWidget|Theme")
 	void ApplyTheme();
+	virtual void ApplyTheme_Implementation() { }
 
 	/*********************************************************************************************
 	 * Data
@@ -235,7 +236,7 @@ public:
 
 protected:
 	/** Called after the underlying slate widget is constructed.
- 	 * May be called multiple times due to adding and removing from the hierarchy. */
+	 * May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
 
 	/** Called when the checked state has changed.
@@ -416,9 +417,12 @@ public:
 	/** Is overridden to return the user input data of this widget. */
 	virtual const FSettingsDataBase* GetSettingData() const override { return &UserInputDataInternal; }
 
+	/** Is overridden to apply theme to unique parts of this widget. */
+	virtual void ApplyTheme_Implementation() override;
+
 protected:
 	/** Called after the underlying slate widget is constructed.
-	* May be called multiple times due to adding and removing from the hierarchy. */
+	 * May be called multiple times due to adding and removing from the hierarchy. */
 	virtual void NativeConstruct() override;
 
 	/** Called whenever the text is changed programmatically or interactively by the user.
@@ -468,7 +472,7 @@ protected:
 };
 
 /**
-* Represents the column which holds scrollbox and sub-settings inside.
+ * Represents the column which holds scrollbox and sub-settings inside.
  */
 UCLASS()
 class SETTINGSWIDGETCONSTRUCTOR_API USettingColumn : public USettingSubWidget
