@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Yevhenii Selivanov
 
 #include "UI/SettingSubWidget.h"
-//---
+
+// SWC
 #include "Data/SettingsDataAsset.h"
 #include "MyUtilsLibraries/SWCWidgetUtilsLibrary.h"
 #include "UI/SettingsWidget.h"
-//---
+
+// UE
 #include "Components/Button.h"
 #include "Components/CheckBox.h"
 #include "Components/EditableTextBox.h"
@@ -15,11 +17,12 @@
 #include "Components/Slider.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
+#include "Engine/Texture.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Widgets/Input/SSlider.h"
-//---
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SettingSubWidget)
 
 // Set the new setting tag for this widget
@@ -72,19 +75,19 @@ UPanelSlot* USettingSubWidget::Attach()
 	UPanelWidget* ParentWidget = nullptr;
 	switch (Alignment)
 	{
-	case EMyVerticalAlignment::Header:
-		ParentWidget = GetSettingsWidgetChecked().GetHeaderVerticalBox();
-		break;
-	case EMyVerticalAlignment::Content:
-		if (const USettingColumn* Column = GetSettingsWidgetChecked().GetColumnBySetting(GetSettingTag()))
-		{
-			ParentWidget = Column->GetVerticalHolderBox();
-		}
-		break;
-	case EMyVerticalAlignment::Footer:
-		ParentWidget = GetSettingsWidgetChecked().GetFooterVerticalBox();
-		break;
-	default: break;
+		case EMyVerticalAlignment::Header:
+			ParentWidget = GetSettingsWidgetChecked().GetHeaderVerticalBox();
+			break;
+		case EMyVerticalAlignment::Content:
+			if (const USettingColumn* Column = GetSettingsWidgetChecked().GetColumnBySetting(GetSettingTag()))
+			{
+				ParentWidget = Column->GetVerticalHolderBox();
+			}
+			break;
+		case EMyVerticalAlignment::Footer:
+			ParentWidget = GetSettingsWidgetChecked().GetFooterVerticalBox();
+			break;
+		default: break;
 	}
 
 	if (!ensureMsgf(ParentWidget, TEXT("ASSERT: [%i] %s:\n'ParentWidget' is not found for the setting '%s'"), __LINE__, *FString(__FUNCTION__), *GetSettingTag().ToString()))
@@ -102,7 +105,7 @@ UPanelSlot* USettingSubWidget::Attach()
 void USettingSubWidget::AddTooltipWidget()
 {
 	if (PrimaryDataInternal.Tooltip.IsEmpty()
-		|| PrimaryDataInternal.Tooltip.EqualToCaseIgnored(FCoreTexts::Get().None))
+	    || PrimaryDataInternal.Tooltip.EqualToCaseIgnored(FCoreTexts::Get().None))
 	{
 		return;
 	}
@@ -344,7 +347,7 @@ void USettingUserInput::SetUserInputData(const FSettingsUserInput& InUserInputDa
 void USettingUserInput::SetUserInputValue(FName InValue)
 {
 	if (!ensureMsgf(EditableTextBox, TEXT("ERROR: [%i] %hs:\n'EditableTextBox' is null!"), __LINE__, __FUNCTION__)
-		|| FText::FromName(InValue).EqualTo(EditableTextBox->GetText()))
+	    || FText::FromName(InValue).EqualTo(EditableTextBox->GetText()))
 	{
 		return;
 	}
@@ -352,6 +355,46 @@ void USettingUserInput::SetUserInputValue(FName InValue)
 	EditableTextBox->SetText(FText::FromName(InValue));
 
 	K2_OnSetUserInputValue(InValue);
+}
+
+// Is overridden to apply theme to unique parts of this widget
+void USettingUserInput::ApplyTheme_Implementation()
+{
+	Super::ApplyTheme_Implementation();
+
+	SEditableTextBox* InSlateEditableTextBox = SlateEditableTextBoxInternal.Pin().Get();
+	if (!ensureMsgf(InSlateEditableTextBox, TEXT("ASSERT: [%i] %hs:\n'SlateEditableTextBoxInternal' is not valid!"), __LINE__, __FUNCTION__)
+	    || !ensureMsgf(EditableTextBox, TEXT("ASSERT: [%i] %hs:\n'EditableTextBox' is not valid!"), __LINE__, __FUNCTION__))
+	{
+		return;
+	}
+
+	const USettingsDataAsset& SettingsDataAsset = USettingsDataAsset::Get();
+	const FSettingsThemeData& UserInputThemeData = SettingsDataAsset.GetUserInputThemeData();
+	const FMiscThemeData& MiscThemeData = SettingsDataAsset.GetMiscThemeData();
+
+	FSlateBrush NormalBrush;
+	NormalBrush.SetResourceObject(UserInputThemeData.Texture);
+	NormalBrush.ImageSize = UserInputThemeData.Size;
+	NormalBrush.DrawAs = UserInputThemeData.DrawAs;
+	NormalBrush.Margin = UserInputThemeData.Margin;
+	NormalBrush.TintColor = MiscThemeData.ThemeColorNormal;
+
+	FSlateBrush HoveredBrush = NormalBrush;
+	HoveredBrush.TintColor = MiscThemeData.ThemeColorHover;
+
+	EditableTextBox->WidgetStyle.BackgroundImageNormal = NormalBrush;
+	EditableTextBox->WidgetStyle.BackgroundImageHovered = HoveredBrush;
+	EditableTextBox->WidgetStyle.BackgroundImageFocused = NormalBrush;
+	EditableTextBox->WidgetStyle.BackgroundImageReadOnly = NormalBrush;
+	EditableTextBox->WidgetStyle.Padding = UserInputThemeData.Padding;
+	EditableTextBox->WidgetStyle.TextStyle.Font = MiscThemeData.TextAndCaptionFont;
+	EditableTextBox->WidgetStyle.TextStyle.ColorAndOpacity = MiscThemeData.TextAndCaptionColor;
+	EditableTextBox->WidgetStyle.ForegroundColor = MiscThemeData.ThemeColorNormal;
+	EditableTextBox->WidgetStyle.ReadOnlyForegroundColor = MiscThemeData.ThemeColorExtra;
+	EditableTextBox->WidgetStyle.ScrollBarStyle.HorizontalBackgroundImage = NormalBrush;
+	EditableTextBox->WidgetStyle.ScrollBarStyle.VerticalBackgroundImage = NormalBrush;
+	InSlateEditableTextBox->SetStyle(&EditableTextBox->WidgetStyle);
 }
 
 // Called after the underlying slate widget is constructed
