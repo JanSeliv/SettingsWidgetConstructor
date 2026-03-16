@@ -5,9 +5,9 @@
 #include "Data/SettingsRow.h"
 #include "FunctionPickerType/FunctionPickerCustomization.h"
 //---
+#include "Modules/ModuleManager.h"
 #include "PropertyEditorModule.h"
 #include "PropertyHandle.h"
-#include "Modules/ModuleManager.h"
 
 // The name of class to be customized: SettingsPicker
 const FName FSettingsPickerCustomization::PropertyClassName = FSettingsPicker::StaticStruct()->GetFName();
@@ -67,9 +67,8 @@ void FSettingsPickerCustomization::RegisterSettingsPickerCustomization()
 
 	// Is customized to show only selected in-game option
 	PropertyModule.RegisterCustomPropertyTypeLayout(
-		PropertyClassName,
-		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FSettingsPickerCustomization::MakeInstance)
-	);
+	    PropertyClassName,
+	    FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FSettingsPickerCustomization::MakeInstance));
 
 	PropertyModule.NotifyCustomizationModuleChanged();
 }
@@ -246,7 +245,7 @@ void FSettingsPickerCustomization::CopyMetas()
 
 		if (!SettingsDataChildStruct)
 		{
-			PropertyDataRef.SetMetaDataValue(TemplateMetaKey, NAME_None, true);
+			PropertyDataRef.SetMetaDataValue(TemplateMetaKey, NAME_None);
 			continue;
 		}
 
@@ -256,14 +255,14 @@ void FSettingsPickerCustomization::CopyMetas()
 			// Copy meta from chosen option USTRUCT to each UPROPERTY of SettingsFunctionProperties
 			if (const FString* FoundMetaData = StructIt->FindMetaData(TemplateMetaKey))
 			{
-				PropertyDataRef.SetMetaDataValue(TemplateMetaKey, **FoundMetaData, true);
+				PropertyDataRef.SetMetaDataValue(TemplateMetaKey, **FoundMetaData);
 				break;
 			}
 
 			if (StructIt == SettingsDataBaseStructInternal)
 			{
 				// The meta key was not found
-				PropertyDataRef.SetMetaDataValue(TemplateMetaKey, NAME_None, true);
+				PropertyDataRef.SetMetaDataValue(TemplateMetaKey, NAME_None);
 				break;
 			}
 		}
