@@ -1,5 +1,5 @@
 <a href="https://github.com/JanSeliv/SettingsWidgetConstructor/blob/main/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)</a>
-<a href="https://www.unrealengine.com/">![Unreal Engine](https://img.shields.io/badge/Unreal-5.6-dea309?style=flat&logo=unrealengine)</a>
+<a href="https://www.unrealengine.com/">![Unreal Engine](https://img.shields.io/badge/Unreal-5.7-dea309?style=flat&logo=unrealengine)</a>
 
 <br/>
 <p align="center">
@@ -33,6 +33,9 @@ Check out our [Release](https://github.com/JanSeliv/SettingsWidgetConstructor/re
 Also, explore this [game project repository](https://github.com/JanSeliv/Bomber) to view the Settings Widget Constructor in action.
 
 ## 📅 Changelog
+#### 2026-04-20
+- Updated to **Unreal Engine 5.7**.
+- Fixes various smaller issues
 #### 2025-11-17
 - Updated to **Unreal Engine 5.6**.
 #### 2025-06-29
