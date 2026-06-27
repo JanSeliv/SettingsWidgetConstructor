@@ -30,7 +30,7 @@ void USettingsDataAsset::PostInitProperties()
 
 	if (!GEngine || !GEngine->IsInitialized())
 	{
-		FCoreDelegates::OnPostEngineInit.AddUObject(this, &ThisClass::OnPostEngineInit);
+		FCoreDelegates::GetOnPostEngineInit().AddUObject(this, &ThisClass::OnPostEngineInit);
 	}
 	else
 	{
