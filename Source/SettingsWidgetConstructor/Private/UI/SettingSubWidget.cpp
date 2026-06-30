@@ -1,4 +1,4 @@
-﻿// Copyright (c) Yevhenii Selivanov
+// Copyright (c) Yevhenii Selivanov
 
 #include "UI/SettingSubWidget.h"
 
@@ -177,7 +177,7 @@ void USettingButton::NativeConstruct()
 	if (ButtonWidget)
 	{
 		ButtonWidget->SetClickMethod(EButtonClickMethod::PreciseClick);
-		ButtonWidget->OnClicked.AddUniqueDynamic(this, &ThisClass::USettingButton::OnButtonPressed);
+		ButtonWidget->OnClicked.AddUniqueDynamic(this, &ThisClass::OnButtonPressed);
 
 		SlateButtonInternal = FSWCWidgetUtilsLibrary::GetSlateWidget<SButton>(ButtonWidget);
 		check(SlateButtonInternal.IsValid());
